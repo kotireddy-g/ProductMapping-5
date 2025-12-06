@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RLHL RCA & Recommendation Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-elevated: #151b2f;
+      --bg-elevated-soft: #191f36;
+      --border: #252b45;
+      --accent: #4f8cff;
+      --accent-soft: rgba(79, 140, 255, 0.15);
+      --accent-amber: #ffb547;
+      --accent-red: #ff5c7a;
+      --text: #f7f8ff;
+      --text-muted: #a2a8d3;
+      --chip-bg: #1f2540;
+      --success: #4fd28e;
+      --warning: #ffb547;
+      --danger: #ff5c7a;
+      --radius-lg: 14px;
+      --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.32);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #1d2541 0, #050814 55%, #000 100%);
+      color: var(--text);
+    }
+
+    .page {
+      max-width: 1440px;
+      margin: 24px auto 40px;
+      padding: 0 24px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(79, 140, 255, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(79, 140, 255, 0.35);
+    }
+
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 0 6px rgba(79, 210, 142, 0.1);
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      gap: 6px;
+    }
+
+    .pill-badge span {
+      color: var(--accent-amber);
+      font-weight: 500;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-elevated-soft) 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      padding: 14px 16px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .card-kpi-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .kpi {
+      background: var(--bg-elevated-soft);
+      border-radius: 12px;
+      padding: 10px 12px;
+      min-width: 120px;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 1px;
+    }
+
+    .kpi-value {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .kpi-pill {
+      font-size: 11px;
+      margin-top: 3px;
+      color: var(--text-muted);
+    }
+
+    .kpi-pill span {
+      color: var(--success);
+      font-weight: 500;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--chip-bg);
+      color: var(--text-muted);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .badge-danger {
+      border-color: rgba(255,92,122,0.5);
+      color: var(--danger);
+      background: rgba(255,92,122,0.15);
+    }
+
+    .badge-warning {
+      border-color: rgba(255,181,71,0.6);
+      color: var(--warning);
+      background: rgba(255,181,71,0.12);
+    }
+
+    .badge-success {
+      border-color: rgba(79,210,142,0.6);
+      color: var(--success);
+      background: rgba(79,210,142,0.12);
+    }
+
+    .risk-radar-placeholder {
+      height: 140px;
+      border-radius: 12px;
+      margin-top: 10px;
+      border: 1px dashed rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: radial-gradient(circle at center, rgba(79,140,255,0.22), transparent 60%);
+    }
+
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .flex-row > * {
+      flex: 1 1 0;
+    }
+
+    .bar-list {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .bar-item-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent-red), var(--accent-amber), var(--accent));
+    }
+
+    .bar-fill-positive {
+      background: linear-gradient(90deg, var(--success), var(--accent));
+    }
+
+    .bar-fill-negative {
+      background: linear-gradient(90deg, var(--accent-red), #7e2f4f);
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      background: var(--chip-bg);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      display: inline-block;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    .chip-dot-danger { background: var(--danger); }
+    .chip-dot-warning { background: var(--warning); }
+    .chip-dot-success { background: var(--success); }
+
+    .narrative {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .narrative strong {
+      color: var(--text);
+    }
+
+    .scenario-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    .scenario-table th,
+    .scenario-table td {
+      padding: 6px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      text-align: left;
+    }
+
+    .scenario-table th {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .scenario-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(79,140,255,0.16);
+      color: var(--accent);
+      border: 1px solid rgba(79,140,255,0.4);
+    }
+
+    .timeline {
+      margin-top: 4px;
+      border-left: 1px solid rgba(255,255,255,0.12);
+      padding-left: 12px;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -15px;
+      top: 3px;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(79,140,255,0.15);
+    }
+
+    .timeline-title {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .timeline-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .tree {
+      font-size: 11px;
+      margin-top: 4px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      white-space: pre;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .tree .critical { color: var(--danger); }
+    .tree .contrib { color: var(--warning); }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-muted);
+    }
+
+    .tag-rl {
+      border-color: rgba(79,140,255,0.6);
+      color: var(--accent);
+      background: rgba(79,140,255,0.1);
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* === NEW: ACTION PANEL STYLES === */
+
+    .action-panel {
+      margin-top: 10px;
+      border-radius: 10px;
+      background: rgba(7, 10, 24, 0.85);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 8px 10px 10px;
+    }
+
+    .action-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .action-panel-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 11px;
+      border: 1px solid transparent;
+      background: var(--chip-bg);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn span {
+      font-size: 12px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #78a6ff 100%);
+      border-color: rgba(79,140,255,0.8);
+      color: #fff;
+    }
+
+    .btn-outline {
+      border-color: rgba(255,255,255,0.18);
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .btn-danger {
+      border-color: rgba(255,92,122,0.6);
+      color: var(--danger);
+      background: rgba(255,92,122,0.14);
+    }
+
+    .action-form {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .action-field {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .action-label {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .action-input,
+    .action-select,
+    .action-textarea {
+      background: #050816;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.09);
+      color: var(--text);
+      font-size: 11px;
+      padding: 5px 7px;
+      outline: none;
+    }
+
+    .action-input:focus,
+    .action-select:focus,
+    .action-textarea:focus {
+      border-color: rgba(79,140,255,0.8);
+      box-shadow: 0 0 0 1px rgba(79,140,255,0.4);
+    }
+
+    .action-textarea {
+      grid-column: 1 / -1;
+      resize: vertical;
+      min-height: 36px;
+      max-height: 80px;
+    }
+
+    .action-status {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .action-status-pill {
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 10px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .action-status-pill.accepted {
+      border-color: rgba(79,210,142,0.7);
+      color: var(--success);
+      background: rgba(79,210,142,0.12);
+    }
+
+    .action-status-pill.modified {
+      border-color: rgba(255,181,71,0.7);
+      color: var(--warning);
+      background: rgba(255,181,71,0.12);
+    }
+
+    .action-status-pill.rejected {
+      border-color: rgba(255,92,122,0.8);
+      color: var(--danger);
+      background: rgba(255,92,122,0.16);
+    }
+
+    .action-status-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 260px;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .action-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .action-form {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">SKU-112 • Chicken Breast (1kg)</div>
+        <div class="page-subtitle">
+          Property: Hyderabad Downtown | Date: 02 Dec 2025
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <div class="pill">
+          <span class="pill-dot"></span>
+          RLHL ONLINE • Policy: PPO → DQN → Rules
+        </div>
+        <div style="display:flex; gap:6px;">
+          <div class="pill-badge">
+            Conf: <span>0.87</span>
+          </div>
+          <div class="pill-badge">
+            Route: <span>AUTO-APPROVE</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layout -->
+    <div class="layout">
+      <!-- Left Column -->
+      <div class="col">
+        <!-- Decision Summary -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Decision Summary</div>
+              <div class="section-label">Recommended action • single SKU</div>
+            </div>
+            <span class="tag tag-rl">RLHL Decision</span>
+          </div>
+
+          <div class="card-kpi-row">
+            <div class="kpi">
+              <div class="kpi-label">Recommended Order Qty</div>
+              <div class="kpi-value" id="kpi-reco-qty">120 units</div>
+              <div class="kpi-pill"><span>+24</span> vs. last week</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Vendor</div>
+              <div class="kpi-value" id="kpi-reco-vendor">Vendor A</div>
+              <div class="kpi-pill">On-time: <span>96%</span></div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Confidence</div>
+              <div class="kpi-value">0.87</div>
+              <div class="kpi-pill">Route: <span>AUTO</span></div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Risk Level</div>
+              <div class="kpi-value">MEDIUM</div>
+              <div class="kpi-pill">Stockout risk: <span>4%</span></div>
+            </div>
+          </div>
+
+          <div class="risk-radar-placeholder">
+            Risk Radar (Stockout • Waste • Price • Lead Time • Supplier)
+          </div>
+
+          <!-- === NEW: HUMAN ACTION PANEL === -->
+          <div class="action-panel">
+            <div class="action-panel-header">
+              <div class="action-panel-title">Human Action on This Recommendation</div>
+              <div class="badge">Decision ID: DEC-2025-112-01</div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-row">
+              <button class="btn btn-primary" id="btn-accept">
+                <span>✔</span> Accept as-is
+              </button>
+              <button class="btn btn-outline" id="btn-modify">
+                <span>✏</span> Modify &amp; Approve
+              </button>
+              <button class="btn btn-danger" id="btn-reject">
+                <span>✖</span> Reject
+              </button>
+            </div>
+
+            <!-- Action Form -->
+            <div class="action-form">
+              <div class="action-field">
+                <label class="action-label" for="input-qty">Updated Order Qty</label>
+                <input
+                  class="action-input"
+                  id="input-qty"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value="120"
+                />
+              </div>
+              <div class="action-field">
+                <label class="action-label" for="select-vendor">Updated Vendor</label>
+                <select class="action-select" id="select-vendor">
+                  <option value="Vendor A" selected>Vendor A (Reco)</option>
+                  <option value="Vendor B">Vendor B</option>
+                  <option value="Vendor C">Vendor C</option>
+                </select>
+              </div>
+              <div class="action-field">
+                <label class="action-label" for="input-rating">Rating (1–5)</label>
+                <input
+                  class="action-input"
+                  id="input-rating"
+                  type="number"
+                  min="1"
+                  max="5"
+                  step="1"
+                  value="5"
+                />
+              </div>
+              <textarea
+                class="action-textarea"
+                id="input-comment"
+                placeholder="Add comment / reason for override (optional)…"
+              ></textarea>
+            </div>
+
+            <!-- Status -->
+            <div class="action-status">
+              <div class="action-status-text" id="action-status-text">
+                No action taken yet. This will be logged as RLHL feedback.
+              </div>
+              <div class="action-status-pill" id="action-status-pill">
+                Pending
+              </div>
+            </div>
+          </div>
+          <!-- === END: HUMAN ACTION PANEL === -->
+
+        </div>
+
+        <!-- RCA Drivers -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">RCA — Key Drivers</div>
+              <div class="section-label">Top factors influencing this recommendation</div>
+            </div>
+            <span class="badge badge-warning">Explainability: Template</span>
+          </div>
+
+          <div class="bar-list">
+            <div>
+              <div class="bar-item-label">
+                <span>Days of Stock Remaining (DoC)</span>
+                <span>-0.42</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-fill-negative" style="width: 42%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="bar-item-label">
+                <span>7-day Demand Trend</span>
+                <span>+0.32</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-fill-positive" style="width: 32%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="bar-item-label">
+                <span>Lead Time Variance (Vendor A)</span>
+                <span>+0.24</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: 24%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="bar-item-label">
+                <span>Waste Rate (Last 30 days)</span>
+                <span>-0.18</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-fill-negative" style="width: 18%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chip-row">
+            <div class="chip">
+              <span class="chip-dot chip-dot-danger"></span>
+              DoC &lt; 3 days → Upweight order
+            </div>
+            <div class="chip">
+              <span class="chip-dot chip-dot-warning"></span>
+              Rising demand (+17% vs 21d)
+            </div>
+            <div class="chip">
+              <span class="chip-dot chip-dot-success"></span>
+              Vendor A reliability &gt; 95%
+            </div>
+          </div>
+
+          <div class="narrative">
+            <strong>Why this action?</strong> Current on-hand stock covers only <strong>2.1 days</strong>
+            of demand, while 7-day demand is <strong>rising</strong> and Vendor A has a
+            <strong>stable lead time</strong>. The agent increases the order to avoid
+            weekend stockouts while keeping waste within tolerance.
+          </div>
+        </div>
+
+        <!-- Root Cause Tree -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Outcome RCA (Last Week)</div>
+              <div class="section-label">Root cause of previous stockout on 24 Nov</div>
+            </div>
+            <span class="badge badge-danger">Severity: HIGH</span>
+          </div>
+
+          <div class="tree">
+Stockout on 24 Nov (HIGH)
+├── <span class="critical">[Root]</span> Demand spike of +32% on weekend
+│   └─ Promotion not reflected in forecast
+├── <span class="contrib">[Contributing]</span> Delivery delay of 2.5 days
+│   └─ Vendor B reliability dropped to 81%
+└── <span class="contrib">[Contributing]</span> Manual override to lower order qty
+    └─ User comment: "Reduce for trial menu"
+          </div>
+
+          <div class="narrative">
+            Recommendation: <strong>Pin Vendor A</strong> as default for this SKU
+            during weekends, and add a rule to upweight forecasts when promotions
+            are active for this menu item.
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="col">
+        <!-- Counterfactual Simulator (Static view) -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Counterfactual Scenarios</div>
+              <div class="section-label">What if we ordered more / less?</div>
+            </div>
+            <span class="badge badge-success">Simulated</span>
+          </div>
+
+          <table class="scenario-table">
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>Order Qty</th>
+                <th>Total Cost</th>
+                <th>Stockout Risk</th>
+                <th>Service Level</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <span class="scenario-badge">Recommended</span>
+                </td>
+                <td>120</td>
+                <td>₹ 4,800</td>
+                <td>4%</td>
+                <td>96%</td>
+              </tr>
+              <tr>
+                <td>+20% Qty</td>
+                <td>144</td>
+                <td>₹ 5,600</td>
+                <td>1%</td>
+                <td>99%</td>
+              </tr>
+              <tr>
+                <td>-20% Qty</td>
+                <td>96</td>
+                <td>₹ 3,900</td>
+                <td>12%</td>
+                <td>88%</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="narrative">
+            The model selects <strong>120 units</strong> as the best balance:
+            it avoids most stockout risk without incurring the extra holding
+            cost from 144 units. Human approvers can see these trade-offs
+            before overriding.
+          </div>
+        </div>
+
+        <!-- Human-in-the-Loop Timeline -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Human Feedback Loop</div>
+              <div class="section-label">Overrides & ratings for this SKU (last 7 days)</div>
+            </div>
+            <span class="badge">RLHL Feedback Stream</span>
+          </div>
+
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-title">
+                Today • Auto-approved
+                <span class="badge badge-success" style="margin-left:6px;">Approved</span>
+              </div>
+              <div class="timeline-meta">
+                Recommended 120 • No override • Rating: ★★★★☆
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot" style="background: var(--warning);"></div>
+              <div class="timeline-title">
+                30 Nov • Modified by User
+                <span class="badge badge-warning" style="margin-left:6px;">Qty Changed</span>
+              </div>
+              <div class="timeline-meta">
+                System: 110 → User: 90 • Comment: "Banquet cancelled"
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot" style="background: var(--danger);"></div>
+              <div class="timeline-title">
+                24 Nov • Rejected
+                <span class="badge badge-danger" style="margin-left:6px;">Rejected</span>
+              </div>
+              <div class="timeline-meta">
+                System: 80 • User chose Vendor B instead • Stockout occurred
+              </div>
+            </div>
+          </div>
+
+          <div class="chip-row">
+            <div class="chip">
+              Override rate (7d): <strong>28%</strong>
+            </div>
+            <div class="chip">
+              Avg. rating: <strong>4.2 / 5</strong>
+            </div>
+            <div class="chip">
+              Learning signal: <strong>Enabled</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats / Policy Health -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Policy Health (SKU-112)</div>
+              <div class="section-label">Last 30 days</div>
+            </div>
+            <span class="badge">Monitoring</span>
+          </div>
+
+          <div class="flex-row">
+            <div class="kpi">
+              <div class="kpi-label">Episodes Reward</div>
+              <div class="kpi-value">+312</div>
+              <div class="kpi-pill"><span>↑</span> improving vs last month</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Stockout Days</div>
+              <div class="kpi-value">1</div>
+              <div class="kpi-pill"><span>↓</span> from 4 last month</div>
+            </div>
+          </div>
+
+          <div class="narrative">
+            RL policy performance is <strong>improving</strong> as human overrides
+            are fed back into the training loop. This view helps you decide
+            whether to widen AUTO-APPROVE thresholds or keep tighter controls.
+          </div>
+        </div>
+      </div>
+    </div>

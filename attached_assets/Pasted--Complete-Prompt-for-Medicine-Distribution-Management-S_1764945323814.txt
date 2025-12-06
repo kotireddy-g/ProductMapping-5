@@ -1,0 +1,245 @@
+# Complete Prompt for Medicine Distribution Management System
+
+Build a comprehensive medicine distribution management system with the following exact specifications:
+
+## Core Requirements
+
+### Authentication & Layout
+- Login page with username/password authentication
+- Persistent header across all pages showing:
+  - "ExperienceFlow" branding/logo
+  - Upload Forecast button
+  - Notifications bell icon with badge count
+  - Logout button
+- Use modern, professional, clean UI design with proper spacing
+
+### Main Dashboard (After Login)
+Split the page into three equal vertical sections:
+
+---
+
+## SECTION 1: OTIF (On-Time In-Full)
+
+### Top Section - Chord Diagram
+- Create a chord diagram visualization similar to Image 1 (colorful arc connections)
+- Left side: List medicine categories vertically:
+  - Emergency Medicines
+  - OT Medicines
+  - Ward Medicines
+  - Daycare Medicines
+  - General Medicines
+  - Implant Medicines
+- Right side: Show hierarchical navigation (3 levels) from Images 2 & 3:
+  - **Level 1**: Emergency & Critical Care, Operating Theatres & Procedure Suites, Inpatient Wards & Units, Outpatient & Ambulatory, Diagnostic & Interventional, Special Therapies & Programs, Pharmacy Network, Support Areas
+  - **Level 2**: Based on Level 1 selection (e.g., Emergency/Casualty, ICUs, Main OTs, General Medical & Surgical, OPD, Radiology, Oncology, Ward Pharmacies, Employee Clinic, Ambulance, Training/Research)
+  - **Level 3**: Specific units (e.g., A&E, Medical ICU, Surgical ICU, General OT, Adult Medical Ward, General OPD, CT/MRI/USG Units, Oncology Ward, DOTS Centre, Satellite Pharmacy, Main Store, Staff Clinic, Ambulance Fleet, Simulation Lab)
+- Clicking any level item should refresh the chord diagram to show connections
+- Animated flowing connections between left and right sides
+
+### Middle Section - OTIF Reasons
+- Table/grid showing:
+  - Medicine Category name
+  - OTIF Percentage (with color coding: green >95%, yellow 85-95%, red <85%)
+  - Click to view details
+
+### Bottom Section - 4 KPIs
+- Display 4 KPI cards in a row
+- Each card contains:
+  - KPI title
+  - Current value (large font)
+  - Small trend line chart showing last 30 days
+  - Percentage change indicator (↑/↓)
+- KPIs: "On-Time Delivery %", "In-Full Delivery %", "Perfect Order Rate", "Average Delay (hours)"
+
+---
+
+## SECTION 2: LABELS
+
+### Top Section - 7 Core Labels
+- Display as horizontal cards/pills:
+  1. Usage / Velocity Labels
+  2. Regulatory / Formulary Labels
+  3. Criticality / Supply Risk Labels
+  4. Clinical / Therapeutic Labels
+  5. Storage / Handling Labels
+  6. Cost / Financial Labels
+  7. Lifecycle / Status Labels
+- Show: Label name + product count
+- First label selected by default (highlighted)
+
+### Middle Section - Sub Labels
+- Based on selected core label, show sub-labels:
+  - **Usage/Velocity**: FAST_MOVING (40), MEDIUM_MOVING (35), SLOW_MOVING (25), VERY_SLOW_MOVING (15), NEW_ITEM (10), OBSOLETE (8)
+  - **Regulatory/Formulary**: FORMULARY (120), NON_FORMULARY (30), RESTRICTED_USE (25)
+  - **Criticality**: CRITICAL (45), HIGH_PRIORITY (60), STANDARD (80)
+  - **Clinical/Therapeutic**: LIFE_SAVING (35), CHRONIC_CARE (90), ACUTE_CARE (70)
+  - **Storage/Handling**: COLD_CHAIN (28), CONTROLLED_SUBSTANCE (15), HAZARDOUS (12), LIGHT_SENSITIVE (20)
+  - **Cost/Financial**: HIGH_VALUE (40), MEDIUM_VALUE (80), LOW_VALUE (95)
+  - **Lifecycle/Status**: ACTIVE (180), PHASING_OUT (15), DISCONTINUED (10)
+- Display as smaller cards with counts
+- First sub-label selected by default
+
+### Bottom Section - 4 KPIs
+- Similar design to OTIF KPIs
+- Dynamic based on label/sub-label selection
+- Examples: "Stock Coverage Days", "Stockout Risk Products", "Avg Inventory Value", "Expiry Risk Items"
+- Each with mini trend chart
+
+---
+
+## SECTION 3: FORECAST
+
+### Top Section - Medicine Categories
+- Display as grid cards (2-3 columns):
+  - Emergency Medicines (350 items)
+  - OT Medicines (180 items)
+  - Ward Medicines (420 items)
+  - Daycare Medicines (95 items)
+  - General Medicines (510 items)
+  - Implant Medicines (75 items)
+- Each card shows: Category name, forecast item count, small icon
+- Click opens Product Journey view
+
+### Middle Section - Forecast Stats Cards
+- 3-4 summary cards showing:
+  - "Total Forecast Items": 1,630
+  - "Forecast Accuracy": 87.5%
+  - "Under-forecasted Items": 45
+  - "Over-forecasted Items": 38
+
+### Bottom Section - 4 KPIs
+- Similar design to other KPIs
+- Examples: "Forecast vs Actual %", "Demand Variability", "Safety Stock Days", "Forecast Bias"
+
+---
+
+## SECONDARY SCREENS
+
+### RCA & Recommendations Screen
+- Triggered by clicking:
+  - OTIF reasons (Section 1 middle)
+  - Sub-labels (Section 2 middle)
+  - Forecast category cards (Section 3 top)
+- Display:
+  - Selected item details at top
+  - Root Cause Analysis section with fishbone/tree diagram
+  - List of identified causes with severity indicators
+  - Recommendations section with actionable items
+  - Priority matrix (Impact vs Effort)
+  - "Implement" and "Back" buttons
+
+### Product Journey Screen (Image 4 Style)
+- Horizontal scrollable product list at top (chips/pills)
+- First product selected by default
+- Main visualization area showing animated flow diagram:
+  - **SOURCE** (left): Large circle with medicine name and total units
+  - **DISTRIBUTION** (middle): Multiple destination nodes (ICU, Emergency Ward, General Ward, Operation Theatre, Pharmacy Store) with unit counts
+  - **CONSUMPTION** (right): Consumption metrics (Patient Care: 7/hr, Procedures: 4/hr, Outpatient: 3/hr, Research: 7/hr)
+  - Animated flowing particles along connection lines (like electrical circuit)
+  - Color-coded flows (red for urgent, green for normal, blue for routine)
+- Bottom timeline showing stock levels over time
+
+### Notifications Panel
+- Slide-in panel from right when bell icon clicked
+- Categorized notifications:
+  - **Stockouts**: "35 products are currently stocked out" (red)
+  - **Low Stock**: "48 products below reorder point" (yellow)
+  - **Expiry Alerts**: "12 products expiring within 30 days" (orange)
+  - **OTIF Issues**: "15 delayed deliveries today" (blue)
+  - **Forecast Deviations**: "8 products exceeded forecast by >20%" (purple)
+- Each notification clickable to navigate to Product Journey
+- Mark as read functionality
+- "View All" button at bottom
+
+---
+
+## TECHNICAL REQUIREMENTS
+
+### Data Structure
+Generate comprehensive synthetic data including:
+- 500+ medicine products with attributes: name, category, sub-category, SKU, manufacturer, unit price, current stock, reorder point, lead time
+- 3 months of transaction history per product
+- OTIF data with timestamps, delivery locations, expected vs actual
+- Forecast data with predicted vs actual quantities
+- Label assignments for each product (all 7 core labels + sub-labels)
+- Notification events with timestamps
+
+### Technology Stack
+- React functional components with hooks
+- React Router for navigation
+- Recharts for charts and visualizations
+- D3.js for chord diagram and product journey animations
+- Tailwind CSS for styling
+- Lucide React for icons
+- Context API or state management for user session
+- Local storage for persistence (user preferences, not data)
+
+### UI/UX Guidelines
+- Responsive design (desktop-first, min-width 1280px)
+- Color scheme: Professional medical theme (blues, greens, grays)
+- Smooth transitions and animations
+- Loading states for data fetching
+- Error handling with user-friendly messages
+- Tooltips for additional information
+- Consistent spacing (use Tailwind's spacing scale)
+- Card shadows and hover effects
+- Professional typography (Inter or similar)
+
+### Key Features
+- Filter and search functionality on all data tables
+- Export to CSV/Excel buttons where applicable
+- Date range pickers for historical data
+- Drill-down capabilities (overview → details)
+- Breadcrumb navigation on detail screens
+- Back buttons on all secondary screens
+- Animated number counters for KPIs
+- Real-time-looking updates (simulate with intervals)
+
+### File Structure
+```
+src/
+├── components/
+│   ├── auth/
+│   │   └── Login.jsx
+│   ├── layout/
+│   │   ├── Header.jsx
+│   │   └── NotificationPanel.jsx
+│   ├── dashboard/
+│   │   ├── OTIFSection.jsx
+│   │   ├── LabelsSection.jsx
+│   │   └── ForecastSection.jsx
+│   ├── visualizations/
+│   │   ├── ChordDiagram.jsx
+│   │   ├── ProductJourney.jsx
+│   │   ├── TrendChart.jsx
+│   │   └── KPICard.jsx
+│   └── screens/
+│       ├── RCAScreen.jsx
+│       └── ProductJourneyScreen.jsx
+├── data/
+│   ├── generateMedicineData.js
+│   ├── generateOTIFData.js
+│   ├── generateLabelData.js
+│   └── generateForecastData.js
+├── utils/
+│   ├── calculations.js
+│   └── formatters.js
+├── context/
+│   └── AppContext.jsx
+├── App.jsx
+└── index.jsx
+```
+
+### Specific Implementation Notes
+1. Chord diagram must have smooth animated transitions when hierarchy levels change
+2. Product journey particles should flow continuously (use requestAnimationFrame)
+3. All percentage values should have 1 decimal place
+4. Currency values should use proper formatting (₹ symbol, commas)
+5. Dates should be in DD-MMM-YYYY format
+6. KPI trend charts should show 30 data points
+7. Notification badges should show count up to 99, then "99+"
+8. Session should persist across page refreshes
+9. Implement smooth scrolling for horizontal product lists
+10. Use skeleton loaders for initial data loading
+
+Create the complete, production-ready application with all functionality working, realistic data flowing through all components, and professional UI matching the described requirements.
