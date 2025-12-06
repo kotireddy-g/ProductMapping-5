@@ -3,17 +3,17 @@ import * as d3 from 'd3';
 import { medicineCategories, hospitalDepartments, chordConnections } from '../../data/unifiedPharmaData';
 
 const movementColors = {
-  'fast-moving': '#10b981',
-  'medium': '#3b82f6',
-  'slow': '#f59e0b',
-  'occasional': '#8b5cf6'
+  'fast-moving': '#059669',
+  'medium': '#2563eb',
+  'slow': '#d97706',
+  'occasional': '#7c3aed'
 };
 
 const movementLabels = [
-  { type: 'fast-moving', label: 'Fast Moving', color: '#10b981' },
-  { type: 'medium', label: 'Medium', color: '#3b82f6' },
-  { type: 'slow', label: 'Slow Moving', color: '#f59e0b' },
-  { type: 'occasional', label: 'Occasional', color: '#8b5cf6' }
+  { type: 'fast-moving', label: 'Fast Moving', color: '#059669' },
+  { type: 'medium', label: 'Medium', color: '#2563eb' },
+  { type: 'slow', label: 'Slow Moving', color: '#d97706' },
+  { type: 'occasional', label: 'Occasional', color: '#7c3aed' }
 ];
 
 const AnimatedChordDiagram = ({ onCategoryClick, onDepartmentClick }) => {
@@ -46,6 +46,21 @@ const AnimatedChordDiagram = ({ onCategoryClick, onDepartmentClick }) => {
     return 'occasional';
   };
 
+  const getStockLevel = (value) => {
+    if (value > 85) return 'overstocking';
+    if (value < 30) return 'understocking';
+    return 'normal';
+  };
+
+  const getStockThickness = (stockLevel) => {
+    switch (stockLevel) {
+      case 'overstocking': return 12;
+      case 'understocking': return 8;
+      case 'normal': return 6;
+      default: return 4;
+    }
+  };
+
   useEffect(() => {
     if (!svgRef.current) return;
 
@@ -53,10 +68,10 @@ const AnimatedChordDiagram = ({ onCategoryClick, onDepartmentClick }) => {
     svg.selectAll('*').remove();
 
     const width = svgRef.current.clientWidth;
-    const height = 400;
-    const padding = 100; // Add padding on both sides
-    const leftX = padding + 50;
-    const rightX = width - padding - 150;
+    const height = 500;
+    const padding = 150; // Increased padding for better spacing
+    const leftX = 200;
+    const rightX = width - 300;
 
     const leftNodes = medicineCategories.map((cat, i) => ({
       ...cat,
@@ -85,13 +100,16 @@ const AnimatedChordDiagram = ({ onCategoryClick, onDepartmentClick }) => {
         );
         const value = existingConnection ? existingConnection.value : 20 + Math.floor(Math.random() * 80);
         const movementType = getMovementType(value);
+        const stockLevel = getStockLevel(value);
+        const thickness = getStockThickness(stockLevel);
         connections.push({
           source: left,
           target: right,
           value: value,
           movementType: movementType,
+          stockLevel: stockLevel,
           color: movementColors[movementType],
-          strokeWidth: Math.max(1.5, (value / 30))
+          strokeWidth: thickness
         });
       });
     });
@@ -127,7 +145,7 @@ const AnimatedChordDiagram = ({ onCategoryClick, onDepartmentClick }) => {
                       ${midX} ${conn.target.y + 10},
                       ${conn.target.x - 10} ${conn.target.y + 10}`)
         .attr('fill', 'none')
-        .attr('stroke', `url(#gradient-${i})`)
+        .attr('stroke', conn.color)
         .attr('stroke-width', conn.strokeWidth)
         .attr('opacity', 0.5)
         .attr('class', 'connection-path')
@@ -145,7 +163,7 @@ const AnimatedChordDiagram = ({ onCategoryClick, onDepartmentClick }) => {
           });
         })
         .on('mouseleave', function() {
-          d3.select(this).attr('opacity', 0.5).attr('stroke-width', conn.strokeWidth);
+          d3.select(this).attr('opacity', 0.8).attr('stroke-width', conn.strokeWidth);
           setTooltipInfo(null);
         });
 
@@ -163,8 +181,8 @@ const AnimatedChordDiagram = ({ onCategoryClick, onDepartmentClick }) => {
         .attr('width', 120)
         .attr('height', 45)
         .attr('rx', 8)
-        .attr('fill', '#f1f5f9')
-        .attr('stroke', '#3b82f6')
+        .attr('fill', '#f8fafc')
+        .attr('stroke', '#64748b')
         .attr('stroke-width', 2);
 
       g.append('text')
@@ -204,8 +222,8 @@ const AnimatedChordDiagram = ({ onCategoryClick, onDepartmentClick }) => {
         .attr('width', 200)
         .attr('height', 32)
         .attr('rx', 6)
-        .attr('fill', '#f1f5f9')
-        .attr('stroke', '#3b82f6')
+        .attr('fill', '#f8fafc')
+        .attr('stroke', '#64748b')
         .attr('stroke-width', 1.5);
 
       g.append('text')

@@ -497,13 +497,13 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
             'bg-red-50 border-red-300'
           }`}>
             <div className="p-4">
-              <div className="flex items-start">
+              <div className="flex items-center gap-3">
                 <div className="flex-shrink-0">
                   {notification.type === 'success' && <CheckCircle className="h-6 w-6 text-green-500" />}
                   {notification.type === 'warning' && <Edit3 className="h-6 w-6 text-yellow-500" />}
                   {notification.type === 'error' && <X className="h-6 w-6 text-red-500" />}
                 </div>
-                <div className="ml-3 w-0 flex-1">
+                <div className="flex flex-col flex-1">
                   <p className={`text-sm font-semibold ${
                     notification.type === 'success' ? 'text-green-800' :
                     notification.type === 'warning' ? 'text-yellow-800' :
