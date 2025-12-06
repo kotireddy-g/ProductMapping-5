@@ -2,52 +2,53 @@
 
 set -e
 
-SERVER_USER="ubuntu"
-SERVER_IP="ec2-13-204-252-47.ap-south-1.compute.amazonaws.com"
-SERVER_PATH="/var/www/product-mapping"
-
-echo "🔍 Verifying React build files..."
-grep "assets" build/index.html || echo "⚠️ Index assets check passed."
-
-echo "📦 Building production bundle..."
-npm run build
-
-echo "📦 Packaging build into ZIP..."
-cd build
-zip -r ../product-mapping.zip .
-cd ..
-
-echo "📤 Uploading ZIP to server..."
-scp product-mapping.zip ${SERVER_USER}@${SERVER_IP}:/tmp/
-
-echo "🚀 Deploying on server..."
-ssh ${SERVER_USER}@${SERVER_IP} << 'ENDSSH'
-set -e
-
-echo "📁 Preparing deployment directory..."
-sudo mkdir -p /var/www/product-mapping
-sudo rm -rf /var/www/product-mapping/*
-
-echo "📦 Unzipping build..."
-sudo unzip -o /tmp/product-mapping.zip -d /var/www/product-mapping
-
-echo "🔧 Setting permissions..."
-sudo chown -R www-data:www-data /var/www/product-mapping
-sudo chmod -R 755 /var/www/product-mapping
-
-echo "🧹 Cleaning server temporary files..."
-rm /tmp/product-mapping.zip
-
-echo "🔄 Restarting NGINX..."
-sudo systemctl restart nginx
-
-echo "✅ Server deployment complete!"
-ENDSSH
-
-echo "🧹 Cleaning local ZIP file..."
-rm product-mapping.zip
+DEPLOY_DIR="/var/www/product-mapping"
+ZIP_FILE="product-mapping.zip"
+LOG_FILE="/var/log/product-mapping-deploy.log"
 
 echo ""
-echo "🎉 Deployment Complete!"
-echo "🌐 Visit your site at: http://${SERVER_IP}/"
+echo "---------------------------------------------------------"
+echo " Starting Deployment… Sit back, relax, and have chai"
+echo "---------------------------------------------------------"
+echo ""
+
+echo "Building production build... Please wait...Bro"
+npm run build
+
+echo ""
+echo " Build is ready! Now packing your files into a ZIP."
+rm -f $ZIP_FILE
+cd build
+zip -r ../$ZIP_FILE . >/dev/null
+cd ..
+
+echo ""
+echo "Deploying locally.. Run Fast"
+sudo mkdir -p $DEPLOY_DIR
+sudo rm -rf $DEPLOY_DIR/*
+
+sudo unzip -o $ZIP_FILE -d $DEPLOY_DIR >/dev/null
+
+echo ""
+echo "Fixing permissions... All permissions is done ..check once  "
+sudo chown -R www-data:www-data $DEPLOY_DIR
+sudo chmod -R 755 $DEPLOY_DIR
+
+echo ""
+echo "Restarting NGINX... Wake up bro !!!"
+sudo systemctl restart nginx
+
+echo ""
+echo "Cleaning completed... cleaning payment amount is pending !!!"
+rm -f $ZIP_FILE
+
+echo ""
+echo "---------------------------------------------------------"
+echo "Deployment Done... Enjoy Happy Life .....don't run run again again.."
+echo "deploy script is now working PERFECTLY"
+echo "If you get issues... Ping me"
+echo "---------------------------------------------------------"
+echo ""
+echo "site is live at:"
+echo "http://13.204.252.47/product-mapping/"
 echo ""
