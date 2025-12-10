@@ -10,21 +10,23 @@ import ProductJourneyScreen from './components/Dashboard/ProductJourneyScreen';
 import RCARecommendationsPage from './components/RCA/RCARecommendationsPage';
 import SupplierForecastReport from './components/SupplierReport/SupplierForecastReport';
 import ForecastReviewPage from './components/ForecastReview/ForecastReviewPage';
+import CommandCenterDashboard from './components/CommandCenter/CommandCenterDashboard';
 import { notifications as initialNotifications } from './data/unifiedPharmaData';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authView, setAuthView] = useState('login');
   const [currentUser, setCurrentUser] = useState(null);
-  
+
   const [currentScreen, setCurrentScreen] = useState('dashboard');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [rcaData, setRcaData] = useState(null);
-  
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  
+
   const [toasts, setToasts] = useState([]);
 
   const loginToasts = [
@@ -38,7 +40,7 @@ function App() {
   const handleLogin = (user) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
-    
+
     loginToasts.forEach((toast, index) => {
       setTimeout(() => {
         setToasts(prev => [...prev, { ...toast, id: Date.now() + index }]);
@@ -82,13 +84,19 @@ function App() {
     setCurrentScreen('dashboard');
     setSelectedCategory(null);
     setRcaData(null);
+    setSelectedDepartment(null);
+  };
+
+  const handleNavigateToCommandCenter = (departmentData) => {
+    setSelectedDepartment(departmentData);
+    setCurrentScreen('command-center');
   };
 
   const handleLandingPageNavigate = (type, data) => {
     switch (type) {
       case 'otif-detail':
-        setRcaData(data);
-        setCurrentScreen('rca');
+        // Navigate to Command Center for OTIF department drill-down
+        handleNavigateToCommandCenter(data);
         break;
       case 'action-detail':
         setRcaData(data);
@@ -104,7 +112,7 @@ function App() {
   };
 
   const handleMarkAsRead = (notificationId) => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
     );
   };
@@ -129,16 +137,16 @@ function App() {
   if (!isAuthenticated) {
     if (authView === 'login') {
       return (
-        <Login 
-          onLogin={handleLogin} 
-          onSwitchToSignup={() => setAuthView('signup')} 
+        <Login
+          onLogin={handleLogin}
+          onSwitchToSignup={() => setAuthView('signup')}
         />
       );
     }
     return (
-      <Signup 
-        onSignup={handleSignup} 
-        onSwitchToLogin={() => setAuthView('login')} 
+      <Signup
+        onSignup={handleSignup}
+        onSwitchToLogin={() => setAuthView('login')}
       />
     );
   }
@@ -146,7 +154,7 @@ function App() {
   if (currentScreen === 'product-journey') {
     return (
       <>
-        <ProductJourneyScreen 
+        <ProductJourneyScreen
           category={selectedCategory}
           onBack={handleBackToDashboard}
         />
@@ -158,7 +166,7 @@ function App() {
   if (currentScreen === 'rca') {
     return (
       <>
-        <RCARecommendationsPage 
+        <RCARecommendationsPage
           sourceTab="otif"
           selectedData={rcaData}
           onBack={handleBackToDashboard}
@@ -171,7 +179,7 @@ function App() {
   if (currentScreen === 'supplier-report') {
     return (
       <>
-        <SupplierForecastReport 
+        <SupplierForecastReport
           onBack={handleBackToDashboard}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
@@ -182,10 +190,22 @@ function App() {
   if (currentScreen === 'forecast-review') {
     return (
       <>
-        <ForecastReviewPage 
+        <ForecastReviewPage
           selectedNode={selectedCategory}
           onBack={handleBackToDashboard}
           onNavigateToProductJourney={handleNavigateToProductJourney}
+        />
+        <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
+      </>
+    );
+  }
+
+  if (currentScreen === 'command-center') {
+    return (
+      <>
+        <CommandCenterDashboard
+          departmentId={selectedDepartment?.id}
+          onBack={handleBackToDashboard}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
       </>
