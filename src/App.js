@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
 import Header from './components/Layout/Header';
 import NotificationPanel from './components/Layout/NotificationPanel';
 import UploadModal from './components/Layout/UploadModal';
 import ToastNotification from './components/Layout/ToastNotification';
-import MainDashboard from './components/Dashboard/MainDashboard';
+import LandingPage from './components/LandingPage';
 import ProductJourneyScreen from './components/Dashboard/ProductJourneyScreen';
-import RCAScreen from './components/Dashboard/RCAScreen';
 import RCARecommendationsPage from './components/RCA/RCARecommendationsPage';
 import SupplierForecastReport from './components/SupplierReport/SupplierForecastReport';
 import ForecastReviewPage from './components/ForecastReview/ForecastReviewPage';
@@ -83,6 +82,25 @@ function App() {
     setCurrentScreen('dashboard');
     setSelectedCategory(null);
     setRcaData(null);
+  };
+
+  const handleLandingPageNavigate = (type, data) => {
+    switch (type) {
+      case 'otif-detail':
+        setRcaData(data);
+        setCurrentScreen('rca');
+        break;
+      case 'action-detail':
+        setRcaData(data);
+        setCurrentScreen('rca');
+        break;
+      case 'forecast-detail':
+        setSelectedCategory(data);
+        setCurrentScreen('forecast-review');
+        break;
+      default:
+        break;
+    }
   };
 
   const handleMarkAsRead = (notificationId) => {
@@ -176,7 +194,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header 
+      <Header
         currentUser={currentUser}
         notifications={notifications}
         onUploadClick={() => setIsUploadOpen(true)}
@@ -185,13 +203,11 @@ function App() {
         onLogout={handleLogout}
       />
 
-      <MainDashboard 
-        onNavigateToRCA={handleNavigateToRCA}
-        onNavigateToProductJourney={handleNavigateToProductJourney}
-        onNavigateToForecastReview={handleNavigateToForecastReview}
+      <LandingPage
+        onNavigate={handleLandingPageNavigate}
       />
 
-      <NotificationPanel 
+      <NotificationPanel
         isOpen={isNotificationOpen}
         notifications={notifications}
         onClose={() => setIsNotificationOpen(false)}
@@ -204,7 +220,7 @@ function App() {
         }}
       />
 
-      <UploadModal 
+      <UploadModal
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onUploadComplete={handleUploadComplete}
