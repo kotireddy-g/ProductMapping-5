@@ -1,0 +1,353 @@
+{
+    "status": "success",
+    "timestamp": "2025-12-11T09:54:39+05:30",
+    "data": {
+        "organization": {
+            "name": "Experienceflow Software Technologies Private Limited",
+            "subtitle": "Hospital Pharmacy OTIF Management System"
+        },
+        "overview": {
+            "overallOTIF": 92.4
+        },
+        "otifDepartments": [
+            {
+                "id": "icu",
+                "name": "ICU",
+                "description": "Intensive Care Unit",
+                "otifPercentage": 95.2,
+                "status": "green",
+                "icon": "Heart"
+            },
+            {
+                "id": "ot",
+                "name": "OT",
+                "description": "Operation Theatre",
+                "otifPercentage": 88.5,
+                "status": "amber",
+                "icon": "Activity"
+            },
+            {
+                "id": "ward",
+                "name": "Ward",
+                "description": "General Ward",
+                "otifPercentage": 82.3,
+                "status": "red",
+                "icon": "Bed"
+            },
+            {
+                "id": "daycare",
+                "name": "Daycare",
+                "description": "Daycare Center",
+                "otifPercentage": 91.7,
+                "status": "amber",
+                "icon": "Users"
+            },
+            {
+                "id": "er",
+                "name": "ER",
+                "description": "Emergency Room",
+                "otifPercentage": 78.9,
+                "status": "red",
+                "icon": "Truck"
+            },
+            {
+                "id": "opd",
+                "name": "OPD",
+                "description": "Out Patient Department",
+                "otifPercentage": 96.8,
+                "status": "green",
+                "icon": "Stethoscope"
+            },
+            {
+                "id": "pharmacy",
+                "name": "Pharmacy",
+                "description": "Central Pharmacy",
+                "otifPercentage": 94.5,
+                "status": "green",
+                "icon": "Pill"
+            },
+            {
+                "id": "lab",
+                "name": "Lab",
+                "description": "Laboratory",
+                "otifPercentage": 87.2,
+                "status": "amber",
+                "icon": "FlaskConical"
+            },
+            {
+                "id": "dialysis",
+                "name": "Dialysis",
+                "description": "Dialysis Unit",
+                "otifPercentage": 93.1,
+                "status": "amber",
+                "icon": "Syringe"
+            },
+            {
+                "id": "nicu",
+                "name": "NICU",
+                "description": "Neonatal ICU",
+                "otifPercentage": 97.4,
+                "status": "green",
+                "icon": "Thermometer"
+            },
+            {
+                "id": "oncology",
+                "name": "Oncology",
+                "description": "Oncology Department",
+                "otifPercentage": 89.6,
+                "status": "amber",
+                "icon": "ClipboardList"
+            },
+            {
+                "id": "radiology",
+                "name": "Radiology",
+                "description": "Radiology Department",
+                "otifPercentage": 81.4,
+                "status": "red",
+                "icon": "Building2"
+            }
+        ],
+        "decisionActions": [
+            {
+                "id": "usage-velocity",
+                "name": "Usage / Velocity",
+                "pendingCount": 45,
+                "severity": "high",
+                "description": "Items with abnormal usage patterns or velocity changes",
+                "details": "Fast-moving items requiring immediate attention"
+            },
+            {
+                "id": "stock-position",
+                "name": "Stock Position",
+                "pendingCount": 38,
+                "severity": "high",
+                "description": "Items with critical stock levels",
+                "details": "Overstocking or understocking situations"
+            },
+            {
+                "id": "expiry-shelf-life",
+                "name": "Expiry / Shelf-Life",
+                "pendingCount": 52,
+                "severity": "high",
+                "description": "Items approaching expiry or with short shelf-life",
+                "details": "Medicines expiring within 30-90 days"
+            },
+            {
+                "id": "demand-pattern",
+                "name": "Demand Pattern & Predictability",
+                "pendingCount": 28,
+                "severity": "medium",
+                "description": "Items with unpredictable demand patterns",
+                "details": "Seasonal or irregular demand items"
+            },
+            {
+                "id": "criticality-service",
+                "name": "Criticality & Service Level",
+                "pendingCount": 31,
+                "severity": "high",
+                "description": "Critical items affecting service levels",
+                "details": "Life-saving drugs and essential medicines"
+            },
+            {
+                "id": "value-cost",
+                "name": "Value / Cost Impact",
+                "pendingCount": 22,
+                "severity": "medium",
+                "description": "High-value items requiring cost optimization",
+                "details": "Expensive medicines and cost-sensitive items"
+            },
+            {
+                "id": "policy-handling",
+                "name": "Policy / Handling",
+                "pendingCount": 14,
+                "severity": "medium",
+                "description": "Items requiring special handling or policy compliance",
+                "details": "Controlled substances and special storage items"
+            }
+        ],
+        "decisionActionsSummary": {
+            "totalPendingActions": 230
+        },
+        "forecast": {
+            "overallSurgePercentage": 10,
+            "areas": [
+                {
+                    "id": "icu-forecast",
+                    "areaName": "ICU",
+                    "currentForecast": 15.2,
+                    "previousForecast": 13.8,
+                    "changePercentage": 10.1,
+                    "trend": "up",
+                    "description": "Intensive Care Unit forecast"
+                },
+                {
+                    "id": "ot-forecast",
+                    "areaName": "OT",
+                    "currentForecast": 12.5,
+                    "previousForecast": 11.3,
+                    "changePercentage": 10.6,
+                    "trend": "up",
+                    "description": "Operation Theatre forecast"
+                },
+                {
+                    "id": "ward-forecast",
+                    "areaName": "Ward",
+                    "currentForecast": 22.8,
+                    "previousForecast": 20.7,
+                    "changePercentage": 10.1,
+                    "trend": "up",
+                    "description": "General Ward forecast"
+                },
+                {
+                    "id": "daycare-forecast",
+                    "areaName": "Daycare",
+                    "currentForecast": 8.4,
+                    "previousForecast": 7.6,
+                    "changePercentage": 10.5,
+                    "trend": "up",
+                    "description": "Daycare Center forecast"
+                },
+                {
+                    "id": "er-forecast",
+                    "areaName": "ER",
+                    "currentForecast": 18.9,
+                    "previousForecast": 17.2,
+                    "changePercentage": 9.9,
+                    "trend": "up",
+                    "description": "Emergency Room forecast"
+                },
+                {
+                    "id": "opd-forecast",
+                    "areaName": "OPD",
+                    "currentForecast": 25.3,
+                    "previousForecast": 23.0,
+                    "changePercentage": 10.0,
+                    "trend": "up",
+                    "description": "Out Patient Department forecast"
+                },
+                {
+                    "id": "pharmacy-forecast",
+                    "areaName": "Pharmacy",
+                    "currentForecast": 32.1,
+                    "previousForecast": 29.2,
+                    "changePercentage": 9.9,
+                    "trend": "up",
+                    "description": "Central Pharmacy forecast"
+                },
+                {
+                    "id": "lab-forecast",
+                    "areaName": "Lab",
+                    "currentForecast": 9.7,
+                    "previousForecast": 8.8,
+                    "changePercentage": 10.2,
+                    "trend": "up",
+                    "description": "Laboratory forecast"
+                },
+                {
+                    "id": "dialysis-forecast",
+                    "areaName": "Dialysis",
+                    "currentForecast": 6.5,
+                    "previousForecast": 5.9,
+                    "changePercentage": 10.2,
+                    "trend": "up",
+                    "description": "Dialysis Unit forecast"
+                },
+                {
+                    "id": "nicu-forecast",
+                    "areaName": "NICU",
+                    "currentForecast": 11.3,
+                    "previousForecast": 10.3,
+                    "changePercentage": 9.7,
+                    "trend": "up",
+                    "description": "Neonatal ICU forecast"
+                }
+            ]
+        },
+        "searchSuggestions": {
+            "otif": [
+                "OTIF Overall",
+                "OTIF ICU",
+                "OTIF OT",
+                "OTIF Ward",
+                "OTIF Daycare",
+                "OTIF ER",
+                "OTIF OPD",
+                "OTIF Pharmacy",
+                "OTIF Lab",
+                "OTIF by Department",
+                "OTIF Trends"
+            ],
+            "medicines": [
+                "Paracetamol",
+                "Amoxicillin",
+                "Metformin",
+                "Aspirin",
+                "Ibuprofen",
+                "Omeprazole",
+                "Atorvastatin",
+                "Insulin",
+                "Ciprofloxacin",
+                "Amlodipine",
+                "Losartan",
+                "Ceftriaxone",
+                "Dexamethasone",
+                "Morphine",
+                "Heparin",
+                "Warfarin",
+                "Propofol",
+                "Midazolam",
+                "Fentanyl",
+                "Norepinephrine"
+            ],
+            "actions": [
+                "Usage / Velocity",
+                "Stock Position",
+                "Expiry / Shelf-Life",
+                "Demand Pattern & Predictability",
+                "Criticality & Service Level",
+                "Value / Cost Impact",
+                "Policy / Handling",
+                "Overstocking",
+                "Understocking",
+                "Expiring Soon",
+                "Critical Stock",
+                "High Value Items"
+            ],
+            "labels": [
+                "Critical",
+                "High Priority",
+                "Controlled Substance",
+                "Refrigerated",
+                "Hazardous",
+                "Fast Moving",
+                "Slow Moving",
+                "Expensive",
+                "Generic",
+                "Brand",
+                "Life Saving",
+                "Emergency Stock"
+            ]
+        },
+        "colorCoding": {
+            "otif": {
+                "green": {
+                    "range": "94-100%",
+                    "description": "Healthy performance"
+                },
+                "amber": {
+                    "range": "85-94%",
+                    "description": "Warning - needs attention"
+                },
+                "red": {
+                    "range": "<85%",
+                    "description": "Critical - immediate action required"
+                }
+            }
+        },
+        "metadata": {
+            "lastUpdated": "2025-12-11T09:54:39+05:30",
+            "dataVersion": "1.0",
+            "refreshInterval": 300
+        }
+    }
+}

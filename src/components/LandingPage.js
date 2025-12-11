@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Search, ExternalLink } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Search, ExternalLink, Mic, MicOff } from 'lucide-react';
 import {
   overallOTIF,
   otifDepartments,
@@ -16,6 +16,8 @@ import {
 const LandingPage = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   // Generate filtered search suggestions
   const filteredSuggestions = useMemo(() => {
@@ -42,6 +44,62 @@ const LandingPage = ({ onNavigate }) => {
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion.text);
     setShowSuggestions(false);
+
+    // Navigate to command center if it's an OTIF department suggestion
+    if (suggestion.category === 'OTIF' && suggestion.text.includes('OTIF ')) {
+      const deptName = suggestion.text.replace('OTIF ', '');
+      const dept = otifDepartments.find(d => d.name.toLowerCase() === deptName.toLowerCase());
+      if (dept && onNavigate) {
+        onNavigate('otif-detail', dept);
+      }
+    }
+  };
+
+  // Voice search functionality
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchQuery(transcript);
+        setShowSuggestions(true);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const toggleVoiceSearch = () => {
+    if (!recognitionRef.current) {
+      alert('Voice search is not supported in your browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
   };
 
   return (
@@ -59,9 +117,21 @@ const LandingPage = ({ onNavigate }) => {
               onChange={handleSearchChange}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              placeholder="Search: OTIF, MEDICINE, Action, Labels"
-              className="w-full pl-16 pr-6 py-6 text-xl border-2 border-blue-300 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 shadow-lg bg-white transition-all"
+              placeholder="Search: OTIF, MEDICINE, Action, Labels (Voice or Text)"
+              className="w-full pl-16 pr-20 py-6 text-xl border-2 border-blue-300 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 shadow-lg bg-white transition-all"
             />
+
+            {/* Voice Search Button */}
+            <button
+              onClick={toggleVoiceSearch}
+              className={`absolute right-5 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all ${isListening
+                ? 'bg-red-500 text-white animate-pulse'
+                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                }`}
+              title={isListening ? 'Stop listening' : 'Start voice search'}
+            >
+              {isListening ? <MicOff size={24} /> : <Mic size={24} />}
+            </button>
 
             {/* Auto-suggestions Dropdown */}
             {showSuggestions && filteredSuggestions.length > 0 && (
@@ -89,9 +159,16 @@ const LandingPage = ({ onNavigate }) => {
         <div className="mb-16">
           {/* OTIF Header */}
           <div className="mb-8">
-            <h2 className="text-5xl font-bold text-gray-800">
-              OTIF: <span className="text-green-600">{overallOTIF}%</span>
-            </h2>
+            <div className="flex items-baseline gap-4 flex-wrap">
+              <h2 className="text-5xl font-bold text-gray-800">
+                OTIF: <span className="text-green-600">{overallOTIF}%</span>
+              </h2>
+              <div className="flex items-center gap-4 text-2xl text-gray-600">
+                <span>OT (On-Time): <span className="font-semibold text-blue-600">91%</span></span>
+                <span className="text-gray-300">|</span>
+                <span>IF (In-Full): <span className="font-semibold text-purple-600">89%</span></span>
+              </div>
+            </div>
             <p className="text-gray-600 mt-2">Department-wise On-Time In-Full Performance</p>
           </div>
 
@@ -177,6 +254,12 @@ const LandingPage = ({ onNavigate }) => {
               );
             })}
           </div>
+
+          {/* Note Point */}
+          <div className="mt-4 flex items-start gap-2 text-sm text-slate-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <span className="font-semibold">Note:</span>
+            <span>All actionable insights are based on demand and supply, stock availability</span>
+          </div>
         </div>
 
         {/* Forecast Section */}
@@ -225,6 +308,12 @@ const LandingPage = ({ onNavigate }) => {
                 </button>
               );
             })}
+          </div>
+
+          {/* Note Point */}
+          <div className="mt-4 flex items-start gap-2 text-sm text-slate-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
+            <span className="font-semibold">Note:</span>
+            <span>All data is measured compared with previous week</span>
           </div>
         </div>
 

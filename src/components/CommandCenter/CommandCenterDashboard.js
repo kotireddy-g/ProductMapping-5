@@ -99,32 +99,13 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
                             ))}
                         </div>
                     </div>
-
-                    {/* Reference Fields */}
-                    <div className="mt-4 flex items-center gap-6 text-sm">
-                        <div className="flex items-center gap-2">
-                            <span className="text-slate-600">Ref:</span>
-                            <input
-                                type="text"
-                                placeholder="Reference"
-                                className="px-3 py-1 border border-slate-300 rounded bg-white text-slate-700 w-32"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-slate-600">Date:</span>
-                            <input
-                                type="date"
-                                className="px-3 py-1 border border-slate-300 rounded bg-white text-slate-700"
-                            />
-                        </div>
-                    </div>
                 </div>
             </div>
 
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
                 {/* Section I: Demand-Supply & Medicine Category */}
-                <DemandSupplySection data={departmentData} />
+                <DemandSupplySection data={departmentData} selectedTimePeriod={selectedTimePeriod} />
 
                 {/* Section II: Root Causes */}
                 <RootCausesSection data={departmentData} />
@@ -135,6 +116,7 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
                 {/* Section IV: Demand & Risk Forecast */}
                 <DemandForecastSection
                     data={departmentData}
+                    selectedTimePeriod={selectedTimePeriod}
                     onShowMedicineDetails={() => setShowMedicineModal(true)}
                 />
 
@@ -208,13 +190,13 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
                                     <div className="bg-green-50 p-3 rounded-lg">
                                         <div className="text-xs text-slate-600 mb-1">Cost</div>
                                         <div className="text-xl font-bold text-green-700">
-                                            ₹{departmentData.impactAnalysis.medicineDetails.breakdown.nicu.cost.toLocaleString()}
+                                            RM {departmentData.impactAnalysis.medicineDetails.breakdown.nicu.cost.toLocaleString()}
                                         </div>
                                     </div>
                                     <div className="bg-blue-50 p-3 rounded-lg">
                                         <div className="text-xs text-slate-600 mb-1">Revenue</div>
                                         <div className="text-xl font-bold text-blue-700">
-                                            ₹{departmentData.impactAnalysis.medicineDetails.breakdown.nicu.revenue.toLocaleString()}
+                                            RM {departmentData.impactAnalysis.medicineDetails.breakdown.nicu.revenue.toLocaleString()}
                                         </div>
                                     </div>
                                 </div>

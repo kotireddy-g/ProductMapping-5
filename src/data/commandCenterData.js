@@ -480,7 +480,9 @@ export const getOTIFColorClass = (otif) => {
 
 // Time period options
 export const timePeriods = [
-    { id: 'today', label: 'TODAY', value: 'today' },
-    { id: 'next_month', label: 'NEXT M', value: 'next_month' },
-    { id: '30_days', label: '30 DA', value: '30_days' }
+    { id: 'today', label: 'Today', value: 'today' },
+    { id: 'next_7_days', label: 'Next 7 Days', value: 'next_7_days' },
+    { id: 'next_14_days', label: 'Next 14 Days', value: 'next_14_days' },
+    { id: 'next_21_days', label: 'Next 21 Days', value: 'next_21_days' },
+    { id: 'next_30_days', label: 'Next 30 Days', value: 'next_30_days' }
 ];

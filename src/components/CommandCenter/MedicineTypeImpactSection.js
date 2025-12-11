@@ -4,6 +4,7 @@ import { Filter } from 'lucide-react';
 const MedicineTypeImpactSection = ({ data }) => {
     const { medicineTypeImpact, name } = data;
     const [selectedFilter, setSelectedFilter] = useState('all');
+    const [humanInputs, setHumanInputs] = useState({});
 
     const classifications = [
         { id: 'all', label: 'All', color: 'bg-slate-100 text-slate-700' },
@@ -23,31 +24,40 @@ const MedicineTypeImpactSection = ({ data }) => {
         return 'text-red-700 bg-red-50';
     };
 
+    const handleHumanInputChange = (itemType, value) => {
+        setHumanInputs(prev => ({
+            ...prev,
+            [itemType]: value
+        }));
+    };
+
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                SECTION III: MEDICINE TYPE IMPACTING {name.toUpperCase()}
-            </h2>
+            < h2 className="text-2xl font-bold text-slate-800 mb-2" >
+                Medicine Type Impacting {name.toUpperCase()}
+            </h2 >
 
             {/* Classification Filters */}
-            <div className="mb-6 flex flex-wrap items-center gap-3">
+            < div className="mb-6 flex flex-wrap items-center gap-3" >
                 <Filter size={18} className="text-slate-600" />
-                {classifications.map((classification) => (
-                    <button
-                        key={classification.id}
-                        onClick={() => setSelectedFilter(classification.id)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedFilter === classification.id
+                {
+                    classifications.map((classification) => (
+                        <button
+                            key={classification.id}
+                            onClick={() => setSelectedFilter(classification.id)}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedFilter === classification.id
                                 ? 'ring-2 ring-blue-500 ' + classification.color
                                 : classification.color + ' opacity-60 hover:opacity-100'
-                            }`}
-                    >
-                        {classification.label}
-                    </button>
-                ))}
-            </div>
+                                }`}
+                        >
+                            {classification.label}
+                        </button>
+                    ))
+                }
+            </div >
 
             {/* Medicine Type Impact Table */}
-            <div className="overflow-x-auto">
+            < div className="overflow-x-auto" >
                 <table className="w-full">
                     <thead>
                         <tr className="bg-slate-100 border-b border-slate-300">
@@ -64,7 +74,10 @@ const MedicineTypeImpactSection = ({ data }) => {
                                 OTIF
                             </th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
-                                Action (Assign)
+                                Action (Agent)
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
+                                Human In The Loop
                             </th>
                         </tr>
                     </thead>
@@ -96,17 +109,26 @@ const MedicineTypeImpactSection = ({ data }) => {
                                         <option value="Review">Review</option>
                                     </select>
                                 </td>
+                                <td className="px-4 py-3">
+                                    <input
+                                        type="text"
+                                        value={humanInputs[item.type] || ''}
+                                        onChange={(e) => handleHumanInputChange(item.type, e.target.value)}
+                                        placeholder="Enter reason for low OTIF..."
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-700 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-            </div>
+            </div >
 
             {/* Summary */}
-            <div className="mt-4 text-sm text-slate-600">
+            < div className="mt-4 text-sm text-slate-600" >
                 Showing {filteredImpact.length} of {medicineTypeImpact.length} medicine types
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 
