@@ -12,6 +12,7 @@ import SupplierForecastReport from './components/SupplierReport/SupplierForecast
 import ForecastReviewPage from './components/ForecastReview/ForecastReviewPage';
 import CommandCenterDashboard from './components/CommandCenter/CommandCenterDashboard';
 import DecisionActionsScreen from './components/DecisionActions/DecisionActionsScreen';
+import ForecastInternalDetailsScreen from './components/Forecast/ForecastInternalDetailsScreen';
 import { notifications as initialNotifications } from './data/unifiedPharmaData';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
   const [rcaData, setRcaData] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [selectedAction, setSelectedAction] = useState(null);
+  const [selectedForecastData, setSelectedForecastData] = useState(null);
 
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -88,6 +90,7 @@ function App() {
     setRcaData(null);
     setSelectedDepartment(null);
     setSelectedAction(null);
+    setSelectedForecastData(null);
   };
 
   const handleNavigateToCommandCenter = (departmentData) => {
@@ -106,8 +109,8 @@ function App() {
         setCurrentScreen('decision-actions');
         break;
       case 'forecast-detail':
-        setSelectedCategory(data);
-        setCurrentScreen('forecast-review');
+        setSelectedForecastData(data);
+        setCurrentScreen('forecast-internal-details');
         break;
       default:
         break;
@@ -220,6 +223,18 @@ function App() {
       <>
         <DecisionActionsScreen
           actionType={selectedAction}
+          onBack={handleBackToDashboard}
+        />
+        <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
+      </>
+    );
+  }
+
+  if (currentScreen === 'forecast-internal-details') {
+    return (
+      <>
+        <ForecastInternalDetailsScreen
+          forecastData={selectedForecastData}
           onBack={handleBackToDashboard}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
