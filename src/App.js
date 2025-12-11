@@ -11,6 +11,7 @@ import RCARecommendationsPage from './components/RCA/RCARecommendationsPage';
 import SupplierForecastReport from './components/SupplierReport/SupplierForecastReport';
 import ForecastReviewPage from './components/ForecastReview/ForecastReviewPage';
 import CommandCenterDashboard from './components/CommandCenter/CommandCenterDashboard';
+import DecisionActionsScreen from './components/DecisionActions/DecisionActionsScreen';
 import { notifications as initialNotifications } from './data/unifiedPharmaData';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [rcaData, setRcaData] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [selectedAction, setSelectedAction] = useState(null);
 
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -85,6 +87,7 @@ function App() {
     setSelectedCategory(null);
     setRcaData(null);
     setSelectedDepartment(null);
+    setSelectedAction(null);
   };
 
   const handleNavigateToCommandCenter = (departmentData) => {
@@ -99,8 +102,8 @@ function App() {
         handleNavigateToCommandCenter(data);
         break;
       case 'action-detail':
-        setRcaData(data);
-        setCurrentScreen('rca');
+        setSelectedAction(data);
+        setCurrentScreen('decision-actions');
         break;
       case 'forecast-detail':
         setSelectedCategory(data);
@@ -205,6 +208,18 @@ function App() {
       <>
         <CommandCenterDashboard
           departmentId={selectedDepartment?.id}
+          onBack={handleBackToDashboard}
+        />
+        <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
+      </>
+    );
+  }
+
+  if (currentScreen === 'decision-actions') {
+    return (
+      <>
+        <DecisionActionsScreen
+          actionType={selectedAction}
           onBack={handleBackToDashboard}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
