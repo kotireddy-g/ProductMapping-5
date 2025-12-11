@@ -4,8 +4,8 @@ import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
 
 const Login = ({ onLogin, onSwitchToSignup }) => {
   const [formData, setFormData] = useState({
-    email: 'admin@hospital.com',
-    password: 'password123'
+    email: '',
+    password: ''
   });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -13,39 +13,45 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      onLogin({ email: formData.email, name: formData.email.split('@')[0] });
-    }, 500);
+
+    // Check for specific credentials
+    if (formData.email === 'admin@experienceflow.ai' && formData.password === 'xFlow@321') {
+      setIsLoading(true);
+
+      setTimeout(() => {
+        setIsLoading(false);
+        onLogin({ email: formData.email, name: 'Admin' });
+      }, 500);
+    } else {
+      setErrors({
+        email: 'Invalid credentials',
+        password: 'Invalid credentials'
+      });
+    }
   };
 
-  const handleQuickDemo = () => {
-    onLogin({ email: 'admin@hospital.com', name: 'Admin' });
-  };
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,9 +67,9 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 shadow-lg">
-              <img 
-                src={ExperienceFlowLogo} 
-                alt="ExperienceFlow" 
+              <img
+                src={ExperienceFlowLogo}
+                alt="ExperienceFlow"
                 className="w-16 h-16 rounded-2xl"
               />
             </div>
@@ -83,11 +89,10 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                    errors.email 
-                      ? 'border-red-500 focus:ring-red-200' 
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
+                      ? 'border-red-500 focus:ring-red-200'
                       : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
-                  }`}
+                    }`}
                   placeholder="Enter your email"
                 />
               </div>
@@ -110,11 +115,10 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                    errors.password 
-                      ? 'border-red-500 focus:ring-red-200' 
+                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
+                      ? 'border-red-500 focus:ring-red-200'
                       : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
-                  }`}
+                    }`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -158,15 +162,7 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
             </button>
           </form>
 
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={handleQuickDemo}
-              className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-all border border-slate-200"
-            >
-              Quick Demo Access
-            </button>
-          </div>
+
 
           <div className="mt-6 text-center">
             <p className="text-slate-600">
