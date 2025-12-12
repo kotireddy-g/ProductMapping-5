@@ -80,8 +80,8 @@ const KPIDashboard = () => {
                     <button
                         onClick={() => setTimePeriod('daily')}
                         className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${timePeriod === 'daily'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         Daily
@@ -89,8 +89,8 @@ const KPIDashboard = () => {
                     <button
                         onClick={() => setTimePeriod('weekly')}
                         className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${timePeriod === 'weekly'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         Weekly
@@ -98,8 +98,8 @@ const KPIDashboard = () => {
                     <button
                         onClick={() => setTimePeriod('monthly')}
                         className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${timePeriod === 'monthly'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         Monthly
@@ -187,6 +187,7 @@ const KPIDashboard = () => {
 
     // KPI Card Component with all details inline
     const KPICard = ({ kpiKey, data, icon: Icon }) => {
+        const [showFormula, setShowFormula] = useState(false);
         const colors = getStatusColor(data.status);
         const isPositiveChange = data.change >= 0;
         const chartColor = data.status === 'healthy' ? '#10b981' : data.status === 'warning' ? '#f59e0b' : '#ef4444';
@@ -215,18 +216,41 @@ const KPIDashboard = () => {
                         <span className="text-4xl font-bold text-gray-900">
                             {kpiKey === 'expiryRisk' || kpiKey === 'revenueProtection' ? data.unit : ''}
                             {data.current}
-                            {kpiKey !== 'expiryRisk' && kpiKey !== 'revenueProtection' ? data.unit : ''}
+                            {kpiKey === 'expiryRisk' || kpiKey === 'revenueProtection' ? 'M' : data.unit}
                         </span>
                     </div>
 
                     <div className="flex items-center gap-3 text-sm">
                         <div className={`flex items-center gap-1 font-semibold ${isPositiveChange ? 'text-green-600' : 'text-red-600'}`}>
                             <span>{isPositiveChange ? '↑' : '↓'}</span>
-                            <span>{isPositiveChange ? '+' : ''}{data.change}{data.unit}</span>
+                            <span>
+                                {isPositiveChange ? '+' : ''}
+                                {data.change}
+                                {kpiKey === 'expiryRisk' || kpiKey === 'revenueProtection' ? data.unit + 'M' : data.unit}
+                            </span>
                         </div>
                         <span className="text-gray-500">vs last month</span>
                     </div>
                 </div>
+
+                {/* Formula Section (Collapsible) */}
+                {data.formula && (
+                    <div className="mb-4">
+                        <button
+                            onClick={() => setShowFormula(!showFormula)}
+                            className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                        >
+                            {showFormula ? '▼' : '▶'} Formula
+                        </button>
+                        {showFormula && (
+                            <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <p className="text-xs text-gray-700 font-mono leading-relaxed">
+                                    {data.formula}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Target and Additional Metrics */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
@@ -235,7 +259,7 @@ const KPIDashboard = () => {
                         <div className="text-lg font-bold text-blue-700">
                             {kpiKey === 'expiryRisk' || kpiKey === 'revenueProtection' ? data.unit : ''}
                             {data.target}
-                            {kpiKey !== 'expiryRisk' && kpiKey !== 'revenueProtection' ? data.unit : ''}
+                            {kpiKey === 'expiryRisk' || kpiKey === 'revenueProtection' ? 'M' : data.unit}
                         </div>
                     </div>
 
@@ -313,7 +337,8 @@ const KPIDashboard = () => {
 
                 {/* Why It Matters */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="text-xs text-gray-500 italic">
+                    <div className="text-xs font-semibold text-gray-700 mb-1">Why It Matters</div>
+                    <div className="text-xs text-gray-600 italic">
                         {data.whyItMatters}
                     </div>
                 </div>

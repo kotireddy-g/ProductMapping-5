@@ -1,5 +1,5 @@
 // KPI Dashboard Data for Hospital Pharmacy
-// 6 Critical Performance Indicators with trend data
+// 6 Critical Performance Indicators with detailed formulas and logic
 
 export const kpiData = {
     otif: {
@@ -9,17 +9,20 @@ export const kpiData = {
         target: 95,
         unit: '%',
         change: +2.3,
-        status: 'warning', // 'healthy', 'warning', 'risk'
+        status: 'warning', // 'healthy' (≥95%), 'warning' (90-95%), 'risk' (<90%)
         trend: [89, 90, 91, 89, 92, 93, 92, 92.5],
+        formula: '((Orders Delivered On Time AND In Full) ÷ Total Internal Orders) × 100',
         whyItMatters: 'Delayed surgeries, missed ICU doses, and patient safety depend on this metric',
+        impactAreas: ['Delayed surgeries', 'Missed ICU doses', 'Slow medication rounds', 'Nurse frustration', 'Patient safety risk'],
         trendData: {
             labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
             values: [89, 90, 91, 89, 92, 93, 92, 92.5],
             zones: {
-                healthy: 95,
-                warning: 90,
-                risk: 0
-            }
+                healthy: 95,  // Green band ≥95%
+                warning: 90,  // Yellow band 90-95%
+                risk: 0       // Red band <90%
+            },
+            biggestImpact: 'ICU demand spike in Week 4'
         }
     },
 
@@ -34,11 +37,14 @@ export const kpiData = {
         trend: [88, 89, 87, 88, 87, 88, 87, 87.5],
         understock: 8.5,
         overstock: 4.0,
+        formula: '1 - ((Understock SKUs + Overstock SKUs) ÷ Total Active SKUs)',
         whyItMatters: 'Balance between clinical risk (understock) and financial loss (overstock)',
+        logic: 'Too little stock → OTIF fails, clinical risk. Too much stock → waste and financial loss.',
         trendData: {
             labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
             understock: [9.2, 8.8, 9.5, 8.9, 9.1, 8.7, 8.6, 8.5],
-            overstock: [4.5, 4.3, 4.8, 4.2, 4.1, 4.0, 4.1, 4.0]
+            overstock: [4.5, 4.3, 4.8, 4.2, 4.1, 4.0, 4.1, 4.0],
+            healthScore: [88, 89, 87, 88, 87, 88, 87, 87.5]
         }
     },
 
@@ -56,7 +62,10 @@ export const kpiData = {
             '60days': 0.95,
             '90days': 0.65
         },
+        formula: 'Σ (Stock Quantity × Unit Cost) for all batches expiring within X days',
         whyItMatters: 'Direct impact on hospital profit margin and audit compliance',
+        impactAreas: ['Hospital cost', 'Net profit margin', 'Audit & compliance', 'Pharmacy reputation'],
+        preventionActions: ['Redistribute stock', 'Reduce orders', 'Promote FEFO issuance', 'Reallocate to high-consumption depts'],
         trendData: {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
             '30days': [1.0, 0.95, 1.1, 0.9, 0.88, 0.92, 0.87, 0.85],
@@ -75,11 +84,16 @@ export const kpiData = {
         status: 'healthy',
         trend: [85, 86, 87, 88, 87, 88, 89, 89.2],
         mape: 10.8,
+        formula: 'Forecast Accuracy (%) = 100 - MAPE, where MAPE = (Σ |Forecast - Actual| ÷ Actual) ÷ n × 100',
         whyItMatters: 'Determines optimal ordering, replenishment timing, and inventory levels',
+        impactAreas: ['How much to order', 'When to replenish', 'Stock buffer to maintain'],
+        lowAccuracyRisk: ['Overstock (cash loss)', 'Understock (OTIF failure)'],
+        highAccuracyBenefit: ['Efficient supply', 'Lower inventory', 'Higher OTIF'],
         trendData: {
             labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
             forecast: [1200, 1250, 1180, 1300, 1220, 1280, 1240, 1260],
-            actual: [1150, 1280, 1200, 1280, 1200, 1260, 1220, 1250]
+            actual: [1150, 1280, 1200, 1280, 1200, 1260, 1220, 1250],
+            accuracy: [85, 86, 87, 88, 87, 88, 89, 89.2]
         }
     },
 
@@ -99,7 +113,10 @@ export const kpiData = {
             Wards: 3.2,
             Oncology: 2.5
         },
+        formula: 'Avg Fulfillment Time = Σ (Delivery Time - Request Time) ÷ Total Internal Orders',
         whyItMatters: 'Impacts medication rounds, OT schedules, ER treatment speed, and patient safety',
+        impactAreas: ['Delayed medication rounds', 'OT delays', 'ER treatment delays', 'ICU critical lapses', 'Nurse workload increase'],
+        bottlenecks: ['Central pharmacy', 'Satellite pharmacy', 'Porters', 'Stock availability'],
         trendData: {
             labels: ['ICU', 'ER', 'OT', 'Wards', 'Oncology'],
             values: [1.8, 1.5, 2.1, 3.2, 2.5],
@@ -123,7 +140,14 @@ export const kpiData = {
             OPD: 0.3,
             ER: 0.2
         },
+        formula: 'Revenue Protection = Σ (Cases Avoided Cancellation × Avg Revenue per Case)',
         whyItMatters: 'Direct financial impact—prevents revenue loss from stockouts and service disruptions',
+        stockoutCauses: ['OT case cancellations', 'Chemo session delays', 'OPD prescriptions lost', 'ER diversions', 'Unbillable care delays'],
+        achievements: {
+            yearlyProtection: 'RM 28.5M protected this year through improved supply availability',
+            otCancellationReduction: '62%',
+            chemoSessionsSaved: 145
+        },
         trendData: {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
             monthly: [2.5, 2.7, 2.9, 3.0, 2.8, 3.1, 3.0, 3.2],
