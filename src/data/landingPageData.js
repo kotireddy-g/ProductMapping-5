@@ -93,16 +93,6 @@ export const otifDepartments = [
     description: 'Central Pharmacy'
   },
   {
-    id: 'lab',
-    name: 'Lab',
-    icon: FlaskConical,
-    otifPercentage: 87.2,
-    previousOTIF: 88.9,
-    changePercentage: -1.7,
-    status: 'amber',
-    description: 'Laboratory'
-  },
-  {
     id: 'dialysis',
     name: 'Dialysis',
     icon: Syringe,
@@ -131,6 +121,16 @@ export const otifDepartments = [
     changePercentage: 1.8,
     status: 'amber',
     description: 'Oncology Department'
+  },
+  {
+    id: 'lab',
+    name: 'Lab',
+    icon: FlaskConical,
+    otifPercentage: 87.2,
+    previousOTIF: 88.9,
+    changePercentage: -1.7,
+    status: 'amber',
+    description: 'Laboratory'
   },
   {
     id: 'radiology',

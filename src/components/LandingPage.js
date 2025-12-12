@@ -14,6 +14,7 @@ import {
 } from '../data/landingPageData';
 import { decisionActionSubcategories } from '../data/decisionActionSubcategories';
 import ChordDiagram from './ChordDiagram';
+import KPIDashboard from './KPIDashboard';
 
 const LandingPage = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -182,7 +183,17 @@ const LandingPage = ({ onNavigate }) => {
           {/* OTIF Department Grid Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
             {otifDepartments.map((dept) => {
-              const colors = getOTIFColorByPercentage(dept.otifPercentage);
+              // Special grey styling for Lab and Radiology
+              const isGreyCard = dept.id === 'lab' || dept.id === 'radiology';
+              const colors = isGreyCard
+                ? {
+                  bg: 'bg-gray-100',
+                  border: 'border-gray-300',
+                  iconBg: 'bg-gray-200',
+                  text: 'text-gray-700'
+                }
+                : getOTIFColorByPercentage(dept.otifPercentage);
+
               const IconComponent = dept.icon;
               const changeSign = dept.changePercentage >= 0 ? '+' : '';
               const trendColor = dept.changePercentage >= 0 ? 'text-green-700' : 'text-red-700';
@@ -191,7 +202,13 @@ const LandingPage = ({ onNavigate }) => {
               return (
                 <button
                   key={dept.id}
-                  onClick={() => onNavigate && onNavigate('otif-detail', dept)}
+                  onClick={() => {
+                    if (isGreyCard) {
+                      alert(`${dept.name} is currently disabled and will be enabled after integration.`);
+                    } else {
+                      onNavigate && onNavigate('otif-detail', dept);
+                    }
+                  }}
                   className={`${colors.bg} ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left`}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -288,7 +305,7 @@ const LandingPage = ({ onNavigate }) => {
           {/* Forecast Header */}
           <div className="mb-8">
             <h2 className="text-5xl font-bold text-gray-800">
-              Forecast: <span className="text-blue-600">{forecastSurge}% ↑</span>
+              Forecast: <span className={forecastSurge >= 0 ? 'text-green-600' : 'text-red-600'}>{forecastSurge}% {forecastSurge >= 0 ? '↑' : '↓'}</span>
             </h2>
             <p className="text-gray-600 mt-2">Demand forecast surge across hospital areas</p>
           </div>
@@ -337,6 +354,9 @@ const LandingPage = ({ onNavigate }) => {
             <span>All data is measured compared with previous week</span>
           </div>
         </div>
+
+        {/* KPI Dashboard */}
+        <KPIDashboard />
 
         {/* Footer with Links */}
         <div className="bg-white border-t border-gray-200 shadow-sm mt-12">
