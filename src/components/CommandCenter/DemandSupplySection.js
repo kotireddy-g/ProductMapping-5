@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
     const { demandSupply, medicineCategories, name } = data;
@@ -34,20 +34,6 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
         }));
         xAxisLabel = 'Days';
     }
-
-    // Prepare pie chart data with color based on OTIF percentage
-    const getPieColor = (otif) => {
-        if (otif < 80) return '#ef4444'; // Red
-        if (otif >= 80 && otif <= 90) return '#f59e0b'; // Yellow
-        return '#10b981'; // Green
-    };
-
-    const pieData = medicineCategories.map(cat => ({
-        name: cat.name,
-        value: cat.percentage,
-        otif: cat.otif,
-        color: getPieColor(cat.otif)
-    }));
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -107,74 +93,56 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                     <h3 className="text-lg font-semibold text-slate-700 mb-4">MEDICINE-CATEGORY</h3>
                     <p className="text-sm text-slate-600 mb-4">OTIF Distribution by Category</p>
 
-                    {/* Larger Pie Chart */}
-                    <div className="h-96 flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={pieData}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={true}
-                                    label={({ name, value, otif }) => `${name}: ${value}% (OTIF: ${otif}%)`}
-                                    outerRadius={120}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                >
-                                    {pieData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    formatter={(value, name, props) => {
-                                        const { payload } = props;
-                                        return [
-                                            `${value}% (OTIF: ${payload.otif}%)`,
-                                            payload.name
-                                        ];
-                                    }}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
+                    {/* Heatmap Visualization */}
+                    <div className="h-64 mb-3">
+                        {/* Heatmap Grid */}
+                        <div className="grid grid-cols-2 gap-2 h-full">
+                            {medicineCategories.map((cat, index) => {
+                                const bgColor = cat.otif < 80 ? 'bg-red-500' :
+                                    cat.otif >= 80 && cat.otif <= 90 ? 'bg-yellow-500' :
+                                        'bg-green-500';
+                                const intensity = cat.otif >= 90 ? 'bg-opacity-90' :
+                                    cat.otif >= 80 ? 'bg-opacity-70' :
+                                        'bg-opacity-60';
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className={`${bgColor} ${intensity} rounded-lg p-2 flex flex-col justify-between hover:scale-105 transition-transform cursor-pointer shadow-md`}
+                                    >
+                                        <div>
+                                            <h4 className="text-white font-bold text-sm mb-1">{cat.name}</h4>
+                                            <div className="text-white text-xs opacity-90">
+                                                Distribution: {cat.percentage}%
+                                            </div>
+                                        </div>
+                                        <div className="mt-1">
+                                            <div className="text-white text-xl font-bold">
+                                                {cat.otif}%
+                                            </div>
+                                            <div className="text-white text-xs opacity-90">
+                                                OTIF Score
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
 
-                    {/* Simplified Legend */}
-                    <div className="mt-4 space-y-2">
-                        <div className="grid grid-cols-1 gap-2 text-xs">
-                            {medicineCategories.map((cat, index) => (
-                                <div key={index} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div
-                                            className="w-4 h-4 rounded-full"
-                                            style={{ backgroundColor: getPieColor(cat.otif) }}
-                                        ></div>
-                                        <span className="text-slate-700">{cat.name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-slate-600">{cat.percentage}%</span>
-                                        <span className={`font-semibold ${cat.otif < 80 ? 'text-red-700' :
-                                                cat.otif >= 80 && cat.otif <= 90 ? 'text-yellow-700' :
-                                                    'text-green-700'
-                                            }`}>
-                                            OTIF: {cat.otif}%
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                    {/* Color Coding Legend Only */}
+                    <div className="mt-4 pt-4 border-t border-slate-300 flex items-center gap-4 text-xs text-slate-600">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            <span>Green: OTIF &gt; 90%</span>
                         </div>
-                        <div className="mt-3 pt-3 border-t border-slate-300 flex items-center gap-4 text-xs text-slate-600">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                <span>Green: OTIF &gt; 90%</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                                <span>Yellow: OTIF 80-90%</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                <span>Red: OTIF &lt; 80%</span>
-                            </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <span>Yellow: OTIF 80-90%</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                            <span>Red: OTIF &lt; 80%</span>
                         </div>
                     </div>
                 </div>
