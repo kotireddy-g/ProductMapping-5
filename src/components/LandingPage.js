@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, ExternalLink, Mic, MicOff } from 'lucide-react';
+import { Search, ExternalLink, Mic, MicOff, X, ChevronRight } from 'lucide-react';
 import {
   overallOTIF,
   otifDepartments,
@@ -8,15 +8,19 @@ import {
   forecastSurge,
   forecastAreas,
   searchSuggestions,
-  getOTIFColorClass,
+  getOTIFColorByPercentage,
   getActionColorClass,
   getForecastColorClass
 } from '../data/landingPageData';
+import { decisionActionSubcategories } from '../data/decisionActionSubcategories';
+import ChordDiagram from './ChordDiagram';
 
 const LandingPage = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [selectedAction, setSelectedAction] = useState(null);
+  const [showSubcategoriesModal, setShowSubcategoriesModal] = useState(false);
   const recognitionRef = useRef(null);
 
   // Generate filtered search suggestions
@@ -33,7 +37,7 @@ const LandingPage = ({ onNavigate }) => {
 
     return allSuggestions
       .filter(s => s.text.toLowerCase().includes(query))
-      .slice(0, 8); // Limit to 8 suggestions
+      .slice(0, 8);
   }, [searchQuery]);
 
   const handleSearchChange = (e) => {
@@ -45,7 +49,6 @@ const LandingPage = ({ onNavigate }) => {
     setSearchQuery(suggestion.text);
     setShowSuggestions(false);
 
-    // Navigate to command center if it's an OTIF department suggestion
     if (suggestion.category === 'OTIF' && suggestion.text.includes('OTIF ')) {
       const deptName = suggestion.text.replace('OTIF ', '');
       const dept = otifDepartments.find(d => d.name.toLowerCase() === deptName.toLowerCase());
@@ -161,22 +164,29 @@ const LandingPage = ({ onNavigate }) => {
           <div className="mb-8">
             <div className="flex items-baseline gap-4 flex-wrap">
               <h2 className="text-5xl font-bold text-gray-800">
-                OTIF: <span className="text-green-600">{overallOTIF}%</span>
+                OTIF: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
               </h2>
-              <div className="flex items-center gap-4 text-2xl text-gray-600">
-                <span>OT (On-Time): <span className="font-semibold text-blue-600">91%</span></span>
-                <span className="text-gray-300">|</span>
-                <span>IF (In-Full): <span className="font-semibold text-purple-600">89%</span></span>
-              </div>
+            </div>
+            {/* Sub-header with OT and IF */}
+            <div className="flex items-center gap-4 mt-3 text-lg text-gray-600">
+              <span>OT (On-Time): <span className={`font-semibold ${getOTIFColorByPercentage(91).textColor}`}>91%</span></span>
+              <span className="text-gray-300">|</span>
+              <span>IF (In-Full): <span className={`font-semibold ${getOTIFColorByPercentage(89).textColor}`}>89%</span></span>
             </div>
             <p className="text-gray-600 mt-2">Department-wise On-Time In-Full Performance</p>
           </div>
 
+          {/* Chord Diagram */}
+          <ChordDiagram />
+
           {/* OTIF Department Grid Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
             {otifDepartments.map((dept) => {
-              const colors = getOTIFColorClass(dept.status);
+              const colors = getOTIFColorByPercentage(dept.otifPercentage);
               const IconComponent = dept.icon;
+              const changeSign = dept.changePercentage >= 0 ? '+' : '';
+              const trendColor = dept.changePercentage >= 0 ? 'text-green-700' : 'text-red-700';
+              const trendArrow = dept.changePercentage >= 0 ? '↑' : '↓';
 
               return (
                 <button
@@ -196,6 +206,14 @@ const LandingPage = ({ onNavigate }) => {
                     {dept.name}
                   </h3>
                   <p className="text-xs text-gray-600 mt-1">{dept.description}</p>
+
+                  {/* Percentage Change Indicator */}
+                  <div className="flex items-center justify-between mt-2 text-xs">
+                    <span className="text-gray-600">vs Prev:</span>
+                    <span className={`font-semibold ${trendColor} flex items-center gap-0.5`}>
+                      {changeSign}{Math.abs(dept.changePercentage)}% {trendArrow}
+                    </span>
+                  </div>
                 </button>
               );
             })}
@@ -234,7 +252,10 @@ const LandingPage = ({ onNavigate }) => {
               return (
                 <button
                   key={action.id}
-                  onClick={() => onNavigate && onNavigate('action-detail', action)}
+                  onClick={() => {
+                    setSelectedAction(action);
+                    setShowSubcategoriesModal(true);
+                  }}
                   className={`${colors.bg} ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left relative`}
                 >
                   {/* Pending Count Badge */}
@@ -317,38 +338,94 @@ const LandingPage = ({ onNavigate }) => {
           </div>
         </div>
 
-      </div>
-
-      {/* Footer with Links */}
-      <div className="bg-white border-t border-gray-200 shadow-sm mt-12">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="text-sm text-gray-600">
-              © 2024 Experienceflow Software Technologies Private Limited. All rights reserved.
-            </div>
-            <div className="flex items-center gap-6 text-sm">
-              <a
-                href="https://experienceflow.ai/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
-              >
-                Privacy Policy
-                <ExternalLink size={14} />
-              </a>
-              <a
-                href="https://experienceflow.ai/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
-              >
-                Terms & Conditions
-                <ExternalLink size={14} />
-              </a>
+        {/* Footer with Links */}
+        <div className="bg-white border-t border-gray-200 shadow-sm mt-12">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="text-sm text-gray-600">
+                © 2024 Experienceflow Software Technologies Private Limited. All rights reserved.
+              </div>
+              <div className="flex items-center gap-6 text-sm">
+                <a
+                  href="https://experienceflow.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
+                >
+                  Privacy Policy
+                  <ExternalLink size={14} />
+                </a>
+                <a
+                  href="https://experienceflow.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
+                >
+                  Terms & Conditions
+                  <ExternalLink size={14} />
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Decision Action Subcategories Modal */}
+      {showSubcategoriesModal && selectedAction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className={`${getActionColorClass(selectedAction.severity).bg} ${getActionColorClass(selectedAction.severity).border} border-b-2 p-6 flex items-center justify-between`}>
+              <div>
+                <h3 className={`text-2xl font-bold ${getActionColorClass(selectedAction.severity).text}`}>
+                  {selectedAction.name}
+                </h3>
+                <p className="text-sm text-gray-700 mt-1">{selectedAction.description}</p>
+                <p className="text-xs text-gray-600 mt-2">Select a subcategory to view detailed actions</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowSubcategoriesModal(false);
+                  setSelectedAction(null);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={24} className="text-gray-600" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {decisionActionSubcategories[selectedAction.id]?.map((subcategory) => (
+                  <button
+                    key={subcategory.id}
+                    onClick={() => {
+                      setShowSubcategoriesModal(false);
+                      onNavigate && onNavigate('action-detail', { ...selectedAction, subcategory });
+                    }}
+                    className="bg-white border-2 border-gray-200 hover:border-blue-500 rounded-lg p-4 transition-all hover:shadow-lg text-left group"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                        {subcategory.name}
+                      </h4>
+                      <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">
+                        {subcategory.count}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-2">{subcategory.description}</p>
+                    <div className="flex items-center gap-1 text-blue-600 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span>View Details</span>
+                      <ChevronRight size={14} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

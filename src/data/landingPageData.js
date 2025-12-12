@@ -27,6 +27,8 @@ export const otifDepartments = [
     name: 'ICU',
     icon: Heart,
     otifPercentage: 95.2,
+    previousOTIF: 93.8,
+    changePercentage: 1.4,
     status: 'green',
     description: 'Intensive Care Unit'
   },
@@ -35,6 +37,8 @@ export const otifDepartments = [
     name: 'OT',
     icon: Activity,
     otifPercentage: 88.5,
+    previousOTIF: 90.2,
+    changePercentage: -1.7,
     status: 'amber',
     description: 'Operation Theatre'
   },
@@ -43,6 +47,8 @@ export const otifDepartments = [
     name: 'Ward',
     icon: Bed,
     otifPercentage: 82.3,
+    previousOTIF: 84.1,
+    changePercentage: -1.8,
     status: 'red',
     description: 'General Ward'
   },
@@ -51,6 +57,8 @@ export const otifDepartments = [
     name: 'Daycare',
     icon: Users,
     otifPercentage: 91.7,
+    previousOTIF: 89.3,
+    changePercentage: 2.4,
     status: 'amber',
     description: 'Daycare Center'
   },
@@ -59,6 +67,8 @@ export const otifDepartments = [
     name: 'ER',
     icon: Truck,
     otifPercentage: 78.9,
+    previousOTIF: 81.5,
+    changePercentage: -2.6,
     status: 'red',
     description: 'Emergency Room'
   },
@@ -67,6 +77,8 @@ export const otifDepartments = [
     name: 'OPD',
     icon: Stethoscope,
     otifPercentage: 96.8,
+    previousOTIF: 95.1,
+    changePercentage: 1.7,
     status: 'green',
     description: 'Out Patient Department'
   },
@@ -75,6 +87,8 @@ export const otifDepartments = [
     name: 'Pharmacy',
     icon: Pill,
     otifPercentage: 94.5,
+    previousOTIF: 93.2,
+    changePercentage: 1.3,
     status: 'green',
     description: 'Central Pharmacy'
   },
@@ -83,6 +97,8 @@ export const otifDepartments = [
     name: 'Lab',
     icon: FlaskConical,
     otifPercentage: 87.2,
+    previousOTIF: 88.9,
+    changePercentage: -1.7,
     status: 'amber',
     description: 'Laboratory'
   },
@@ -91,6 +107,8 @@ export const otifDepartments = [
     name: 'Dialysis',
     icon: Syringe,
     otifPercentage: 93.1,
+    previousOTIF: 91.4,
+    changePercentage: 1.7,
     status: 'amber',
     description: 'Dialysis Unit'
   },
@@ -99,6 +117,8 @@ export const otifDepartments = [
     name: 'NICU',
     icon: Thermometer,
     otifPercentage: 97.4,
+    previousOTIF: 96.2,
+    changePercentage: 1.2,
     status: 'green',
     description: 'Neonatal ICU'
   },
@@ -107,6 +127,8 @@ export const otifDepartments = [
     name: 'Oncology',
     icon: ClipboardList,
     otifPercentage: 89.6,
+    previousOTIF: 87.8,
+    changePercentage: 1.8,
     status: 'amber',
     description: 'Oncology Department'
   },
@@ -115,6 +137,8 @@ export const otifDepartments = [
     name: 'Radiology',
     icon: Building2,
     otifPercentage: 81.4,
+    previousOTIF: 83.7,
+    changePercentage: -2.3,
     status: 'red',
     description: 'Radiology Department'
   }
@@ -256,18 +280,18 @@ export const forecastAreas = [
     id: 'lab-forecast',
     areaName: 'Lab',
     currentForecast: 9.7,
-    previousForecast: 8.8,
-    changePercentage: 10.2,
-    trend: 'up',
+    previousForecast: 11.2,
+    changePercentage: -13.4,
+    trend: 'down',
     description: 'Laboratory forecast'
   },
   {
     id: 'dialysis-forecast',
     areaName: 'Dialysis',
     currentForecast: 6.5,
-    previousForecast: 5.9,
-    changePercentage: 10.2,
-    trend: 'up',
+    previousForecast: 8.1,
+    changePercentage: -19.8,
+    trend: 'down',
     description: 'Dialysis Unit forecast'
   },
   {
@@ -348,7 +372,37 @@ export const searchSuggestions = {
   ]
 };
 
-// Helper function to get color class based on OTIF status
+// Helper function to get color class based on OTIF percentage
+// Green: 94-100%, Amber: 85-94%, Red: <85%
+export const getOTIFColorByPercentage = (percentage) => {
+  if (percentage >= 94) {
+    return {
+      bg: 'bg-green-50',
+      border: 'border-green-300',
+      text: 'text-green-800',
+      iconBg: 'bg-green-100',
+      textColor: 'text-green-600'
+    };
+  } else if (percentage >= 85) {
+    return {
+      bg: 'bg-amber-50',
+      border: 'border-amber-300',
+      text: 'text-amber-800',
+      iconBg: 'bg-amber-100',
+      textColor: 'text-amber-600'
+    };
+  } else {
+    return {
+      bg: 'bg-red-50',
+      border: 'border-red-300',
+      text: 'text-red-800',
+      iconBg: 'bg-red-100',
+      textColor: 'text-red-600'
+    };
+  }
+};
+
+// Helper function to get color class based on OTIF status (legacy)
 export const getOTIFColorClass = (status) => {
   switch (status) {
     case 'green':
