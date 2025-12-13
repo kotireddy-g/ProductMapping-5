@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
 import Header from './components/Layout/Header';
@@ -14,6 +14,8 @@ import CommandCenterDashboard from './components/CommandCenter/CommandCenterDash
 import DecisionActionsScreen from './components/DecisionActions/DecisionActionsScreen';
 import ForecastInternalDetailsScreen from './components/Forecast/ForecastInternalDetailsScreen';
 import { notifications as initialNotifications } from './data/unifiedPharmaData';
+import notificationsService from './services/notificationsService';
+import authService from './services/authService';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -32,6 +34,40 @@ function App() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const [toasts, setToasts] = useState([]);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const token = authService.getToken();
+    const user = authService.getUser();
+
+    if (token && user) {
+      setIsAuthenticated(true);
+      setCurrentUser(user);
+    }
+  }, []);
+
+  // Fetch notifications when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchNotifications = async () => {
+        try {
+          const response = await notificationsService.getNotifications();
+          if (response.success && response.data) {
+            setNotifications(response.data.notifications);
+          }
+        } catch (error) {
+          console.error('Failed to fetch notifications:', error);
+          // Keep using mock notifications as fallback
+        }
+      };
+
+      fetchNotifications();
+
+      // Optional: Refresh notifications every 30 seconds
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
 
   const loginToasts = [
     { id: 1, type: 'critical', title: 'Critical Stockout Alert', message: '35 products are currently stocked out', duration: 5000 },
@@ -58,6 +94,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    authService.logout(); // Clear tokens from localStorage
     setCurrentUser(null);
     setIsAuthenticated(false);
     setAuthView('login');

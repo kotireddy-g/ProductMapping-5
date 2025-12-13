@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, Maximize2, X } from 'lucide-react';
+import supplyDemandService from '../services/supplyDemandService';
 
-// Data structures
+// Mock data structures (fallback)
 const hospitalSupply = {
   level1: [
     { id: 'emergency_critical', name: 'Emergency & Critical Care', color: '#ef4444' },
@@ -301,13 +302,34 @@ const getTATValue = (nodeId) => {
 };
 
 // Generate CONSISTENT connections - values won't change
-const generateConnections = (supplyItems, demandItems) => {
+const generateConnections = (supplyItems, demandItems, flowsData) => {
+  // If we have real flow data from API, use it
+  if (flowsData && flowsData.length > 0) {
+    // Filter flows to only include connections between current supply and demand items
+    const supplyIds = supplyItems.map(s => s.id);
+    const demandIds = demandItems.map(d => d.id);
+
+    return flowsData
+      .filter(flow => supplyIds.includes(flow.source) && demandIds.includes(flow.target))
+      .map(flow => ({
+        source: flow.source,
+        target: flow.target,
+        value: flow.quantity || flow.value || 0,
+        speed: flow.velocity || flow.speed || 'medium',
+        otif: flow.otif?.toFixed(1) || '0.0',
+        tat: flow.tat?.toFixed(1) || flow.timeHours?.toFixed(1) || '0.0',
+        ordered: flow.ordered,
+        delivered: flow.delivered
+      }));
+  }
+
+  // Fallback to mock data generation if no API data
   const connections = [];
   const speeds = ['fast', 'medium', 'slow', 'occasional'];
 
   supplyItems.forEach((supply) => {
     demandItems.forEach((demand) => {
-      const combinedId = `${supply.id} -${demand.id} `;
+      const combinedId = `${supply.id}-${demand.id}`;
       const hash = hashCode(combinedId);
 
       // Use hash to determine if connection exists (consistent)
@@ -344,6 +366,7 @@ const generateConnections = (supplyItems, demandItems) => {
 };
 
 const HospitalSankeyDiagram = () => {
+  // Drill-down state
   const [supplyLevel, setSupplyLevel] = useState(1);
   const [demandLevel, setDemandLevel] = useState(1);
   const [supplyPath, setSupplyPath] = useState([]);
@@ -353,29 +376,73 @@ const HospitalSankeyDiagram = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const svgRef = useRef(null);
 
+  // API data state
+  const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Use API data if available, otherwise fall back to mock data
+  const supplyData = apiData?.supply || hospitalSupply;
+  const demandData = apiData?.demand || hospitalDemand;
+  const flowsData = apiData?.flows || []; // Empty array fallback - will use mock generation in generateConnections
+
+  // Fetch data from API on mount and when drill-down changes
+  useEffect(() => {
+    const fetchFlowData = async () => {
+      try {
+        setLoading(true);
+
+        // Build query parameters for drill-down
+        const params = {};
+        if (supplyLevel > 1 && supplyPath.length > 0) {
+          params.supplyLevel = supplyLevel;
+          params.supplyParent = supplyPath[supplyLevel - 2];
+        }
+        if (demandLevel > 1 && demandPath.length > 0) {
+          params.demandLevel = demandLevel;
+        }
+
+        const response = await supplyDemandService.getFlowData(params);
+
+        if (response.success && response.data) {
+          setApiData(response.data);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch supply-demand flow data:', err);
+        setError('Failed to load data. Using cached data.');
+        // Keep using mock data as fallback
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFlowData();
+  }, [supplyLevel, demandLevel, supplyPath, demandPath]);
+
   // Get current items based on drill-down state
   const getCurrentSupplyItems = () => {
-    if (supplyLevel === 1) return hospitalSupply.level1;
+    if (supplyLevel === 1) return supplyData.level1;
     if (supplyLevel === 2) {
       const parentId = supplyPath[0];
-      return hospitalSupply.level2[parentId] || [];
+      return supplyData.level2[parentId] || [];
     }
     if (supplyLevel === 3) {
       const parentId = supplyPath[1];
-      return hospitalSupply.level3[parentId] || [];
+      return supplyData.level3[parentId] || [];
     }
     return [];
   };
 
   const getCurrentDemandItems = () => {
-    if (demandLevel === 1) return hospitalDemand.level1;
+    if (demandLevel === 1) return demandData.level1;
     if (demandLevel === 2) {
       const parentId = demandPath[0];
-      return hospitalDemand.level2[parentId] || [];
+      return demandData.level2[parentId] || [];
     }
     if (demandLevel === 3) {
       const parentId = demandPath[1];
-      return hospitalDemand.level3[parentId] || [];
+      return demandData.level3[parentId] || [];
     }
     return [];
   };
@@ -383,10 +450,10 @@ const HospitalSankeyDiagram = () => {
   const supplyItems = getCurrentSupplyItems();
   const demandItems = getCurrentDemandItems();
 
-  // Update connections when items change
+  // Update connections when items or flows change
   useEffect(() => {
-    setConnections(generateConnections(supplyItems, demandItems));
-  }, [supplyItems, demandItems]);
+    setConnections(generateConnections(supplyItems, demandItems, flowsData));
+  }, [supplyItems, demandItems, flowsData]);
 
   // Handle supply node click
   const handleSupplyClick = (item) => {
@@ -567,8 +634,28 @@ Z
 
   return (
     <>
+      {/* Loading Indicator */}
+      {loading && (
+        <div className="flex items-center justify-center h-96">
+          <div className="flex flex-col items-center gap-4">
+            <svg className="animate-spin h-12 w-12 text-blue-600" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <span className="text-slate-600 font-medium">Loading supply-demand flow data...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && !loading && (
+        <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-4">
+          <p className="text-yellow-800 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Full-Screen Modal */}
-      {isFullScreen && (
+      {!loading && isFullScreen && (
         <div className="fixed inset-0 z-50 bg-white overflow-auto">
           {/* Close Button */}
           <button
@@ -648,7 +735,7 @@ Z
 
                     return (
                       <path
-                        key={`${sourceNode.id}-${conn.target}`}
+                        key={`${sourceNode.id} -${conn.target} `}
                         d={createFlowPath(sourceNode, targetNode, sourceConnections, connIdx)}
                         fill={speedColors[conn.speed]}
                         opacity={0.5}
