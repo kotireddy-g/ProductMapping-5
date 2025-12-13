@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
+import authService from '../../services/authService';
 
 const Login = ({ onLogin, onSwitchToSignup }) => {
   const [formData, setFormData] = useState({
@@ -35,19 +36,62 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
 
     if (!validateForm()) return;
 
-    // Check for specific credentials
-    if (formData.email === 'admin@experienceflow.ai' && formData.password === 'xFlow@321') {
-      setIsLoading(true);
+    setIsLoading(true);
+    setErrors({});
 
-      setTimeout(() => {
-        setIsLoading(false);
-        onLogin({ email: formData.email, name: 'Admin' });
-      }, 500);
-    } else {
-      setErrors({
-        email: 'Invalid credentials',
-        password: 'Invalid credentials'
-      });
+    try {
+      // Call real login API
+      const response = await authService.login(formData.email, formData.password);
+
+      if (response.success && response.data) {
+        // Login successful
+        onLogin(response.data.user);
+      } else {
+        setErrors({
+          email: 'Login failed. Please try again.',
+          password: 'Login failed. Please try again.'
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+
+      // Handle different error types
+      if (error.response) {
+        // Server responded with error
+        const status = error.response.status;
+        const message = error.response.data?.message || 'Login failed';
+
+        if (status === 401) {
+          setErrors({
+            email: 'Invalid email or password',
+            password: 'Invalid email or password'
+          });
+        } else if (status === 400) {
+          setErrors({
+            email: message,
+            password: message
+          });
+        } else {
+          setErrors({
+            email: 'Server error. Please try again later.',
+            password: 'Server error. Please try again later.'
+          });
+        }
+      } else if (error.request) {
+        // Request made but no response
+        setErrors({
+          email: 'Network error. Please check your connection.',
+          password: 'Network error. Please check your connection.'
+        });
+      } else {
+        // Something else happened
+        setErrors({
+          email: 'An unexpected error occurred.',
+          password: 'An unexpected error occurred.'
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -90,8 +134,8 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
+                    ? 'border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
                     }`}
                   placeholder="Enter your email"
                 />
@@ -116,8 +160,8 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
+                    ? 'border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
                     }`}
                   placeholder="Enter your password"
                 />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Target,
     Package,
@@ -7,9 +7,37 @@ import {
     Clock,
     DollarSign
 } from 'lucide-react';
-import { kpiData, getStatusColor } from '../data/kpiData';
+import { kpiData as mockKpiData, getStatusColor } from '../data/kpiData';
+import kpiService from '../services/kpiService';
 
 const KPIDashboard = () => {
+    const [kpiData, setKpiData] = useState(mockKpiData);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch KPI data from API on component mount
+    useEffect(() => {
+        const fetchKPIData = async () => {
+            try {
+                setLoading(true);
+                const response = await kpiService.getAllKPIs();
+                
+                if (response.success && response.data) {
+                    setKpiData(response.data);
+                    setError(null);
+                }
+            } catch (err) {
+                console.error('Failed to fetch KPI data:', err);
+                setError('Failed to load KPI data. Using cached data.');
+                // Keep using mock data as fallback
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchKPIData();
+    }, []);
+
     // Professional line chart component with axes and tooltip
     const TrendChart = ({ data, color = '#3b82f6', kpiKey }) => {
         const [timePeriod, setTimePeriod] = useState('weekly');
@@ -67,7 +95,7 @@ const KPIDashboard = () => {
             return { x, y, value };
         });
 
-        const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x},${p.y}`).join(' ');
+        const linePath = points.map((p, i) => `${ i === 0 ? 'M' : 'L' } ${ p.x },${ p.y } `).join(' ');
 
         // X-axis labels - show every nth label to avoid crowding
         const labelInterval = Math.ceil(labels.length / 10);
@@ -79,28 +107,31 @@ const KPIDashboard = () => {
                 <div className="flex items-center gap-2 mb-3">
                     <button
                         onClick={() => setTimePeriod('daily')}
-                        className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${timePeriod === 'daily'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
+                        className={`px - 3 py - 1 rounded - md text - xs font - medium transition - colors ${
+    timePeriod === 'daily'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+} `}
                     >
                         Daily
                     </button>
                     <button
                         onClick={() => setTimePeriod('weekly')}
-                        className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${timePeriod === 'weekly'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
+                        className={`px - 3 py - 1 rounded - md text - xs font - medium transition - colors ${
+    timePeriod === 'weekly'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+} `}
                     >
                         Weekly
                     </button>
                     <button
                         onClick={() => setTimePeriod('monthly')}
-                        className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${timePeriod === 'monthly'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
+                        className={`px - 3 py - 1 rounded - md text - xs font - medium transition - colors ${
+    timePeriod === 'monthly'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+} `}
                     >
                         Monthly
                     </button>
@@ -172,8 +203,8 @@ const KPIDashboard = () => {
                         <div
                             className="absolute bg-gray-900 text-white px-3 py-2 rounded-lg shadow-xl text-xs font-semibold z-10 pointer-events-none"
                             style={{
-                                left: `${hoveredPoint.x}px`,
-                                top: `${hoveredPoint.y - 40}px`,
+                                left: `${ hoveredPoint.x } px`,
+                                top: `${ hoveredPoint.y - 40 } px`,
                                 transform: 'translateX(-50%)'
                             }}
                         >
@@ -193,11 +224,11 @@ const KPIDashboard = () => {
         const chartColor = data.status === 'healthy' ? '#10b981' : data.status === 'warning' ? '#f59e0b' : '#ef4444';
 
         return (
-            <div className={`bg-white rounded-xl shadow-md border-2 ${colors.border} p-6 hover:shadow-lg transition-shadow`}>
+            <div className={`bg - white rounded - xl shadow - md border - 2 ${ colors.border } p - 6 hover: shadow - lg transition - shadow`}>
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${colors.bg}`}>
+                        <div className={`p - 2 rounded - lg ${ colors.bg } `}>
                             <Icon size={20} className={colors.text} />
                         </div>
                         <div>
@@ -205,7 +236,7 @@ const KPIDashboard = () => {
                             <p className="text-xs text-gray-500">{data.subtitle}</p>
                         </div>
                     </div>
-                    <div className={`px-2 py-1 rounded-full text-xs font-semibold ${colors.badge} capitalize`}>
+                    <div className={`px - 2 py - 1 rounded - full text - xs font - semibold ${ colors.badge } capitalize`}>
                         {data.status}
                     </div>
                 </div>
@@ -221,7 +252,7 @@ const KPIDashboard = () => {
                     </div>
 
                     <div className="flex items-center gap-3 text-sm">
-                        <div className={`flex items-center gap-1 font-semibold ${isPositiveChange ? 'text-green-600' : 'text-red-600'}`}>
+                        <div className={`flex items - center gap - 1 font - semibold ${ isPositiveChange ? 'text-green-600' : 'text-red-600' } `}>
                             <span>{isPositiveChange ? '↑' : '↓'}</span>
                             <span>
                                 {isPositiveChange ? '+' : ''}
@@ -293,9 +324,9 @@ const KPIDashboard = () => {
                     )}
 
                     {(kpiKey === 'otif' || kpiKey === 'fulfillmentTime') && (
-                        <div className={`${colors.bg} rounded-lg p-3 border ${colors.border}`}>
+                        <div className={`${ colors.bg } rounded - lg p - 3 border ${ colors.border } `}>
                             <div className="text-xs text-gray-600 mb-1">Gap</div>
-                            <div className={`text-lg font-bold ${colors.text}`}>
+                            <div className={`text - lg font - bold ${ colors.text } `}>
                                 {Math.abs(data.current - data.target).toFixed(1)}{data.unit}
                             </div>
                         </div>

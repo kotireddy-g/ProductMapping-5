@@ -6,6 +6,7 @@
   "homepage": "/product-mapping",
   "dependencies": {
     "autoprefixer": "^10.4.16",
+    "axios": "^1.13.2",
     "d3": "^7.9.0",
     "d3-sankey": "^0.12.3",
     "lucide-react": "^0.263.1",
