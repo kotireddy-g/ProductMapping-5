@@ -1,54 +1,54 @@
 #!/bin/bash
+# Deployment script for Hospital Pharmacy OTIF Application
+# Deploys to: http://192.168.1.111/product-mapping/
 
-set -e
+echo "🚀 Starting deployment for Product Mapping Application..."
 
-DEPLOY_DIR="/var/www/product-mapping"
-ZIP_FILE="product-mapping.zip"
-LOG_FILE="/var/log/product-mapping-deploy.log"
+# Navigate to project directory
+cd "/Users/exflow_koti_air/Downloads/ProductMapping 5"
 
-echo ""
-echo "---------------------------------------------------------"
-echo " Starting Deployment… Sit back, relax, and have chai"
-echo "---------------------------------------------------------"
-echo ""
+# Clean previous build
+echo "🧹 Cleaning previous build..."
+rm -rf build
 
-echo "Building production build... Please wait...Bro"
+# Build the application
+echo "📦 Building application..."
 npm run build
 
-echo ""
-echo " Build is ready! Now packing your files into a ZIP."
-rm -f $ZIP_FILE
+# Verify base path is correct
+echo "✅ Verifying base path..."
+grep "assets" build/index.html
+# Should show: /product-mapping/assets/...
+
+# Package the build
+echo "📦 Packaging build..."
 cd build
-zip -r ../$ZIP_FILE . >/dev/null
+zip -r ../product-mapping.zip .
 cd ..
 
-echo ""
-echo "Deploying locally.. Run Fast"
-sudo mkdir -p $DEPLOY_DIR
-sudo rm -rf $DEPLOY_DIR/*
+# Upload to server
+echo "📤 Uploading to server..."
+scp product-mapping.zip exflow@192.168.1.111:/tmp/
 
-sudo unzip -o $ZIP_FILE -d $DEPLOY_DIR >/dev/null
+# Deploy on server
+echo "🚀 Deploying on server..."
+ssh exflow@192.168.1.111 << 'ENDSSH'
+cd /var/www
+sudo rm -rf product-mapping/*
+sudo unzip -o /tmp/product-mapping.zip -d product-mapping
+sudo chown -R www-data:www-data product-mapping
+sudo chmod -R 755 product-mapping
+rm /tmp/product-mapping.zip
+ENDSSH
+
+# Clean up local zip
+echo "🧹 Cleaning up..."
+rm product-mapping.zip
 
 echo ""
-echo "Fixing permissions... All permissions is done ..check once  "
-sudo chown -R www-data:www-data $DEPLOY_DIR
-sudo chmod -R 755 $DEPLOY_DIR
-
+echo "✅ Deployment Complete!"
+echo "🌐 Visit: http://192.168.1.111/product-mapping/"
 echo ""
-echo "Restarting NGINX... Wake up bro !!!"
-sudo systemctl restart nginx
-
-echo ""
-echo "Cleaning completed... cleaning payment amount is pending !!!"
-rm -f $ZIP_FILE
-
-echo ""
-echo "---------------------------------------------------------"
-echo "Deployment Done... Enjoy Happy Life .....don't run run again again.."
-echo "deploy script is now working PERFECTLY"
-echo "If you get issues... Ping me"
-echo "---------------------------------------------------------"
-echo ""
-echo "site is live at:"
-echo "http://13.204.252.47/product-mapping/"
-echo ""
+echo "📝 Login credentials:"
+echo "   Email: admin@experienceflow.ai"
+echo "   Password: xFlow@321"
