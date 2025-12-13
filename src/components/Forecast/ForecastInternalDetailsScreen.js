@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
-import { ArrowLeft, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, AlertCircle, CheckCircle, X } from 'lucide-react';
 
-const ForecastInternalDetailsScreen = ({ forecastData, onBack }) => {
+const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastArea = 'ICU' }) => {
     const [selectedPeriod, setSelectedPeriod] = useState('Today');
-    const [selectedCategory, setSelectedCategory] = useState('ICU 24/7');
     const [selectedMedicine, setSelectedMedicine] = useState('');
     const [whatIfScenario, setWhatIfScenario] = useState('do-nothing');
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
 
     const periods = ['Today', 'Next 7 Days', 'Next 14 Days', 'Next 21 Days', 'Next 30 Days'];
-    const categories = ['ICU 24/7', 'OT', 'Emergency', 'General Ward', 'Pharmacy'];
 
-    // Internal departments based on selected category
+    // Show toast notification
+    const showToastNotification = (message) => {
+        setToastMessage(message);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 4000);
+    };
+
+    // Internal departments based on selected forecast area
     const getInternalDepartments = () => {
-        if (selectedCategory === 'ICU 24/7') {
+        if (selectedForecastArea === 'ICU') {
             return [
                 { id: 1, name: 'NICU', demand: 450, stockAvailable: 1200, forecast: 520, additional: 70, status: 'critical' },
                 { id: 2, name: 'ICCU', demand: 380, stockAvailable: 950, forecast: 420, additional: 40, status: 'warning' },
@@ -22,8 +29,8 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack }) => {
             ];
         }
         return [
-            { id: 1, name: `${selectedCategory} - Unit 1`, demand: 300, stockAvailable: 800, forecast: 350, additional: 50, status: 'normal' },
-            { id: 2, name: `${selectedCategory} - Unit 2`, demand: 250, stockAvailable: 650, forecast: 280, additional: 30, status: 'normal' }
+            { id: 1, name: `${selectedForecastArea} - Unit 1`, demand: 300, stockAvailable: 800, forecast: 350, additional: 50, status: 'normal' },
+            { id: 2, name: `${selectedForecastArea} - Unit 2`, demand: 250, stockAvailable: 650, forecast: 280, additional: 30, status: 'normal' }
         ];
     };
 
@@ -136,7 +143,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack }) => {
 
                     <div className="flex items-center justify-between mb-6">
                         <h1 className="text-4xl font-bold text-slate-800">
-                            Forecast Internal Details
+                            {selectedForecastArea.toUpperCase()} FORECAST
                         </h1>
 
                         {/* Periodic Filters - Moved to Right */}
@@ -146,30 +153,14 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack }) => {
                                     key={period}
                                     onClick={() => setSelectedPeriod(period)}
                                     className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${selectedPeriod === period
-                                            ? 'bg-blue-600 text-white shadow-md'
-                                            : 'bg-white text-slate-700 border border-slate-300 hover:border-blue-500'
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'bg-white text-slate-700 border border-slate-300 hover:border-blue-500'
                                         }`}
                                 >
                                     {period}
                                 </button>
                             ))}
                         </div>
-                    </div>
-
-                    {/* Category Filter Buttons */}
-                    <div className="flex items-center gap-3">
-                        {categories.map((category) => (
-                            <button
-                                key={category}
-                                onClick={() => setSelectedCategory(category)}
-                                className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all ${selectedCategory === category
-                                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg'
-                                    : 'bg-white text-slate-700 border-2 border-slate-300 hover:border-purple-500'
-                                    }`}
-                            >
-                                {category}
-                            </button>
-                        ))}
                     </div>
                 </div>
             </div>
@@ -180,7 +171,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack }) => {
                 <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
                     <div className="px-6 py-4 bg-gradient-to-r from-slate-100 to-slate-50 border-b border-slate-200">
                         <h2 className="text-xl font-bold text-slate-800">
-                            {selectedCategory} - Internal Departments
+                            {selectedForecastArea.toUpperCase()} - Internal Departments
                         </h2>
                     </div>
 
@@ -236,10 +227,16 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack }) => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-center gap-2">
-                                                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
+                                                <button
+                                                    onClick={() => showToastNotification(`✓ Order placed for ${dept.name}`)}
+                                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+                                                >
                                                     Order
                                                 </button>
-                                                <button className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors">
+                                                <button
+                                                    onClick={() => showToastNotification(`✓ Redistribution initiated for ${dept.name}`)}
+                                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors"
+                                                >
                                                     Redistribute
                                                 </button>
                                             </div>
@@ -415,7 +412,10 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack }) => {
                                         </div>
                                     </div>
 
-                                    <button className="w-full mt-4 px-4 py-2 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-900 transition-colors">
+                                    <button
+                                        onClick={() => showToastNotification(`✓ Selected: ${rec.title} - ${rec.action}`)}
+                                        className="w-full mt-4 px-4 py-2 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-900 transition-colors"
+                                    >
                                         Select This Option
                                     </button>
                                 </div>
@@ -424,6 +424,22 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack }) => {
                     </div>
                 )}
             </div>
+
+            {/* Toast Notification */}
+            {showToast && (
+                <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
+                    <div className="bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[300px]">
+                        <CheckCircle className="w-6 h-6 flex-shrink-0" />
+                        <p className="font-medium">{toastMessage}</p>
+                        <button
+                            onClick={() => setShowToast(false)}
+                            className="ml-auto p-1 hover:bg-green-700 rounded transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

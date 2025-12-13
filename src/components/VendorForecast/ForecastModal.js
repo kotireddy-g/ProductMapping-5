@@ -166,7 +166,7 @@ const ForecastModal = ({ isOpen, onClose }) => {
     let data = [...pharmaceuticalData];
 
     if (searchQuery) {
-      data = data.filter(item => 
+      data = data.filter(item =>
         item.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.supplier.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -208,11 +208,10 @@ const ForecastModal = ({ isOpen, onClose }) => {
               <button
                 key={tab}
                 onClick={() => setCurrentTab(tab)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  currentTab === tab
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${currentTab === tab
                     ? 'bg-blue-600 text-white'
                     : 'text-slate-600 hover:bg-slate-100'
-                }`}
+                  }`}
               >
                 {tab}
               </button>
@@ -246,7 +245,7 @@ const ForecastModal = ({ isOpen, onClose }) => {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Stock</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Expiry Risk</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Supplier</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">AI Confidence</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Agent Confidence</th>
               </tr>
             </thead>
             <tbody>
@@ -274,8 +273,8 @@ const ForecastModal = ({ isOpen, onClose }) => {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="w-12 h-2 bg-slate-200 rounded-full">
-                        <div 
-                          className="h-2 bg-blue-600 rounded-full" 
+                        <div
+                          className="h-2 bg-blue-600 rounded-full"
                           style={{ width: item.aiConfidence }}
                         ></div>
                       </div>

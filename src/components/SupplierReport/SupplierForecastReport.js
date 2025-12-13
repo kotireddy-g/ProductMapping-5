@@ -3,9 +3,9 @@ import { ArrowLeft, Filter, Download } from 'lucide-react';
 
 const SupplierForecastReport = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState('All Items');
-  
+
   const tabs = ['All Items', 'Critical', 'Surging', 'Expiry Risk'];
-  
+
   const supplierData = [
     {
       id: 1,
@@ -254,11 +254,10 @@ const SupplierForecastReport = ({ onBack }) => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === tab
+              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${activeTab === tab
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               {tab}
             </button>
@@ -301,7 +300,7 @@ const SupplierForecastReport = ({ onBack }) => {
                     Vendor Name
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    AI Confidence
+                    Agent Confidence
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Raise PR
@@ -351,15 +350,15 @@ const SupplierForecastReport = ({ onBack }) => {
                       <div className="flex items-center">
                         <div className="text-sm text-gray-900 mr-2">{item.aiConfidence}</div>
                         <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
                             style={{ width: item.aiConfidence }}
                           ></div>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <button 
+                      <button
                         disabled
                         className="px-3 py-1 bg-gray-100 text-gray-400 rounded text-xs font-medium cursor-not-allowed"
                       >

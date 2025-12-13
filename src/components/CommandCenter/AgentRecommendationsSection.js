@@ -1,8 +1,17 @@
-import React from 'react';
-import { Brain, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Brain, AlertCircle, CheckCircle, XCircle, X } from 'lucide-react';
 
 const AgentRecommendationsSection = ({ data, selectedTimePeriod = 'today' }) => {
     const { agentRecommendations, name } = data;
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+
+    // Show toast notification
+    const showToastNotification = (medicine, action) => {
+        setToastMessage(`✓ ${action} initiated for ${medicine}`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 4000);
+    };
 
     const getPriorityColor = (priority) => {
         switch (priority) {
@@ -104,12 +113,15 @@ const AgentRecommendationsSection = ({ data, selectedTimePeriod = 'today' }) => 
                                     </span>
                                 </td>
                                 <td className="px-4 py-3 text-center">
-                                    <button className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${rec.priority === 'High'
-                                        ? 'bg-red-600 text-white hover:bg-red-700'
-                                        : rec.priority === 'Medium'
-                                            ? 'bg-orange-600 text-white hover:bg-orange-700'
-                                            : 'bg-green-600 text-white hover:bg-green-700'
-                                        }`}>
+                                    <button
+                                        onClick={() => showToastNotification(rec.medicine, rec.action)}
+                                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${rec.priority === 'High'
+                                            ? 'bg-red-600 text-white hover:bg-red-700'
+                                            : rec.priority === 'Medium'
+                                                ? 'bg-orange-600 text-white hover:bg-orange-700'
+                                                : 'bg-green-600 text-white hover:bg-green-700'
+                                            }`}
+                                    >
                                         {rec.action}
                                     </button>
                                 </td>
@@ -118,6 +130,22 @@ const AgentRecommendationsSection = ({ data, selectedTimePeriod = 'today' }) => 
                     </tbody>
                 </table>
             </div>
+
+            {/* Toast Notification */}
+            {showToast && (
+                <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
+                    <div className="bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[300px]">
+                        <CheckCircle className="w-6 h-6 flex-shrink-0" />
+                        <p className="font-medium">{toastMessage}</p>
+                        <button
+                            onClick={() => setShowToast(false)}
+                            className="ml-auto p-1 hover:bg-green-700 rounded transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

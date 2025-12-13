@@ -272,6 +272,7 @@ function App() {
       <>
         <ForecastInternalDetailsScreen
           forecastData={selectedForecastData}
+          selectedForecastArea={selectedForecastData?.areaName || 'ICU'}
           onBack={handleBackToDashboard}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
