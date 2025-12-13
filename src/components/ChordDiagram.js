@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, Maximize2 } from 'lucide-react';
+import { ChevronLeft, Maximize2, X } from 'lucide-react';
 
 // Data structures
 const hospitalSupply = {
@@ -304,30 +304,30 @@ const getTATValue = (nodeId) => {
 const generateConnections = (supplyItems, demandItems) => {
   const connections = [];
   const speeds = ['fast', 'medium', 'slow', 'occasional'];
-  
+
   supplyItems.forEach((supply) => {
     demandItems.forEach((demand) => {
-      const combinedId = `${supply.id}-${demand.id}`;
+      const combinedId = `${supply.id} -${demand.id} `;
       const hash = hashCode(combinedId);
-      
+
       // Use hash to determine if connection exists (consistent)
       const shouldConnect = (hash % 10) > 2;
-      
+
       if (shouldConnect) {
         const speedIndex = hash % speeds.length;
         const speed = speeds[speedIndex];
-        
+
         // Consistent value based on hash
         const baseValue = (hash % 50) + 10;
         const value = speed === 'fast' ? baseValue + 20 :
-                      speed === 'medium' ? baseValue + 10 :
-                      speed === 'slow' ? baseValue :
-                      baseValue / 2;
-        
+          speed === 'medium' ? baseValue + 10 :
+            speed === 'slow' ? baseValue :
+              baseValue / 2;
+
         // Consistent metrics based on hash
         const otifBase = 85 + (hash % 13);
         const tatBase = 1.5 + ((hash % 30) / 10);
-        
+
         connections.push({
           source: supply.id,
           target: demand.id,
@@ -339,7 +339,7 @@ const generateConnections = (supplyItems, demandItems) => {
       }
     });
   });
-  
+
   return connections;
 };
 
@@ -350,6 +350,7 @@ const HospitalSankeyDiagram = () => {
   const [demandPath, setDemandPath] = useState([]);
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: null });
   const [connections, setConnections] = useState([]);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const svgRef = useRef(null);
 
   // Get current items based on drill-down state
@@ -439,9 +440,9 @@ const HospitalSankeyDiagram = () => {
     const parts = ['Supply'];
     supplyPath.forEach((id, idx) => {
       const level = idx + 1;
-      const items = level === 1 ? hospitalSupply.level1 : 
-                   level === 2 ? hospitalSupply.level2[supplyPath[0]] :
-                   hospitalSupply.level3[supplyPath[1]];
+      const items = level === 1 ? hospitalSupply.level1 :
+        level === 2 ? hospitalSupply.level2[supplyPath[0]] :
+          hospitalSupply.level3[supplyPath[1]];
       const item = items?.find(i => i.id === id);
       if (item) parts.push(item.name);
     });
@@ -453,9 +454,9 @@ const HospitalSankeyDiagram = () => {
     const parts = ['Demand'];
     demandPath.forEach((id, idx) => {
       const level = idx + 1;
-      const items = level === 1 ? hospitalDemand.level1 : 
-                   level === 2 ? hospitalDemand.level2[demandPath[0]] :
-                   hospitalDemand.level3[demandPath[1]];
+      const items = level === 1 ? hospitalDemand.level1 :
+        level === 2 ? hospitalDemand.level2[demandPath[0]] :
+          hospitalDemand.level3[demandPath[1]];
       const item = items?.find(i => i.id === id);
       if (item) parts.push(item.name);
     });
@@ -495,34 +496,34 @@ const HospitalSankeyDiagram = () => {
       const totalValue = sourceConnections.reduce((sum, c) => sum + c.value, 0);
       sourceYOffset += (conn.value / totalValue) * sourceNode.height;
     }
-    
+
     const totalSourceValue = sourceConnections.reduce((sum, c) => sum + c.value, 0);
     const flowHeight = (sourceConnections[connectionIndex].value / totalSourceValue) * sourceNode.height;
-    
+
     const sx = sourceNode.x + nodeWidth;
     const sy1 = (sourceNode.y - sourceNode.height / 2) + sourceYOffset;
     const sy2 = sy1 + flowHeight;
-    
+
     // Find target connections to calculate target offset
     const targetConnections = connections.filter(c => c.target === targetNode.id);
     const targetConnectionIndex = targetConnections.findIndex(
       c => c.source === sourceNode.id && c.target === targetNode.id
     );
-    
+
     let targetYOffset = 0;
     for (let i = 0; i < targetConnectionIndex; i++) {
       const conn = targetConnections[i];
       const totalValue = targetConnections.reduce((sum, c) => sum + c.value, 0);
       targetYOffset += (conn.value / totalValue) * targetNode.height;
     }
-    
+
     const totalTargetValue = targetConnections.reduce((sum, c) => sum + c.value, 0);
     const targetFlowHeight = (targetConnections[targetConnectionIndex].value / totalTargetValue) * targetNode.height;
-    
+
     const tx = targetNode.x;
     const ty1 = (targetNode.y - targetNode.height / 2) + targetYOffset;
     const ty2 = ty1 + targetFlowHeight;
-    
+
     const midX = sx + centerWidth / 2;
 
     // Create the ribbon path using full bar space
@@ -531,7 +532,7 @@ const HospitalSankeyDiagram = () => {
       C ${midX} ${sy1}, ${midX} ${ty1}, ${tx} ${ty1}
       L ${tx} ${ty2}
       C ${midX} ${ty2}, ${midX} ${sy2}, ${sx} ${sy2}
-      Z
+Z
     `;
   };
 
@@ -565,308 +566,615 @@ const HospitalSankeyDiagram = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h3 className="text-2xl font-bold text-gray-800">Supply & Demand Flow</h3>
-          <p className="text-sm text-gray-600">Interactive visualization of hospital supply chain</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <Maximize2 size={16} />
-          Expand
-        </button>
-      </div>
+    <>
+      {/* Full-Screen Modal */}
+      {isFullScreen && (
+        <div className="fixed inset-0 z-50 bg-white overflow-auto">
+          {/* Close Button */}
+          <button
+            onClick={() => setIsFullScreen(false)}
+            className="fixed top-4 right-4 z-50 p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-lg"
+          >
+            <X size={24} />
+          </button>
 
-      {/* Movement Speed Legend */}
-      <div className="flex gap-6 items-center mb-4 p-3 bg-slate-50 rounded-lg">
-        <span className="font-semibold text-gray-700 text-sm">Movement Speed:</span>
-        {Object.entries(speedColors).map(([speed, color]) => (
-          <div key={speed} className="flex items-center gap-2">
-            <div style={{ width: '32px', height: '8px', background: color, borderRadius: '4px' }} />
-            <span className="text-sm text-gray-700 capitalize">{speed}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Breadcrumbs */}
-      <div className="flex justify-between items-center mb-4 p-3 bg-slate-50 rounded-lg">
-        <div className="flex items-center gap-3">
-          {supplyLevel > 1 && (
-            <button
-              onClick={goBackSupply}
-              className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
-            >
-              <ChevronLeft size={14} />
-              Back
-            </button>
-          )}
-          <span className="text-sm text-gray-600">{getSupplyBreadcrumb()}</span>
-        </div>
-        
-        <button
-          onClick={resetView}
-          className="px-4 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
-        >
-          Reset View
-        </button>
-
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">{getDemandBreadcrumb()}</span>
-          {demandLevel > 1 && (
-            <button
-              onClick={goBackDemand}
-              className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
-            >
-              Back
-              <ChevronLeft size={14} style={{ transform: 'rotate(180deg)' }} />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Sankey Diagram */}
-      <div className="relative overflow-x-auto">
-        <svg
-          ref={svgRef}
-          width={width}
-          height={height}
-          style={{ overflow: 'visible' }}
-        >
-          {/* Draw flows first (so they're behind nodes) */}
-          {supplyNodes.map(sourceNode => {
-            const sourceConnections = connections.filter(c => c.source === sourceNode.id);
-            
-            return sourceConnections.map((conn, connIdx) => {
-              const targetNode = demandNodes.find(n => n.id === conn.target);
-              if (!targetNode) return null;
-
-              const sourceName = sourceNode.name;
-              const targetName = targetNode.name;
-
-              return (
-                <path
-                  key={`${sourceNode.id}-${conn.target}`}
-                  d={createFlowPath(sourceNode, targetNode, sourceConnections, connIdx)}
-                  fill={speedColors[conn.speed]}
-                  opacity={0.5}
-                  style={{
-                    cursor: 'pointer',
-                    transition: 'opacity 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = '0.8';
-                    handleMouseMove(e, conn, sourceName, targetName);
-                  }}
-                  onMouseMove={(e) => handleMouseMove(e, conn, sourceName, targetName)}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '0.5';
-                    handleMouseLeave();
-                  }}
-                />
-              );
-            });
-          })}
-
-          {/* Supply nodes */}
-          {supplyNodes.map((node) => {
-            const stock = getStockValue(node.id);
-            const canDrillDown = (supplyLevel === 1 && hospitalSupply.level2[node.id]) ||
-                                (supplyLevel === 2 && hospitalSupply.level3[node.id]);
-            
-            return (
-              <g key={node.id}>
-                {/* Node bar */}
-                <rect
-                  x={node.x}
-                  y={node.y - node.height / 2}
-                  width={nodeWidth}
-                  height={node.height}
-                  fill="#3b82f6"
-                  rx={2}
-                  style={{
-                    cursor: canDrillDown ? 'pointer' : 'default',
-                    filter: canDrillDown ? 'brightness(1.1) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))' : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))'
-                  }}
-                  onClick={() => canDrillDown && handleSupplyClick(node)}
-                />
-                
-                {/* Label - fully visible to the LEFT */}
-                <text
-                  x={node.x - 16}
-                  y={node.y}
-                  textAnchor="end"
-                  dominantBaseline="middle"
-                  style={{
-                    fontSize: '0.875rem',
-                    fill: '#1e293b',
-                    fontWeight: 500,
-                    cursor: canDrillDown ? 'pointer' : 'default',
-                    pointerEvents: 'none'
-                  }}
-                >
-                  {node.name}
-                </text>
-                
-                {/* Stock count */}
-                <text
-                  x={node.x - 16}
-                  y={node.y + 16}
-                  textAnchor="end"
-                  style={{
-                    fontSize: '0.75rem',
-                    fill: '#64748b',
-                    pointerEvents: 'none'
-                  }}
-                >
-                  In-Stock: {stock}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* Demand nodes */}
-          {demandNodes.map((node) => {
-            const otif = getOTIFValue(node.id);
-            const tat = getTATValue(node.id);
-            const canDrillDown = (demandLevel === 1 && hospitalDemand.level2[node.id]) ||
-                                (demandLevel === 2 && hospitalDemand.level3[node.id]);
-            
-            return (
-              <g key={node.id}>
-                {/* Node bar */}
-                <rect
-                  x={node.x}
-                  y={node.y - node.height / 2}
-                  width={nodeWidth}
-                  height={node.height}
-                  fill="#3b82f6"
-                  rx={2}
-                  style={{
-                    cursor: canDrillDown ? 'pointer' : 'default',
-                    filter: canDrillDown ? 'brightness(1.1) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))' : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))'
-                  }}
-                  onClick={() => canDrillDown && handleDemandClick(node)}
-                />
-                
-                {/* Label - fully visible to the RIGHT */}
-                <text
-                  x={node.x + nodeWidth + 16}
-                  y={node.y}
-                  textAnchor="start"
-                  dominantBaseline="middle"
-                  style={{
-                    fontSize: '0.875rem',
-                    fill: '#1e293b',
-                    fontWeight: 500,
-                    cursor: canDrillDown ? 'pointer' : 'default',
-                    pointerEvents: 'none'
-                  }}
-                >
-                  {node.name}
-                </text>
-                
-                {/* Metrics */}
-                <text
-                  x={node.x + nodeWidth + 16}
-                  y={node.y + 16}
-                  textAnchor="start"
-                  style={{
-                    fontSize: '0.75rem',
-                    fill: '#64748b',
-                    pointerEvents: 'none'
-                  }}
-                >
-                  OTIF: {otif}% | TAT: {tat}h
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Tooltip */}
-        {tooltip.visible && tooltip.content && (
-          <div style={{
-            position: 'absolute',
-            left: tooltip.x + 15,
-            top: tooltip.y - 10,
-            background: 'rgba(15, 23, 42, 0.95)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(148, 163, 184, 0.3)',
-            borderRadius: '8px',
-            padding: '0.75rem 1rem',
-            pointerEvents: 'none',
-            zIndex: 1000,
-            minWidth: '200px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
-          }}>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
-              Flow Details
+          {/* Full-Screen Content */}
+          <div className="p-8">
+            {/* Movement Speed Legend */}
+            <div className="flex gap-6 items-center mb-4 p-3 bg-slate-50 rounded-lg">
+              <span className="font-semibold text-gray-700 text-sm">Movement Speed:</span>
+              {Object.entries(speedColors).map(([speed, color]) => (
+                <div key={speed} className="flex items-center gap-2">
+                  <div style={{ width: '32px', height: '8px', background: color, borderRadius: '4px' }} />
+                  <span className="text-sm text-gray-700 capitalize">{speed}</span>
+                </div>
+              ))}
             </div>
-            <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e2e8f0', marginBottom: '0.25rem' }}>
-              {tooltip.content.source}
+
+            {/* Breadcrumbs */}
+            <div className="flex justify-between items-center mb-4 p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                {supplyLevel > 1 && (
+                  <button
+                    onClick={goBackSupply}
+                    className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                  >
+                    <ChevronLeft size={14} />
+                    Back
+                  </button>
+                )}
+                <span className="text-sm text-gray-600">{getSupplyBreadcrumb()}</span>
+              </div>
+
+              <button
+                onClick={resetView}
+                className="px-4 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
+              >
+                Reset View
+              </button>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">{getDemandBreadcrumb()}</span>
+                {demandLevel > 1 && (
+                  <button
+                    onClick={goBackDemand}
+                    className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                  >
+                    Back
+                    <ChevronLeft size={14} style={{ transform: 'rotate(180deg)' }} />
+                  </button>
+                )}
+              </div>
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
-              → {tooltip.content.target}
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.5rem',
-              fontSize: '0.75rem',
-              borderTop: '1px solid rgba(148, 163, 184, 0.3)',
-              paddingTop: '0.5rem'
-            }}>
-              <div>
-                <div style={{ color: '#94a3b8' }}>Speed</div>
+
+            {/* Sankey Diagram */}
+            <div className="relative overflow-x-auto">
+              <svg
+                ref={svgRef}
+                width={width}
+                height={height}
+                style={{ overflow: 'visible' }}
+              >
+                {/* Draw flows first (so they're behind nodes) */}
+                {supplyNodes.map(sourceNode => {
+                  const sourceConnections = connections.filter(c => c.source === sourceNode.id);
+
+                  return sourceConnections.map((conn, connIdx) => {
+                    const targetNode = demandNodes.find(n => n.id === conn.target);
+                    if (!targetNode) return null;
+
+                    const sourceName = sourceNode.name;
+                    const targetName = targetNode.name;
+
+                    return (
+                      <path
+                        key={`${sourceNode.id}-${conn.target}`}
+                        d={createFlowPath(sourceNode, targetNode, sourceConnections, connIdx)}
+                        fill={speedColors[conn.speed]}
+                        opacity={0.5}
+                        style={{
+                          cursor: 'pointer',
+                          transition: 'opacity 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = '0.8';
+                          handleMouseMove(e, conn, sourceName, targetName);
+                        }}
+                        onMouseMove={(e) => handleMouseMove(e, conn, sourceName, targetName)}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '0.5';
+                          handleMouseLeave();
+                        }}
+                      />
+                    );
+                  });
+                })}
+
+                {/* Supply nodes */}
+                {supplyNodes.map((node) => {
+                  const stock = getStockValue(node.id);
+                  const canDrillDown = (supplyLevel === 1 && hospitalSupply.level2[node.id]) ||
+                    (supplyLevel === 2 && hospitalSupply.level3[node.id]);
+
+                  return (
+                    <g key={node.id}>
+                      <rect
+                        x={node.x}
+                        y={node.y - node.height / 2}
+                        width={nodeWidth}
+                        height={node.height}
+                        fill="#3b82f6"
+                        rx={2}
+                        style={{
+                          cursor: canDrillDown ? 'pointer' : 'default',
+                          filter: canDrillDown ? 'brightness(1.1) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))' : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))'
+                        }}
+                        onClick={() => canDrillDown && handleSupplyClick(node)}
+                      />
+
+                      <text
+                        x={node.x - 16}
+                        y={node.y}
+                        textAnchor="end"
+                        dominantBaseline="middle"
+                        style={{
+                          fontSize: '0.875rem',
+                          fill: '#1e293b',
+                          fontWeight: 500,
+                          cursor: canDrillDown ? 'pointer' : 'default',
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        {node.name}
+                      </text>
+
+                      <text
+                        x={node.x - 16}
+                        y={node.y + 16}
+                        textAnchor="end"
+                        style={{
+                          fontSize: '0.75rem',
+                          fill: '#64748b',
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        In-Stock: {stock}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* Demand nodes */}
+                {demandNodes.map((node) => {
+                  const otif = getOTIFValue(node.id);
+                  const tat = getTATValue(node.id);
+                  const canDrillDown = (demandLevel === 1 && hospitalDemand.level2[node.id]) ||
+                    (demandLevel === 2 && hospitalDemand.level3[node.id]);
+
+                  return (
+                    <g key={node.id}>
+                      <rect
+                        x={node.x}
+                        y={node.y - node.height / 2}
+                        width={nodeWidth}
+                        height={node.height}
+                        fill="#3b82f6"
+                        rx={2}
+                        style={{
+                          cursor: canDrillDown ? 'pointer' : 'default',
+                          filter: canDrillDown ? 'brightness(1.1) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))' : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))'
+                        }}
+                        onClick={() => canDrillDown && handleDemandClick(node)}
+                      />
+
+                      <text
+                        x={node.x + nodeWidth + 16}
+                        y={node.y}
+                        textAnchor="start"
+                        dominantBaseline="middle"
+                        style={{
+                          fontSize: '0.875rem',
+                          fill: '#1e293b',
+                          fontWeight: 500,
+                          cursor: canDrillDown ? 'pointer' : 'default',
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        {node.name}
+                      </text>
+
+                      <text
+                        x={node.x + nodeWidth + 16}
+                        y={node.y + 16}
+                        textAnchor="start"
+                        style={{
+                          fontSize: '0.75rem',
+                          fill: '#64748b',
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        OTIF: {otif}% | TAT: {tat}h
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+
+              {/* Tooltip */}
+              {tooltip.visible && tooltip.content && (
                 <div style={{
-                  color: speedColors[tooltip.content.speed],
-                  fontWeight: 600,
-                  textTransform: 'capitalize'
+                  position: 'absolute',
+                  left: tooltip.x + 15,
+                  top: tooltip.y - 10,
+                  background: 'rgba(15, 23, 42, 0.95)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(148, 163, 184, 0.3)',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1rem',
+                  pointerEvents: 'none',
+                  zIndex: 1000,
+                  minWidth: '200px',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
                 }}>
-                  {tooltip.content.speed}
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+                    Flow Details
+                  </div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e2e8f0', marginBottom: '0.25rem' }}>
+                    {tooltip.content.source}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+                    → {tooltip.content.target}
+                  </div>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.5rem',
+                    fontSize: '0.75rem',
+                    borderTop: '1px solid rgba(148, 163, 184, 0.3)',
+                    paddingTop: '0.5rem'
+                  }}>
+                    <div>
+                      <div style={{ color: '#94a3b8' }}>Speed</div>
+                      <div style={{
+                        color: speedColors[tooltip.content.speed],
+                        fontWeight: 600,
+                        textTransform: 'capitalize'
+                      }}>
+                        {tooltip.content.speed}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#94a3b8' }}>Value</div>
+                      <div style={{ color: '#e2e8f0', fontWeight: 600 }}>{tooltip.content.value}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#94a3b8' }}>OTIF</div>
+                      <div style={{ color: '#10b981', fontWeight: 600 }}>{tooltip.content.otif}%</div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#94a3b8' }}>TAT</div>
+                      <div style={{ color: '#60a5fa', fontWeight: 600 }}>{tooltip.content.tat}h</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Stats Cards */}
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              {[
+                { label: 'Current Pending Supply', value: '1,850', color: '#f59e0b' },
+                { label: 'Forecast Next Hour', value: '420', color: '#10b981' },
+                { label: 'Today Demand', value: '3,250', color: '#3b82f6' }
+              ].map((stat, i) => (
+                <div key={i} className="bg-slate-50 rounded-lg p-4 border-l-4" style={{ borderLeftColor: stat.color }}>
+                  <div className="text-sm text-gray-600 mb-1 font-medium">
+                    {stat.label}
+                  </div>
+                  <div className="text-3xl font-bold" style={{ color: stat.color }}>
+                    {stat.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer Instruction */}
+            <div className="mt-4 text-center text-sm text-gray-500">
+              Click on nodes to drill down • Hover over flows for details
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Normal View */}
+      {!isFullScreen && (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-800">Supply & Demand Flow</h3>
+              <p className="text-sm text-gray-600">Interactive visualization of hospital supply chain</p>
+            </div>
+            <button
+              onClick={() => setIsFullScreen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Maximize2 size={16} />
+              Expand
+            </button>
+          </div>
+
+          {/* Movement Speed Legend */}
+          <div className="flex gap-6 items-center mb-4 p-3 bg-slate-50 rounded-lg">
+            <span className="font-semibold text-gray-700 text-sm">Movement Speed:</span>
+            {Object.entries(speedColors).map(([speed, color]) => (
+              <div key={speed} className="flex items-center gap-2">
+                <div style={{ width: '32px', height: '8px', background: color, borderRadius: '4px' }} />
+                <span className="text-sm text-gray-700 capitalize">{speed}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Breadcrumbs */}
+          <div className="flex justify-between items-center mb-4 p-3 bg-slate-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              {supplyLevel > 1 && (
+                <button
+                  onClick={goBackSupply}
+                  className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                >
+                  <ChevronLeft size={14} />
+                  Back
+                </button>
+              )}
+              <span className="text-sm text-gray-600">{getSupplyBreadcrumb()}</span>
+            </div>
+
+            <button
+              onClick={resetView}
+              className="px-4 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
+            >
+              Reset View
+            </button>
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">{getDemandBreadcrumb()}</span>
+              {demandLevel > 1 && (
+                <button
+                  onClick={goBackDemand}
+                  className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                >
+                  Back
+                  <ChevronLeft size={14} style={{ transform: 'rotate(180deg)' }} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Sankey Diagram */}
+          <div className="relative overflow-x-auto">
+            <svg
+              ref={svgRef}
+              width={width}
+              height={height}
+              style={{ overflow: 'visible' }}
+            >
+              {/* Draw flows first (so they're behind nodes) */}
+              {supplyNodes.map(sourceNode => {
+                const sourceConnections = connections.filter(c => c.source === sourceNode.id);
+
+                return sourceConnections.map((conn, connIdx) => {
+                  const targetNode = demandNodes.find(n => n.id === conn.target);
+                  if (!targetNode) return null;
+
+                  const sourceName = sourceNode.name;
+                  const targetName = targetNode.name;
+
+                  return (
+                    <path
+                      key={`${sourceNode.id} -${conn.target} `}
+                      d={createFlowPath(sourceNode, targetNode, sourceConnections, connIdx)}
+                      fill={speedColors[conn.speed]}
+                      opacity={0.5}
+                      style={{
+                        cursor: 'pointer',
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.opacity = '0.8';
+                        handleMouseMove(e, conn, sourceName, targetName);
+                      }}
+                      onMouseMove={(e) => handleMouseMove(e, conn, sourceName, targetName)}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = '0.5';
+                        handleMouseLeave();
+                      }}
+                    />
+                  );
+                });
+              })}
+
+              {/* Supply nodes */}
+              {supplyNodes.map((node) => {
+                const stock = getStockValue(node.id);
+                const canDrillDown = (supplyLevel === 1 && hospitalSupply.level2[node.id]) ||
+                  (supplyLevel === 2 && hospitalSupply.level3[node.id]);
+
+                return (
+                  <g key={node.id}>
+                    {/* Node bar */}
+                    <rect
+                      x={node.x}
+                      y={node.y - node.height / 2}
+                      width={nodeWidth}
+                      height={node.height}
+                      fill="#3b82f6"
+                      rx={2}
+                      style={{
+                        cursor: canDrillDown ? 'pointer' : 'default',
+                        filter: canDrillDown ? 'brightness(1.1) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))' : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))'
+                      }}
+                      onClick={() => canDrillDown && handleSupplyClick(node)}
+                    />
+
+                    {/* Label - fully visible to the LEFT */}
+                    <text
+                      x={node.x - 16}
+                      y={node.y}
+                      textAnchor="end"
+                      dominantBaseline="middle"
+                      style={{
+                        fontSize: '0.875rem',
+                        fill: '#1e293b',
+                        fontWeight: 500,
+                        cursor: canDrillDown ? 'pointer' : 'default',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      {node.name}
+                    </text>
+
+                    {/* Stock count */}
+                    <text
+                      x={node.x - 16}
+                      y={node.y + 16}
+                      textAnchor="end"
+                      style={{
+                        fontSize: '0.75rem',
+                        fill: '#64748b',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      In-Stock: {stock}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Demand nodes */}
+              {demandNodes.map((node) => {
+                const otif = getOTIFValue(node.id);
+                const tat = getTATValue(node.id);
+                const canDrillDown = (demandLevel === 1 && hospitalDemand.level2[node.id]) ||
+                  (demandLevel === 2 && hospitalDemand.level3[node.id]);
+
+                return (
+                  <g key={node.id}>
+                    {/* Node bar */}
+                    <rect
+                      x={node.x}
+                      y={node.y - node.height / 2}
+                      width={nodeWidth}
+                      height={node.height}
+                      fill="#3b82f6"
+                      rx={2}
+                      style={{
+                        cursor: canDrillDown ? 'pointer' : 'default',
+                        filter: canDrillDown ? 'brightness(1.1) drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))' : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))'
+                      }}
+                      onClick={() => canDrillDown && handleDemandClick(node)}
+                    />
+
+                    {/* Label - fully visible to the RIGHT */}
+                    <text
+                      x={node.x + nodeWidth + 16}
+                      y={node.y}
+                      textAnchor="start"
+                      dominantBaseline="middle"
+                      style={{
+                        fontSize: '0.875rem',
+                        fill: '#1e293b',
+                        fontWeight: 500,
+                        cursor: canDrillDown ? 'pointer' : 'default',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      {node.name}
+                    </text>
+
+                    {/* Metrics */}
+                    <text
+                      x={node.x + nodeWidth + 16}
+                      y={node.y + 16}
+                      textAnchor="start"
+                      style={{
+                        fontSize: '0.75rem',
+                        fill: '#64748b',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      OTIF: {otif}% | TAT: {tat}h
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Tooltip */}
+            {tooltip.visible && tooltip.content && (
+              <div style={{
+                position: 'absolute',
+                left: tooltip.x + 15,
+                top: tooltip.y - 10,
+                background: 'rgba(15, 23, 42, 0.95)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(148, 163, 184, 0.3)',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                pointerEvents: 'none',
+                zIndex: 1000,
+                minWidth: '200px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+              }}>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+                  Flow Details
+                </div>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e2e8f0', marginBottom: '0.25rem' }}>
+                  {tooltip.content.source}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+                  → {tooltip.content.target}
+                </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.5rem',
+                  fontSize: '0.75rem',
+                  borderTop: '1px solid rgba(148, 163, 184, 0.3)',
+                  paddingTop: '0.5rem'
+                }}>
+                  <div>
+                    <div style={{ color: '#94a3b8' }}>Speed</div>
+                    <div style={{
+                      color: speedColors[tooltip.content.speed],
+                      fontWeight: 600,
+                      textTransform: 'capitalize'
+                    }}>
+                      {tooltip.content.speed}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: '#94a3b8' }}>Value</div>
+                    <div style={{ color: '#e2e8f0', fontWeight: 600 }}>{tooltip.content.value}</div>
+                  </div>
+                  <div>
+                    <div style={{ color: '#94a3b8' }}>OTIF</div>
+                    <div style={{ color: '#10b981', fontWeight: 600 }}>{tooltip.content.otif}%</div>
+                  </div>
+                  <div>
+                    <div style={{ color: '#94a3b8' }}>TAT</div>
+                    <div style={{ color: '#60a5fa', fontWeight: 600 }}>{tooltip.content.tat}h</div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <div style={{ color: '#94a3b8' }}>Value</div>
-                <div style={{ color: '#e2e8f0', fontWeight: 600 }}>{tooltip.content.value}</div>
-              </div>
-              <div>
-                <div style={{ color: '#94a3b8' }}>OTIF</div>
-                <div style={{ color: '#10b981', fontWeight: 600 }}>{tooltip.content.otif}%</div>
-              </div>
-              <div>
-                <div style={{ color: '#94a3b8' }}>TAT</div>
-                <div style={{ color: '#60a5fa', fontWeight: 600 }}>{tooltip.content.tat}h</div>
-              </div>
-            </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* Bottom Stats Cards */}
-      <div className="grid grid-cols-3 gap-4 mt-6">
-        {[
-          { label: 'Current Pending Supply', value: '1,850', color: '#f59e0b' },
-          { label: 'Forecast Next Hour', value: '420', color: '#10b981' },
-          { label: 'Today Demand', value: '3,250', color: '#3b82f6' }
-        ].map((stat, i) => (
-          <div key={i} className="bg-slate-50 rounded-lg p-4 border-l-4" style={{ borderLeftColor: stat.color }}>
-            <div className="text-sm text-gray-600 mb-1 font-medium">
-              {stat.label}
-            </div>
-            <div className="text-3xl font-bold" style={{ color: stat.color }}>
-              {stat.value}
-            </div>
+          {/* Bottom Stats Cards */}
+          <div className="grid grid-cols-3 gap-4 mt-6">
+            {[
+              { label: 'Current Pending Supply', value: '1,850', color: '#f59e0b' },
+              { label: 'Forecast Next Hour', value: '420', color: '#10b981' },
+              { label: 'Today Demand', value: '3,250', color: '#3b82f6' }
+            ].map((stat, i) => (
+              <div key={i} className="bg-slate-50 rounded-lg p-4 border-l-4" style={{ borderLeftColor: stat.color }}>
+                <div className="text-sm text-gray-600 mb-1 font-medium">
+                  {stat.label}
+                </div>
+                <div className="text-3xl font-bold" style={{ color: stat.color }}>
+                  {stat.value}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Footer Instruction */}
-      <div className="mt-4 text-center text-sm text-gray-500">
-        Click on nodes to drill down • Hover over flows for details
-      </div>
-    </div>
+          {/* Footer Instruction */}
+          <div className="mt-4 text-center text-sm text-gray-500">
+            Click on nodes to drill down • Hover over flows for details
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
