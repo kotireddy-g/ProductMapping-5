@@ -400,6 +400,7 @@ const HospitalSankeyDiagram = () => {
         }
         if (demandLevel > 1 && demandPath.length > 0) {
           params.demandLevel = demandLevel;
+          params.demandParent = demandPath[demandLevel - 2];
         }
 
         const response = await supplyDemandService.getFlowData(params);
@@ -930,9 +931,21 @@ Z
             {/* Bottom Stats Cards */}
             <div className="grid grid-cols-3 gap-4 mt-6">
               {[
-                { label: 'Current Pending Supply', value: '1,850', color: '#f59e0b' },
-                { label: 'Forecast Next Hour', value: '420', color: '#10b981' },
-                { label: 'Today Demand', value: '3,250', color: '#3b82f6' }
+                {
+                  label: 'Current Pending Supply',
+                  value: apiData?.metrics?.currentPendingSupply?.toLocaleString() || '0',
+                  color: '#f59e0b'
+                },
+                {
+                  label: 'Forecast Next Hour',
+                  value: apiData?.metrics?.forecastNextHour?.toLocaleString() || '0',
+                  color: '#10b981'
+                },
+                {
+                  label: 'Today Demand',
+                  value: apiData?.metrics?.todayDemand?.toLocaleString() || '0',
+                  color: '#3b82f6'
+                }
               ].map((stat, i) => (
                 <div key={i} className="bg-slate-50 rounded-lg p-4 border-l-4" style={{ borderLeftColor: stat.color }}>
                   <div className="text-sm text-gray-600 mb-1 font-medium">
@@ -943,11 +956,6 @@ Z
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Footer Instruction */}
-            <div className="mt-4 text-center text-sm text-gray-500">
-              Click on nodes to drill down • Hover over flows for details
             </div>
           </div>
         </div>
@@ -1240,9 +1248,21 @@ Z
           {/* Bottom Stats Cards */}
           <div className="grid grid-cols-3 gap-4 mt-6">
             {[
-              { label: 'Current Pending Supply', value: '1,850', color: '#f59e0b' },
-              { label: 'Forecast Next Hour', value: '420', color: '#10b981' },
-              { label: 'Today Demand', value: '3,250', color: '#3b82f6' }
+              {
+                label: 'Current Pending Supply',
+                value: apiData?.metrics?.currentPendingSupply?.toLocaleString() || '0',
+                color: '#f59e0b'
+              },
+              {
+                label: 'Forecast Next Hour',
+                value: apiData?.metrics?.forecastNextHour?.toLocaleString() || '0',
+                color: '#10b981'
+              },
+              {
+                label: 'Today Demand',
+                value: apiData?.metrics?.todayDemand?.toLocaleString() || '0',
+                color: '#3b82f6'
+              }
             ].map((stat, i) => (
               <div key={i} className="bg-slate-50 rounded-lg p-4 border-l-4" style={{ borderLeftColor: stat.color }}>
                 <div className="text-sm text-gray-600 mb-1 font-medium">
@@ -1253,11 +1273,6 @@ Z
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Footer Instruction */}
-          <div className="mt-4 text-center text-sm text-gray-500">
-            Click on nodes to drill down • Hover over flows for details
           </div>
         </div>
       )}

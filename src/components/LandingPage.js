@@ -1,20 +1,41 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, ExternalLink, Mic, MicOff, X, ChevronRight } from 'lucide-react';
 import {
-  overallOTIF,
-  otifDepartments,
-  decisionActions,
+  Search, ExternalLink, Mic, MicOff, X, ChevronRight,
+  Heart, Activity, Bed, Users, Truck, Stethoscope, Pill,
+  FlaskConical, Syringe, Thermometer, ClipboardList, Building2
+} from 'lucide-react';
+import {
+  overallOTIF as mockOverallOTIF,
+  otifDepartments as mockOtifDepartments,
+  decisionActions as mockDecisionActions,
   totalPendingActions,
   forecastSurge,
-  forecastAreas,
+  forecastAreas as mockForecastAreas,
   searchSuggestions,
   getOTIFColorByPercentage,
   getActionColorClass,
   getForecastColorClass
 } from '../data/landingPageData';
-import { decisionActionSubcategories } from '../data/decisionActionSubcategories';
+import { decisionActionSubcategories as mockDecisionActionSubcategories } from '../data/decisionActionSubcategories';
 import ChordDiagram from './ChordDiagram';
 import KPIDashboard from './KPIDashboard';
+import dashboardService from '../services/dashboardService';
+
+// Icon mapping for department cards (API returns string names)
+const iconMap = {
+  'Heart': Heart,
+  'Activity': Activity,
+  'Bed': Bed,
+  'Users': Users,
+  'Truck': Truck,
+  'Stethoscope': Stethoscope,
+  'Pill': Pill,
+  'FlaskConical': FlaskConical,
+  'Syringe': Syringe,
+  'Thermometer': Thermometer,
+  'ClipboardList': ClipboardList,
+  'Building2': Building2
+};
 
 const LandingPage = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +44,80 @@ const LandingPage = ({ onNavigate }) => {
   const [selectedAction, setSelectedAction] = useState(null);
   const [showSubcategoriesModal, setShowSubcategoriesModal] = useState(false);
   const recognitionRef = useRef(null);
+
+  // API data state
+  const [overviewData, setOverviewData] = useState(null);
+  const [decisionActionsData, setDecisionActionsData] = useState(null);
+  const [forecastData, setForecastData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Use API data or fall back to mock data
+  const overallOTIF = overviewData?.overallOTIF || mockOverallOTIF;
+  const overallOT = overviewData?.overallOT || 95.0;
+  const overallIF = overviewData?.overallIF || 94.8;
+
+  // Reorder departments: Lab and Radiology last
+  const rawDepartments = overviewData?.departments || mockOtifDepartments;
+  const otifDepartments = useMemo(() => {
+    const labIndex = rawDepartments.findIndex(d => d.id === 'lab');
+    const radiologyIndex = rawDepartments.findIndex(d => d.id === 'radiology');
+    const otherDepts = rawDepartments.filter(d => d.id !== 'lab' && d.id !== 'radiology');
+    const labDept = labIndex !== -1 ? rawDepartments[labIndex] : null;
+    const radiologyDept = radiologyIndex !== -1 ? rawDepartments[radiologyIndex] : null;
+
+    const reordered = [...otherDepts];
+    if (labDept) reordered.push(labDept);
+    if (radiologyDept) reordered.push(radiologyDept);
+
+    return reordered;
+  }, [rawDepartments]);
+
+  const decisionActions = decisionActionsData?.decisionActions || mockDecisionActions;
+  const decisionActionSubcategories = decisionActionsData?.decisionActionSubcategories || mockDecisionActionSubcategories;
+  const forecastAreas = forecastData || mockForecastAreas;
+
+  // Fetch all dashboard data on mount
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch all three APIs in parallel
+        const [overviewResponse, actionsResponse, forecastResponse] = await Promise.all([
+          dashboardService.getOverview().catch(err => {
+            console.error('Overview API failed:', err);
+            return null;
+          }),
+          dashboardService.getDecisionActions().catch(err => {
+            console.error('Decision Actions API failed:', err);
+            return null;
+          }),
+          dashboardService.getForecast().catch(err => {
+            console.error('Forecast API failed:', err);
+            return null;
+          })
+        ]);
+
+        // Update state with API data if successful
+        if (overviewResponse?.success) {
+          setOverviewData(overviewResponse.data);
+        }
+        if (actionsResponse?.success) {
+          setDecisionActionsData(actionsResponse.data);
+        }
+        if (forecastResponse?.success) {
+          setForecastData(forecastResponse.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        // Component will use mock data as fallback
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   // Generate filtered search suggestions
   const filteredSuggestions = useMemo(() => {
@@ -174,12 +269,12 @@ const LandingPage = ({ onNavigate }) => {
               <div className="flex items-center gap-6 text-lg">
                 <div className="text-center">
                   <div className="text-sm text-gray-500 mb-1">OT (On-Time)</div>
-                  <div className={`text-3xl font-bold ${getOTIFColorByPercentage(91).textColor}`}>91%</div>
+                  <div className={`text-3xl font-bold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</div>
                 </div>
                 <div className="h-12 w-px bg-gray-300"></div>
                 <div className="text-center">
                   <div className="text-sm text-gray-500 mb-1">IF (In-Full)</div>
-                  <div className={`text-3xl font-bold ${getOTIFColorByPercentage(89).textColor}`}>89%</div>
+                  <div className={`text-3xl font-bold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</div>
                 </div>
               </div>
             </div>
@@ -202,7 +297,8 @@ const LandingPage = ({ onNavigate }) => {
                 }
                 : getOTIFColorByPercentage(dept.otifPercentage);
 
-              const IconComponent = dept.icon;
+              // Get icon component from string name (API) or use directly if already a component (mock)
+              const IconComponent = typeof dept.icon === 'string' ? iconMap[dept.icon] || Heart : dept.icon;
               const changeSign = dept.changePercentage >= 0 ? '+' : '';
               const trendColor = dept.changePercentage >= 0 ? 'text-green-700' : 'text-red-700';
               const trendArrow = dept.changePercentage >= 0 ? '↑' : '↓';
@@ -318,7 +414,7 @@ const LandingPage = ({ onNavigate }) => {
             <p className="text-gray-600 mt-2">Demand forecast surge across hospital areas</p>
           </div>
 
-          {/* Forecast Grid Cards */}
+          {/* Forecast Grid Cards - WITH WHITE BACKGROUNDS */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {forecastAreas.map((area) => {
               const colors = getForecastColorClass(area.trend);
@@ -328,7 +424,7 @@ const LandingPage = ({ onNavigate }) => {
                 <button
                   key={area.id}
                   onClick={() => onNavigate && onNavigate('forecast-detail', area)}
-                  className={`${colors.bg} ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left`}
+                  className={`bg-white ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className={`text-base font-bold ${colors.text}`}>
