@@ -50,7 +50,7 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
 
                     {/* Department Title */}
                     <h1 className="text-4xl font-bold text-slate-800 mb-6">
-                        {name} COMMAND CENTRE
+                        {name.toUpperCase()} COMMAND CENTER
                     </h1>
 
                     {/* Key Metrics and Filters Row */}

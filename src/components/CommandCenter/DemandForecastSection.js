@@ -19,14 +19,12 @@ const DemandForecastSection = ({ data, selectedTimePeriod = 'today' }) => {
         'New Stock'
     ];
 
-    // Prepare horizontal bar chart data based on period
-    const getBarChartData = () => {
-        return medicineTypes.map(type => ({
-            name: type,
-            value: Math.floor(Math.random() * 100) + 50,
-            isSelected: type === selectedMedicineType
-        }));
-    };
+    // Static bar chart data (values don't change on click)
+    const barChartData = medicineTypes.map((type, index) => ({
+        name: type,
+        value: [120, 95, 110, 105, 130, 115, 100][index], // Static values
+        isSelected: type === selectedMedicineType
+    }));
 
     // Risk medicines data by type
     const riskMedicinesByType = {
@@ -157,7 +155,7 @@ const DemandForecastSection = ({ data, selectedTimePeriod = 'today' }) => {
                     <div className="h-96">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
-                                data={getBarChartData()}
+                                data={barChartData}
                                 layout="vertical"
                                 onClick={(data) => {
                                     if (data && data.activeLabel) {
@@ -224,7 +222,7 @@ const DemandForecastSection = ({ data, selectedTimePeriod = 'today' }) => {
                     <div className="text-sm text-slate-600 mb-1">Revenue Impact</div>
                     <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-bold text-green-700">15%</span>
-                        <span className="text-sm text-slate-600">300,000</span>
+                        <span className="text-sm text-slate-600">RM 300,000</span>
                     </div>
                 </div>
 

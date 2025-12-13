@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, CheckCircle } from 'lucide-react';
 import { rcaData, getPriorityColor } from '../../data/rcaData';
 
 const RootCausesSection = ({ data, selectedTimePeriod = 'today' }) => {
     const [selectedDetail, setSelectedDetail] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertData, setAlertData] = useState(null);
 
     // Handle clicking on Why, Demand, or Supplied cells
     const handleDetailClick = (item, columnType) => {
@@ -14,12 +18,34 @@ const RootCausesSection = ({ data, selectedTimePeriod = 'today' }) => {
 
     // Handle clicking on Preventive Recommendations
     const handlePreventiveClick = (item) => {
-        alert(`Alert sent to Purchase Team:\n\nAction: ${item.preventiveRecommendations}\nPriority: ${item.priority.toUpperCase()}\n\nThe purchase team has been notified to take action.`);
+        setAlertData({
+            title: '192.168.1.111 says',
+            message: `Alert sent to Purchase Team:\n\nAction: ${item.preventiveRecommendations}\nPriority: ${item.priority.toUpperCase()}\n\nThe purchase team has been notified to take action.`,
+            team: 'Purchase Team'
+        });
+        setShowAlert(true);
     };
 
     // Handle clicking on Actions
     const handleActionClick = (item) => {
-        alert(`Alert sent to Pharma Team:\n\nAction: ${item.actions}\nPriority: ${item.priority.toUpperCase()}\n\nThe pharmacy team has been notified to prioritize based on ${item.priority} priority level.`);
+        setAlertData({
+            title: '192.168.1.111 says',
+            message: `Alert sent to Pharma Team:\n\nAction: ${item.actions}\nPriority: ${item.priority.toUpperCase()}\n\nThe pharmacy team has been notified to prioritize based on ${item.priority} priority level.`,
+            team: 'Pharma Team'
+        });
+        setShowAlert(true);
+    };
+
+    // Handle alert OK button
+    const handleAlertOk = () => {
+        setShowAlert(false);
+        setToastMessage(`✓ Notification sent to ${alertData.team} successfully`);
+        setShowToast(true);
+
+        // Auto-hide toast after 4 seconds
+        setTimeout(() => {
+            setShowToast(false);
+        }, 4000);
     };
 
     return (
@@ -198,6 +224,42 @@ const RootCausesSection = ({ data, selectedTimePeriod = 'today' }) => {
                                 Close
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Alert Modal */}
+            {showAlert && alertData && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4">{alertData.title}</h3>
+                        <div className="text-gray-300 text-sm whitespace-pre-line mb-6">
+                            {alertData.message}
+                        </div>
+                        <div className="flex justify-end">
+                            <button
+                                onClick={handleAlertOk}
+                                className="px-6 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors font-medium"
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Toast Notification */}
+            {showToast && (
+                <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
+                    <div className="bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[300px]">
+                        <CheckCircle className="w-6 h-6 flex-shrink-0" />
+                        <p className="font-medium">{toastMessage}</p>
+                        <button
+                            onClick={() => setShowToast(false)}
+                            className="ml-auto p-1 hover:bg-green-700 rounded transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
             )}

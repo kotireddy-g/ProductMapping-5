@@ -258,25 +258,17 @@ const LandingPage = ({ onNavigate }) => {
         <div className="mb-16">
           {/* OTIF Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h2 className="text-5xl font-bold text-gray-800">
-                  OTIF: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
-                </h2>
-                <p className="text-gray-600 mt-2">Department-wise On-Time In-Full Performance</p>
-              </div>
-              {/* OT and IF on the right side */}
-              <div className="flex items-center gap-6 text-lg">
-                <div className="text-center">
-                  <div className="text-sm text-gray-500 mb-1">OT (On-Time)</div>
-                  <div className={`text-3xl font-bold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</div>
-                </div>
-                <div className="h-12 w-px bg-gray-300"></div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-500 mb-1">IF (In-Full)</div>
-                  <div className={`text-3xl font-bold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</div>
-                </div>
-              </div>
+            <div>
+              <h2 className="text-5xl font-bold text-gray-800">
+                OTIF: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+              </h2>
+              {/* OT and IF as subheader */}
+              <p className="text-gray-600 mt-2 text-lg">
+                OT: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
+                {' '}<span className="text-gray-400">|</span>{' '}
+                IF: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
+              </p>
+              <p className="text-gray-500 mt-1 text-sm">Department-wise On-Time In-Full Performance</p>
             </div>
           </div>
 
