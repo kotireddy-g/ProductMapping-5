@@ -2,8 +2,68 @@
 // Comprehensive synthetic data for all departments
 
 // Helper function to generate random data within a range
-// Helper function to generate random data within a range (for future use)
-// const randomInRange = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const randomInRange = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+// Helper function to generate OTIF value with variation
+const generateOTIF = (baseOTIF, variation = 5) => {
+    const value = baseOTIF + randomInRange(-variation, variation);
+    return Math.max(70, Math.min(100, value)); // Clamp between 70-100
+};
+
+// Generate heatmap data for medicine categories based on time period
+const generateHeatmapData = (categories, period) => {
+    const heatmapData = [];
+
+    categories.forEach(category => {
+        const baseOTIF = category.otif;
+        let timeSeries = [];
+
+        switch (period) {
+            case 'today':
+                timeSeries = [{ period: 'Current', otif: baseOTIF }];
+                break;
+
+            case 'next_7_days':
+                timeSeries = Array.from({ length: 7 }, (_, i) => ({
+                    period: `Day ${i + 1}`,
+                    otif: generateOTIF(baseOTIF, 5)
+                }));
+                break;
+
+            case 'next_14_days':
+                timeSeries = Array.from({ length: 14 }, (_, i) => ({
+                    period: `Day ${i + 1}`,
+                    otif: generateOTIF(baseOTIF, 6)
+                }));
+                break;
+
+            case 'next_21_days':
+                timeSeries = Array.from({ length: 3 }, (_, i) => ({
+                    period: `Week ${i + 1}`,
+                    otif: generateOTIF(baseOTIF, 4)
+                }));
+                break;
+
+            case 'next_30_days':
+                timeSeries = Array.from({ length: 4 }, (_, i) => ({
+                    period: `Week ${i + 1}`,
+                    otif: generateOTIF(baseOTIF, 4)
+                }));
+                break;
+
+            default:
+                timeSeries = [{ period: 'Current', otif: baseOTIF }];
+        }
+
+        heatmapData.push({
+            category: category.name,
+            color: category.color,
+            timeSeries
+        });
+    });
+
+    return heatmapData;
+};
 
 // Base template for creating department data
 const createDepartmentData = (config) => {
@@ -486,3 +546,6 @@ export const timePeriods = [
     { id: 'next_21_days', label: 'Next 21 Days', value: 'next_21_days' },
     { id: 'next_30_days', label: 'Next 30 Days', value: 'next_30_days' }
 ];
+
+// Export heatmap data generator
+export { generateHeatmapData };

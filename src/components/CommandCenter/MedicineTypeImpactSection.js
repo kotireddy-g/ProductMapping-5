@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Filter } from 'lucide-react';
 
-const MedicineTypeImpactSection = ({ data }) => {
+const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today' }) => {
     const { medicineTypeImpact, name } = data;
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [humanInputs, setHumanInputs] = useState({});

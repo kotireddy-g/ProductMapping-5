@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { rcaData, getPriorityColor } from '../../data/rcaData';
 
-const RootCausesSection = ({ data }) => {
+const RootCausesSection = ({ data, selectedTimePeriod = 'today' }) => {
     const [selectedDetail, setSelectedDetail] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
 
@@ -158,10 +158,10 @@ const RootCausesSection = ({ data }) => {
                                                 <td className="px-4 py-3 font-semibold text-blue-600">{detail.forecast}</td>
                                                 <td className="px-4 py-3">
                                                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${detail.label.includes('Critical') || detail.label.includes('High')
-                                                            ? 'bg-red-100 text-red-700'
-                                                            : detail.label.includes('Medium')
-                                                                ? 'bg-yellow-100 text-yellow-700'
-                                                                : 'bg-slate-100 text-slate-700'
+                                                        ? 'bg-red-100 text-red-700'
+                                                        : detail.label.includes('Medium')
+                                                            ? 'bg-yellow-100 text-yellow-700'
+                                                            : 'bg-slate-100 text-slate-700'
                                                         }`}>
                                                         {detail.label}
                                                     </span>

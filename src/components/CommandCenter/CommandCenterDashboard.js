@@ -108,10 +108,10 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
                 <DemandSupplySection data={departmentData} selectedTimePeriod={selectedTimePeriod} />
 
                 {/* Section II: Root Causes */}
-                <RootCausesSection data={departmentData} />
+                <RootCausesSection data={departmentData} selectedTimePeriod={selectedTimePeriod} />
 
                 {/* Section III: Medicine Type Impact */}
-                <MedicineTypeImpactSection data={departmentData} />
+                <MedicineTypeImpactSection data={departmentData} selectedTimePeriod={selectedTimePeriod} />
 
                 {/* Section IV: Demand & Risk Forecast */}
                 <DemandForecastSection
@@ -121,7 +121,7 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
                 />
 
                 {/* Section V: Agent Recommendations */}
-                <AgentRecommendationsSection data={departmentData} />
+                <AgentRecommendationsSection data={departmentData} selectedTimePeriod={selectedTimePeriod} />
             </div>
 
             {/* Medicine Details Modal */}

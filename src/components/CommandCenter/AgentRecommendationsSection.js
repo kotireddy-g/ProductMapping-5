@@ -1,7 +1,7 @@
 import React from 'react';
 import { Brain, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
-const AgentRecommendationsSection = ({ data }) => {
+const AgentRecommendationsSection = ({ data, selectedTimePeriod = 'today' }) => {
     const { agentRecommendations, name } = data;
 
     const getPriorityColor = (priority) => {

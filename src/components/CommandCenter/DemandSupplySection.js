@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { generateHeatmapData } from '../../data/commandCenterData';
 
 const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
     const { demandSupply, medicineCategories, name } = data;
@@ -10,7 +11,6 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
 
     if (selectedTimePeriod === 'today') {
         // For "Today": Show internal departments
-        // First bar is overall department, then internal departments
         const internalDepartments = [
             { name: `Overall ${name}`, demand: 450, supply: 420 },
             { name: 'NICU', demand: 120, supply: 115 },
@@ -88,63 +88,98 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                     </div>
                 </div>
 
-                {/* Right Panel - Medicine Category Pie Chart */}
+                {/* Right Panel - Medicine Category Heatmap */}
                 <div className="bg-slate-50 rounded-lg p-5 border border-slate-200">
                     <h3 className="text-lg font-semibold text-slate-700 mb-4">MEDICINE-CATEGORY</h3>
-                    <p className="text-sm text-slate-600 mb-4">OTIF Distribution by Category</p>
+                    <p className="text-sm text-slate-600 mb-4">OTIF Distribution by Category Over Time</p>
 
-                    {/* Heatmap Visualization */}
-                    <div className="h-64 mb-3">
-                        {/* Heatmap Grid */}
-                        <div className="grid grid-cols-2 gap-2 h-full">
-                            {medicineCategories.map((cat, index) => {
-                                const bgColor = cat.otif < 80 ? 'bg-red-500' :
-                                    cat.otif >= 80 && cat.otif <= 90 ? 'bg-yellow-500' :
-                                        'bg-green-500';
-                                const intensity = cat.otif >= 90 ? 'bg-opacity-90' :
-                                    cat.otif >= 80 ? 'bg-opacity-70' :
-                                        'bg-opacity-60';
+                    {/* Generate heatmap data */}
+                    {(() => {
+                        const heatmapData = generateHeatmapData(medicineCategories, selectedTimePeriod);
 
-                                return (
-                                    <div
-                                        key={index}
-                                        className={`${bgColor} ${intensity} rounded-lg p-2 flex flex-col justify-between hover:scale-105 transition-transform cursor-pointer shadow-md`}
-                                    >
-                                        <div>
-                                            <h4 className="text-white font-bold text-sm mb-1">{cat.name}</h4>
-                                            <div className="text-white text-xs opacity-90">
-                                                Distribution: {cat.percentage}%
-                                            </div>
-                                        </div>
-                                        <div className="mt-1">
-                                            <div className="text-white text-xl font-bold">
-                                                {cat.otif}%
-                                            </div>
-                                            <div className="text-white text-xs opacity-90">
-                                                OTIF Score
-                                            </div>
+                        // Helper function to get cell color based on OTIF
+                        const getCellColor = (otif) => {
+                            if (otif >= 90) return 'bg-green-500';
+                            if (otif >= 80) return 'bg-yellow-500';
+                            return 'bg-red-500';
+                        };
+
+                        // Helper function to get opacity based on OTIF
+                        const getCellOpacity = (otif) => {
+                            if (otif >= 95) return 'bg-opacity-90';
+                            if (otif >= 90) return 'bg-opacity-80';
+                            if (otif >= 85) return 'bg-opacity-70';
+                            if (otif >= 80) return 'bg-opacity-60';
+                            return 'bg-opacity-50';
+                        };
+
+                        return (
+                            <>
+                                {/* Enhanced Heatmap Visualization */}
+                                <div className="overflow-x-auto mb-3">
+                                    <div className="min-w-full">
+                                        {/* Heatmap Grid */}
+                                        <div className="grid gap-1" style={{
+                                            gridTemplateColumns: `150px repeat(${heatmapData[0]?.timeSeries.length || 1}, minmax(60px, 1fr))`
+                                        }}>
+                                            {/* Header Row - Empty cell + Time periods */}
+                                            <div className="h-8"></div>
+                                            {heatmapData[0]?.timeSeries.map((item, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className="h-8 flex items-center justify-center text-xs font-semibold text-slate-700"
+                                                >
+                                                    {item.period}
+                                                </div>
+                                            ))}
+
+                                            {/* Data Rows */}
+                                            {heatmapData.map((row, rowIdx) => (
+                                                <React.Fragment key={rowIdx}>
+                                                    {/* Row Label */}
+                                                    <div className="flex items-center text-sm font-medium text-slate-700 pr-2">
+                                                        {row.category}
+                                                    </div>
+
+                                                    {/* Data Cells */}
+                                                    {row.timeSeries.map((cell, cellIdx) => {
+                                                        const bgColor = getCellColor(cell.otif);
+                                                        const opacity = getCellOpacity(cell.otif);
+
+                                                        return (
+                                                            <div
+                                                                key={cellIdx}
+                                                                className={`${bgColor} ${opacity} rounded-md h-12 flex items-center justify-center text-white font-bold text-sm hover:scale-105 transition-transform cursor-pointer shadow-sm`}
+                                                                title={`${row.category} - ${cell.period}: ${cell.otif}% OTIF`}
+                                                            >
+                                                                {cell.otif}%
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </React.Fragment>
+                                            ))}
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                                </div>
 
-                    {/* Color Coding Legend Only */}
-                    <div className="mt-4 pt-4 border-t border-slate-300 flex items-center gap-4 text-xs text-slate-600">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                            <span>Green: OTIF &gt; 90%</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                            <span>Yellow: OTIF 80-90%</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                            <span>Red: OTIF &lt; 80%</span>
-                        </div>
-                    </div>
+                                {/* Color Coding Legend */}
+                                <div className="mt-4 pt-4 border-t border-slate-300 flex items-center gap-4 text-xs text-slate-600">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                        <span>Green: OTIF ≥ 90%</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                        <span>Yellow: OTIF 80-90%</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                        <span>Red: OTIF &lt; 80%</span>
+                                    </div>
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
             </div>
         </div>
