@@ -1,6 +1,5 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { generateHeatmapData } from '../../data/commandCenterData';
 
 const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
     const { demandSupply, medicineCategories, name } = data;
@@ -64,9 +63,10 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                     <h3 className="text-lg font-semibold text-slate-700 mb-4">MEDICINE-CATEGORY</h3>
                     <p className="text-sm text-slate-600 mb-4">OTIF Distribution by Category Over Time</p>
 
-                    {/* Generate heatmap data */}
+                    {/* Use API heatmap data */}
                     {(() => {
-                        const heatmapData = generateHeatmapData(medicineCategories, selectedTimePeriod);
+                        const heatmapData = data.heatmapData || { categories: [] };
+
 
                         // Helper function to get cell color based on OTIF
                         const getCellColor = (otif) => {
@@ -91,11 +91,11 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                                     <div className="min-w-full">
                                         {/* Heatmap Grid */}
                                         <div className="grid gap-1" style={{
-                                            gridTemplateColumns: `150px repeat(${heatmapData[0]?.timeSeries.length || 1}, minmax(60px, 1fr))`
+                                            gridTemplateColumns: `150px repeat(${heatmapData.categories?.[0]?.time_series?.length || 7}, minmax(60px, 1fr))`
                                         }}>
                                             {/* Header Row - Empty cell + Time periods */}
                                             <div className="h-8"></div>
-                                            {heatmapData[0]?.timeSeries.map((item, idx) => (
+                                            {heatmapData.categories?.[0]?.time_series?.map((item, idx) => (
                                                 <div
                                                     key={idx}
                                                     className="h-8 flex items-center justify-center text-xs font-semibold text-slate-700"
@@ -105,7 +105,7 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                                             ))}
 
                                             {/* Data Rows */}
-                                            {heatmapData.map((row, rowIdx) => (
+                                            {heatmapData.categories?.map((row, rowIdx) => (
                                                 <React.Fragment key={rowIdx}>
                                                     {/* Row Label */}
                                                     <div className="flex items-center text-sm font-medium text-slate-700 pr-2">
@@ -113,7 +113,7 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                                                     </div>
 
                                                     {/* Data Cells */}
-                                                    {row.timeSeries.map((cell, cellIdx) => {
+                                                    {row.time_series?.map((cell, cellIdx) => {
                                                         const bgColor = getCellColor(cell.otif);
                                                         const opacity = getCellOpacity(cell.otif);
 
