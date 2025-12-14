@@ -604,12 +604,20 @@ Z
     `;
   };
 
-  // Speed colors
+  // Speed colors (for tooltip display only)
   const speedColors = {
     fast: '#10b981',
     medium: '#f59e0b',
     slow: '#eab308',
     occasional: '#9ca3af'
+  };
+
+  // Get OTIF-based color for ribbons
+  const getOTIFColor = (otif) => {
+    const otifValue = parseFloat(otif);
+    if (otifValue >= 95) return '#10b981'; // Green
+    if (otifValue >= 85) return '#f59e0b'; // Amber
+    return '#ef4444'; // Red
   };
 
   const handleMouseMove = (e, connection, sourceName, targetName) => {
@@ -738,7 +746,7 @@ Z
                       <path
                         key={`${sourceNode.id} -${conn.target} `}
                         d={createFlowPath(sourceNode, targetNode, sourceConnections, connIdx)}
-                        fill={speedColors[conn.speed]}
+                        fill={getOTIFColor(conn.otif)}
                         opacity={0.5}
                         style={{
                           cursor: 'pointer',
@@ -1049,7 +1057,7 @@ Z
                     <path
                       key={`${sourceNode.id} -${conn.target} `}
                       d={createFlowPath(sourceNode, targetNode, sourceConnections, connIdx)}
-                      fill={speedColors[conn.speed]}
+                      fill={getOTIFColor(conn.otif)}
                       opacity={0.5}
                       style={{
                         cursor: 'pointer',
