@@ -280,6 +280,36 @@ const LandingPage = ({ onNavigate }) => {
             {otifDepartments.map((dept) => {
               // Special grey styling for Lab and Radiology
               const isGreyCard = dept.id === 'lab' || dept.id === 'radiology';
+
+              // Get colors based on API status field
+              const getColorsByStatus = (status) => {
+                switch (status) {
+                  case 'green':
+                    return {
+                      bg: 'bg-green-50',
+                      border: 'border-green-400',
+                      iconBg: 'bg-green-100',
+                      text: 'text-green-700'
+                    };
+                  case 'amber':
+                    return {
+                      bg: 'bg-amber-50',
+                      border: 'border-amber-400',
+                      iconBg: 'bg-amber-100',
+                      text: 'text-amber-700'
+                    };
+                  case 'red':
+                    return {
+                      bg: 'bg-red-50',
+                      border: 'border-red-400',
+                      iconBg: 'bg-red-100',
+                      text: 'text-red-700'
+                    };
+                  default:
+                    return getOTIFColorByPercentage(dept.otifPercentage);
+                }
+              };
+
               const colors = isGreyCard
                 ? {
                   bg: 'bg-gray-100',
@@ -287,7 +317,7 @@ const LandingPage = ({ onNavigate }) => {
                   iconBg: 'bg-gray-200',
                   text: 'text-gray-700'
                 }
-                : getOTIFColorByPercentage(dept.otifPercentage);
+                : getColorsByStatus(dept.status);
 
               // Get icon component from string name (API) or use directly if already a component (mock)
               const IconComponent = typeof dept.icon === 'string' ? iconMap[dept.icon] || Heart : dept.icon;
@@ -336,10 +366,10 @@ const LandingPage = ({ onNavigate }) => {
           <div className="mt-6 flex flex-wrap items-center gap-6 text-sm text-gray-600 bg-white p-4 rounded-lg shadow-sm">
             <span className="font-semibold text-gray-700">Color Coding:</span>
             <div className="flex items-center gap-2">
-              <span>🟢 Green: 94-100%</span>
+              <span>🟢 Green: 95-100%</span>
             </div>
             <div className="flex items-center gap-2">
-              <span>🟠 Amber: 85-94%</span>
+              <span>🟠 Amber: 85-95%</span>
             </div>
             <div className="flex items-center gap-2">
               <span>🔴 Red: &lt;85%</span>

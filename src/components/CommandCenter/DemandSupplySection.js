@@ -5,35 +5,9 @@ import { generateHeatmapData } from '../../data/commandCenterData';
 const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
     const { demandSupply, medicineCategories, name } = data;
 
-    // Prepare demand-supply chart data based on selected period
-    let demandSupplyData = [];
-    let xAxisLabel = '';
-
-    if (selectedTimePeriod === 'today') {
-        // For "Today": Show internal departments
-        const internalDepartments = [
-            { name: `Overall ${name}`, demand: 450, supply: 420 },
-            { name: 'NICU', demand: 120, supply: 115 },
-            { name: 'ICCU', demand: 95, supply: 92 },
-            { name: 'MICU', demand: 110, supply: 105 },
-            { name: 'SICU', demand: 85, supply: 80 },
-            { name: 'PICU', demand: 40, supply: 38 }
-        ];
-        demandSupplyData = internalDepartments;
-        xAxisLabel = 'Departments';
-    } else {
-        // For other periods: Show days on X-axis
-        const days = selectedTimePeriod === 'next_7_days' ? 7 :
-            selectedTimePeriod === 'next_14_days' ? 14 :
-                selectedTimePeriod === 'next_21_days' ? 21 : 30;
-
-        demandSupplyData = Array.from({ length: days }, (_, i) => ({
-            name: `Day ${i + 1}`,
-            demand: Math.floor(Math.random() * 50) + 100,
-            supply: Math.floor(Math.random() * 50) + 90
-        }));
-        xAxisLabel = 'Days';
-    }
+    // Use API chart data if available, otherwise use fallback
+    const demandSupplyData = demandSupply?.chart_data || [];
+    const xAxisLabel = 'Days Forecast';
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -50,15 +24,15 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                     <div className="grid grid-cols-3 gap-3 mb-4">
                         <div className="bg-white p-3 rounded-lg border border-slate-200">
                             <div className="text-xs text-slate-600 mb-1">OTIF (On-Time In-Full)</div>
-                            <div className="text-xl font-bold text-blue-700">{demandSupply.otif}%</div>
+                            <div className="text-xl font-bold text-blue-700">{demandSupply?.otif || 0}%</div>
                         </div>
                         <div className="bg-white p-3 rounded-lg border border-slate-200">
                             <div className="text-xs text-slate-600 mb-1">OT (On-Time)</div>
-                            <div className="text-xl font-bold text-green-700">{demandSupply.onTime}%</div>
+                            <div className="text-xl font-bold text-green-700">{demandSupply?.on_time || demandSupply?.onTime || 0}%</div>
                         </div>
                         <div className="bg-white p-3 rounded-lg border border-slate-200">
                             <div className="text-xs text-slate-600 mb-1">IF (In-Full)</div>
-                            <div className="text-xl font-bold text-purple-700">{demandSupply.inFull}%</div>
+                            <div className="text-xl font-bold text-purple-700">{demandSupply?.in_full || demandSupply?.inFull || 0}%</div>
                         </div>
                     </div>
 
@@ -68,10 +42,7 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                             <BarChart data={demandSupplyData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis
-                                    dataKey="name"
-                                    angle={selectedTimePeriod === 'today' ? -45 : 0}
-                                    textAnchor={selectedTimePeriod === 'today' ? 'end' : 'middle'}
-                                    height={selectedTimePeriod === 'today' ? 100 : 30}
+                                    dataKey="label"
                                     tick={{ fontSize: 12 }}
                                 />
                                 <YAxis />
@@ -99,8 +70,8 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
 
                         // Helper function to get cell color based on OTIF
                         const getCellColor = (otif) => {
-                            if (otif >= 90) return 'bg-green-500';
-                            if (otif >= 80) return 'bg-yellow-500';
+                            if (otif >= 95) return 'bg-green-500';
+                            if (otif >= 85) return 'bg-amber-500';
                             return 'bg-red-500';
                         };
 
@@ -166,15 +137,15 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                                 <div className="mt-4 pt-4 border-t border-slate-300 flex items-center gap-4 text-xs text-slate-600">
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                        <span>Green: OTIF ≥ 90%</span>
+                                        <span>Green: 95-100%</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                                        <span>Yellow: OTIF 80-90%</span>
+                                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                                        <span>Amber: 85-95%</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                        <span>Red: OTIF &lt; 80%</span>
+                                        <span>Red: &lt;85%</span>
                                     </div>
                                 </div>
                             </>

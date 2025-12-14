@@ -1,135 +1,134 @@
 import React, { useState } from 'react';
-import { Brain, AlertCircle, CheckCircle, XCircle, X } from 'lucide-react';
+import { Brain, CheckCircle, X } from 'lucide-react';
 
-const AgentRecommendationsSection = ({ data, selectedTimePeriod = 'today' }) => {
+const AgentRecommendationsSection = ({ data }) => {
     const { agentRecommendations, name } = data;
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
 
     // Show toast notification
-    const showToastNotification = (medicine, action) => {
-        setToastMessage(`✓ ${action} initiated for ${medicine}`);
+    const showToastNotification = (title) => {
+        setToastMessage(`✓ ${title} - Action initiated`);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 4000);
     };
 
     const getPriorityColor = (priority) => {
-        switch (priority) {
-            case 'High':
-                return 'bg-red-100 text-red-800 border-red-300';
-            case 'Medium':
-                return 'bg-orange-100 text-orange-800 border-orange-300';
-            case 'Low':
-                return 'bg-green-100 text-green-800 border-green-300';
+        const priorityLower = priority?.toLowerCase();
+        switch (priorityLower) {
+            case 'critical':
+                return 'bg-red-100 border-red-400 text-red-800';
+            case 'high':
+                return 'bg-orange-100 border-orange-400 text-orange-800';
+            case 'medium':
+                return 'bg-yellow-100 border-yellow-400 text-yellow-800';
             default:
-                return 'bg-slate-100 text-slate-800 border-slate-300';
+                return 'bg-gray-100 border-gray-400 text-gray-800';
         }
     };
 
-    const getStatusIcon = (status) => {
-        if (status === 'Expected') return <AlertCircle size={16} className="text-orange-600" />;
-        if (status === 'Critical') return <XCircle size={16} className="text-red-600" />;
-        return <CheckCircle size={16} className="text-green-600" />;
+    const getImpactColor = (impact) => {
+        const impactLower = impact?.toLowerCase();
+        switch (impactLower) {
+            case 'high':
+                return 'text-red-700';
+            case 'medium':
+                return 'text-orange-700';
+            case 'low':
+                return 'text-green-700';
+            default:
+                return 'text-gray-700';
+        }
     };
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
                 <Brain size={28} className="text-blue-600" />
-                Agent Recommendation For {name.toUpperCase()}: TOP 10 TODAY
+                Agent Recommendations For {name?.toUpperCase() || 'DEPARTMENT'}
             </h2>
 
-            {/* Center-aligned Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead>
-                        <tr className="bg-slate-100 border-b border-slate-300">
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">
-                                #
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">
-                                Medicine
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">
-                                Status
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">
-                                Stock Available
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">
-                                Expected Demand
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">
-                                Action Available
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">
-                                Priority
-                            </th>
-                            <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700">
-                                Action
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {agentRecommendations.map((rec, index) => (
-                            <tr
-                                key={rec.id}
-                                className="border-b border-slate-200 hover:bg-slate-50 transition-colors"
-                            >
-                                <td className="px-4 py-3 text-center font-semibold text-slate-600">
-                                    {index + 1}
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                    <span className="font-medium text-slate-800">{rec.medicine}</span>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                    <div className="flex items-center justify-center gap-2">
-                                        {getStatusIcon(rec.status)}
-                                        <span className="text-sm text-slate-700">{rec.status}</span>
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                    {rec.stockAvailable ? (
-                                        <CheckCircle size={20} className="text-green-600 inline-block" />
-                                    ) : (
-                                        <XCircle size={20} className="text-red-600 inline-block" />
-                                    )}
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                    <span className="font-semibold text-blue-700">
-                                        {rec.expectedDemand || Math.floor(Math.random() * 200) + 50}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                    {rec.actionAvailable ? (
-                                        <CheckCircle size={20} className="text-green-600 inline-block" />
-                                    ) : (
-                                        <XCircle size={20} className="text-red-600 inline-block" />
-                                    )}
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getPriorityColor(rec.priority)}`}>
-                                        {rec.priority}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                    <button
-                                        onClick={() => showToastNotification(rec.medicine, rec.action)}
-                                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${rec.priority === 'High'
-                                            ? 'bg-red-600 text-white hover:bg-red-700'
-                                            : rec.priority === 'Medium'
-                                                ? 'bg-orange-600 text-white hover:bg-orange-700'
-                                                : 'bg-green-600 text-white hover:bg-green-700'
-                                            }`}
+            {/* Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {agentRecommendations?.map((rec) => (
+                    <div
+                        key={rec.id}
+                        className="border-2 border-slate-200 rounded-lg p-4 hover:shadow-lg transition-all hover:border-blue-300"
+                    >
+                        {/* Priority and Impact Badges */}
+                        <div className="flex items-center justify-between mb-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${getPriorityColor(rec.priority)}`}>
+                                {rec.priority?.toUpperCase()}
+                            </span>
+                            <span className={`text-xs font-semibold ${getImpactColor(rec.impact)}`}>
+                                Impact: {rec.impact}
+                            </span>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-lg font-bold text-slate-800 mb-2 leading-tight">
+                            {rec.title}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="text-sm text-slate-600 mb-3 line-clamp-3">
+                            {rec.description}
+                        </p>
+
+                        {/* Affected Categories */}
+                        {rec.affected_categories && rec.affected_categories.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {rec.affected_categories.map((cat, idx) => (
+                                    <span
+                                        key={idx}
+                                        className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
                                     >
-                                        {rec.action}
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                        {cat}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Metrics Grid */}
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                            <div className="bg-green-50 p-2 rounded text-center">
+                                <div className="font-bold text-green-700 text-sm">
+                                    {rec.estimated_improvement}
+                                </div>
+                                <div className="text-xs text-slate-600">Improvement</div>
+                            </div>
+                            <div className="bg-blue-50 p-2 rounded text-center">
+                                <div className="font-bold text-blue-700 text-sm">
+                                    {rec.implementation_time}
+                                </div>
+                                <div className="text-xs text-slate-600">Timeline</div>
+                            </div>
+                            <div className="bg-purple-50 p-2 rounded text-center">
+                                <div className="font-bold text-purple-700 text-sm">
+                                    {rec.cost_impact}
+                                </div>
+                                <div className="text-xs text-slate-600">Cost</div>
+                            </div>
+                        </div>
+
+                        {/* Action Button */}
+                        <button
+                            onClick={() => showToastNotification(rec.title)}
+                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                        >
+                            Implement Recommendation
+                        </button>
+                    </div>
+                ))}
             </div>
+
+            {/* Empty State */}
+            {(!agentRecommendations || agentRecommendations.length === 0) && (
+                <div className="text-center py-12 text-slate-500">
+                    <Brain size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>No recommendations available at this time.</p>
+                </div>
+            )}
 
             {/* Toast Notification */}
             {showToast && (

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { getDepartmentData, getOTIFColorClass, timePeriods } from '../../data/commandCenterData';
+import { getCommandCenterData } from '../../services/commandCenterService';
 import DemandSupplySection from './DemandSupplySection';
 import RootCausesSection from './RootCausesSection';
 import MedicineTypeImpactSection from './MedicineTypeImpactSection';
@@ -8,18 +9,73 @@ import DemandForecastSection from './DemandForecastSection';
 import AgentRecommendationsSection from './AgentRecommendationsSection';
 
 const CommandCenterDashboard = ({ departmentId, onBack }) => {
-    const [selectedTimePeriod, setSelectedTimePeriod] = useState('today');
+    const [selectedTimePeriod, setSelectedTimePeriod] = useState('next_7_days');
     const [showMedicineModal, setShowMedicineModal] = useState(false);
+    const [apiData, setApiData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Get department data
-    const departmentData = getDepartmentData(departmentId);
+    // Fetch data from API
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await getCommandCenterData(departmentId, selectedTimePeriod);
+                if (response.success) {
+                    setApiData(response.data);
+                }
+            } catch (err) {
+                console.error('Error fetching command center data:', err);
+                setError(err.message);
+                // Fallback to mock data on error
+                setApiData(null);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    if (!departmentData) {
+        fetchData();
+    }, [departmentId, selectedTimePeriod]);
+
+    // Transform API data to match the expected structure for child components
+    const transformedData = apiData ? {
+        name: apiData.department?.name || 'Department',
+        overview: apiData.overview,
+        department: apiData.department,
+        demandSupply: apiData.demand_supply,  // Transform snake_case to camelCase
+        medicineCategories: apiData.medicine_categories,
+        heatmapData: apiData.heatmap_data,
+        rootCauses: apiData.root_causes,
+        medicineTypeImpact: apiData.medicine_type_impact,
+        agentRecommendations: apiData.agent_recommendations,
+        summaryMetrics: apiData.summary_metrics
+    } : null;
+
+    // Use transformed API data if available, otherwise fall back to mock data
+    const departmentData = transformedData || getDepartmentData(departmentId);
+
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-slate-600">Loading command center data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error or no data state
+    if (!departmentData || !departmentData.overview) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-slate-800 mb-2">Department Not Found</h2>
                     <p className="text-slate-600 mb-4">Unable to load data for this department.</p>
+                    {error && <p className="text-red-600 text-sm mb-4">Error: {error}</p>}
                     <button
                         onClick={onBack}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -31,8 +87,9 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
         );
     }
 
-    const { overview, name } = departmentData;
-    const otifColors = getOTIFColorClass(overview.otif);
+    const { overview, department } = departmentData;
+    const name = department?.display_name || department?.name || departmentData.name || 'Department';
+    const otifColors = getOTIFColorClass(overview?.otif || 0);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
@@ -61,7 +118,7 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
                             <div className={`${otifColors.bg} ${otifColors.border} border-2 rounded-lg px-6 py-3`}>
                                 <div className="text-sm text-slate-600 mb-1">OTIF</div>
                                 <div className={`text-3xl font-bold ${otifColors.text}`}>
-                                    {overview.otif}%
+                                    {overview?.otif || 0}%
                                 </div>
                             </div>
 
@@ -69,7 +126,7 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
                             <div className="bg-blue-50 border-2 border-blue-300 rounded-lg px-6 py-3">
                                 <div className="text-sm text-slate-600 mb-1">OT (On-Time)</div>
                                 <div className="text-3xl font-bold text-blue-700">
-                                    {overview.onTime}%
+                                    {overview?.on_time || overview?.onTime || 0}%
                                 </div>
                             </div>
 
@@ -77,7 +134,7 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
                             <div className="bg-purple-50 border-2 border-purple-300 rounded-lg px-6 py-3">
                                 <div className="text-sm text-slate-600 mb-1">IF (In-Full)</div>
                                 <div className="text-3xl font-bold text-purple-700">
-                                    {overview.inFull}%
+                                    {overview?.in_full || overview?.inFull || 0}%
                                 </div>
                             </div>
                         </div>
