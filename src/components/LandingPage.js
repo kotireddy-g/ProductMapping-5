@@ -20,6 +20,7 @@ import { decisionActionSubcategories as mockDecisionActionSubcategories } from '
 import ChordDiagram from './ChordDiagram';
 import KPIDashboard from './KPIDashboard';
 import dashboardService from '../services/dashboardService';
+import { parseSearchQuery } from '../utils/searchParser';
 
 // Icon mapping for department cards (API returns string names)
 const iconMap = {
@@ -141,16 +142,81 @@ const LandingPage = ({ onNavigate }) => {
     setShowSuggestions(true);
   };
 
+  // Handle intelligent search
+  const handleSearch = (query) => {
+    if (!query || query.trim().length === 0) return;
+
+    // Prepare dashboard data for search parser
+    const dashboardData = {
+      departments: otifDepartments,
+      forecastAreas: forecastAreas,
+      decisionActions: decisionActions
+    };
+
+    // Parse the search query
+    const searchResult = parseSearchQuery(query, dashboardData);
+
+    // Handle navigation based on search result type
+    switch (searchResult.type) {
+      case 'department':
+        // Navigate to Command Center with department
+        if (onNavigate) {
+          onNavigate('otif-detail', searchResult.data);
+        }
+        break;
+
+      case 'forecast':
+        // Navigate to Forecast Details
+        if (onNavigate) {
+          onNavigate('forecast-detail', searchResult.data);
+        }
+        break;
+
+      case 'decision_action':
+        if (searchResult.data.type === 'main') {
+          // Show subcategory popup for main action
+          setSelectedAction(searchResult.data.mainAction);
+          setShowSubcategoriesModal(true);
+        } else if (searchResult.data.type === 'sub') {
+          // Navigate directly to Decision Actions page
+          if (onNavigate) {
+            onNavigate('action-detail', {
+              ...searchResult.data.mainAction,
+              subcategory: searchResult.data.subAction,
+              mainAction: searchResult.data.mainAction.id,
+              subAction: searchResult.data.subAction.id
+            });
+          }
+        }
+        break;
+
+      case 'no_match':
+        // Show user-friendly message
+        alert(`Sorry, we couldn't find any results for "${query}".\n\nTry searching for:\n• Department names (ICU, Ward, OPD)\n• Forecast queries (ICU forecast, OPD prediction)\n• Decision actions (Fast moving, Stockout, Usage Velocity)`);
+        break;
+
+
+      default:
+        break;
+    }
+
+    // Clear search and hide suggestions
+    setSearchQuery('');
+    setShowSuggestions(false);
+  };
+
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion.text);
     setShowSuggestions(false);
 
-    if (suggestion.category === 'OTIF' && suggestion.text.includes('OTIF ')) {
-      const deptName = suggestion.text.replace('OTIF ', '');
-      const dept = otifDepartments.find(d => d.name.toLowerCase() === deptName.toLowerCase());
-      if (dept && onNavigate) {
-        onNavigate('otif-detail', dept);
-      }
+    // Use intelligent search for suggestions too
+    handleSearch(suggestion.text);
+  };
+
+  // Handle Enter key press in search
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch(searchQuery);
     }
   };
 
@@ -214,6 +280,7 @@ const LandingPage = ({ onNavigate }) => {
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
+              onKeyPress={handleSearchKeyPress}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder="Search: OTIF, MEDICINE, Action, Labels (Voice or Text)"
