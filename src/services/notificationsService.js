@@ -13,7 +13,13 @@ const notificationsService = {
     getNotifications: async () => {
         try {
             const response = await apiClient.get('/api/notifications');
-            return response.data;
+            // API returns { success: true, data: [...notifications] }
+            // Return in expected format: { data: { notifications: [...] } }
+            return {
+                data: {
+                    notifications: response.data.data || response.data.notifications || []
+                }
+            };
         } catch (error) {
             console.error('Get notifications error:', error);
             throw error;
