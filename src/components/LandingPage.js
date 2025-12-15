@@ -548,7 +548,12 @@ const LandingPage = ({ onNavigate }) => {
                     key={subcategory.id}
                     onClick={() => {
                       setShowSubcategoriesModal(false);
-                      onNavigate && onNavigate('action-detail', { ...selectedAction, subcategory });
+                      onNavigate && onNavigate('action-detail', {
+                        ...selectedAction,
+                        subcategory,
+                        mainAction: selectedAction.id,
+                        subAction: subcategory.id
+                      });
                     }}
                     className="bg-white border-2 border-gray-200 hover:border-blue-500 rounded-lg p-4 transition-all hover:shadow-lg text-left group"
                   >

@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Info, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Info, Eye, CheckCircle } from 'lucide-react';
 import ProductJourneyModal from '../ForecastReview/ProductJourneyModal';
+import { getDecisionActionsData } from '../../services/decisionActionsService';
 
-const DecisionActionsScreen = ({ actionType, onBack }) => {
+const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) => {
     const [humanFeedback, setHumanFeedback] = useState({});
     const [tags, setTags] = useState({});
     const [showFlowModal, setShowFlowModal] = useState(false);
     const [selectedFlowItem, setSelectedFlowItem] = useState(null);
+    const [medicineData, setMedicineData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Alert definitions for tooltips
     const alertDefinitions = {
@@ -28,8 +32,38 @@ const DecisionActionsScreen = ({ actionType, onBack }) => {
         }
     };
 
-    // Sample data for the table
-    const medicineData = [
+    // Fetch data from API
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!mainAction || !subAction) {
+                setError('Missing action parameters');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await getDecisionActionsData(mainAction, subAction);
+
+                if (response.success && response.data) {
+                    setMedicineData(response.data);
+                } else {
+                    setError('Failed to load data');
+                }
+            } catch (err) {
+                console.error('Error fetching decision actions data:', err);
+                setError('Failed to load data. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [mainAction, subAction]);
+
+    // Sample data for fallback (removed, now using API)
+    const sampleData = [
         {
             id: 1,
             category: 'Life-saving',
@@ -268,195 +302,259 @@ const DecisionActionsScreen = ({ actionType, onBack }) => {
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="max-w-[1600px] mx-auto px-6 py-4">
-                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead className="bg-gradient-to-r from-slate-100 to-slate-50 sticky top-0">
-                                <tr className="border-b-2 border-slate-300">
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Category
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        SKU/Medicine
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Alert
-                                    </th>
-                                    <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Flow
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Tag
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Location
-                                    </th>
-                                    <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        OTIF
-                                    </th>
-                                    <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Daily Demand
-                                    </th>
-                                    <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Supply
-                                    </th>
-                                    <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Stock Available
-                                    </th>
-                                    <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Safety Level
-                                    </th>
-                                    <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Forecast%
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Agent Suggestion
-                                    </th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                        Human Feedback
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200">
-                                {medicineData.map((medicine, index) => (
-                                    <tr
-                                        key={medicine.id}
-                                        className={`transition-all hover:bg-blue-50 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}
-                                    >
-                                        {/* Category */}
-                                        <td className="px-4 py-4">
-                                            <span className="font-semibold text-slate-800 px-3 py-1 bg-slate-100 rounded-full text-xs">
-                                                {medicine.category}
-                                            </span>
-                                        </td>
-
-                                        {/* SKU/Medicine */}
-                                        <td className="px-4 py-4">
-                                            <div className="space-y-1.5">
-                                                <div className="font-bold text-slate-900">{medicine.medicineName}</div>
-                                                <div className="text-xs text-slate-600">
-                                                    <span className="font-mono bg-slate-100 px-2 py-0.5 rounded">SKU: {medicine.sku}</span>
-                                                </div>
-                                                <div className="text-xs text-slate-600">
-                                                    <span className="font-mono bg-slate-100 px-2 py-0.5 rounded">Batch: {medicine.batchCode}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 mt-2">
-                                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
-                                                        {medicine.velocity}
-                                                    </span>
-                                                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
-                                                        {medicine.drugLabel}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        {/* Alert */}
-                                        <td className="px-4 py-4">
-                                            <div className="relative group">
-                                                <div className={`px-3 py-2 rounded-lg border-2 font-bold text-xs inline-flex items-center gap-1.5 shadow-sm ${alertDefinitions[medicine.alert].color}`}>
-                                                    {medicine.alert}
-                                                    <Info size={14} />
-                                                </div>
-                                                <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-20 bg-slate-900 text-white text-xs rounded-lg px-4 py-3 whitespace-nowrap shadow-xl border border-slate-700">
-                                                    <div className="font-semibold mb-1">{medicine.alert}</div>
-                                                    <div className="text-slate-300">{alertDefinitions[medicine.alert].definition}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        {/* Flow */}
-                                        <td className="px-4 py-4">
-                                            <button
-                                                onClick={() => handleViewFlow(medicine)}
-                                                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold text-xs hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
-                                            >
-                                                <Eye size={14} />
-                                                View Flow
-                                            </button>
-                                        </td>
-
-                                        {/* Tag */}
-                                        <td className="px-4 py-4">
-                                            <select
-                                                value={tags[medicine.id] || medicine.tag}
-                                                onChange={(e) => handleTagChange(medicine.id, e.target.value)}
-                                                className="px-3 py-2 border-2 border-slate-300 rounded-lg text-xs bg-white text-slate-700 font-semibold hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                            >
-                                                <option value="Must Have">Must Have</option>
-                                                <option value="Patient Based">Patient Based</option>
-                                                <option value="General">General</option>
-                                            </select>
-                                        </td>
-
-                                        {/* Location */}
-                                        <td className="px-4 py-4">
-                                            <span className="text-slate-800 font-semibold">{medicine.location}</span>
-                                        </td>
-
-                                        {/* OTIF */}
-                                        <td className="px-4 py-4 text-center">
-                                            <span className={`px-3 py-2 rounded-lg text-sm ${getOTIFColor(medicine.otif)}`}>
-                                                {medicine.otif}%
-                                            </span>
-                                        </td>
-
-                                        {/* Daily Demand */}
-                                        <td className="px-4 py-4 text-center">
-                                            <span className="font-bold text-blue-700 text-base">{medicine.dailyDemand}</span>
-                                        </td>
-
-                                        {/* Supply */}
-                                        <td className="px-4 py-4 text-center">
-                                            <span className="font-bold text-green-700 text-base">{medicine.supply}</span>
-                                        </td>
-
-                                        {/* Stock Available */}
-                                        <td className="px-4 py-4 text-center">
-                                            <span className="font-bold text-purple-700 text-base">{medicine.stockAvailable}</span>
-                                        </td>
-
-                                        {/* Safety Level */}
-                                        <td className="px-4 py-4 text-center">
-                                            <span className="font-bold text-orange-700 text-base">{medicine.safetyLevel}%</span>
-                                        </td>
-
-                                        {/* Forecast% */}
-                                        <td className="px-4 py-4 text-center">
-                                            <span className="font-bold text-amber-700 text-base">{medicine.forecast}%</span>
-                                        </td>
-
-                                        {/* Agent Suggestion */}
-                                        <td className="px-4 py-4">
-                                            <div className="max-w-xs">
-                                                <span className="text-slate-700 text-xs leading-relaxed">{medicine.agentSuggestion}</span>
-                                            </div>
-                                        </td>
-
-                                        {/* Human Feedback */}
-                                        <td className="px-4 py-4">
-                                            <select
-                                                value={humanFeedback[medicine.id] || ''}
-                                                onChange={(e) => handleFeedbackChange(medicine.id, e.target.value)}
-                                                className="px-3 py-2 border-2 border-slate-300 rounded-lg text-xs bg-white text-slate-700 font-semibold hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-44 transition-all"
-                                            >
-                                                <option value="">Select Reason</option>
-                                                <option value="Supplier Delay">Supplier Delay</option>
-                                                <option value="High Demand">High Demand</option>
-                                                <option value="Quality Issue">Quality Issue</option>
-                                                <option value="Regulatory Hold">Regulatory Hold</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+            {/* Loading State */}
+            {loading && (
+                <div className="max-w-[1600px] mx-auto px-6 py-12">
+                    <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-12 text-center">
+                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                        <p className="text-slate-600 font-semibold">Loading decision actions data...</p>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* Error State */}
+            {error && !loading && (
+                <div className="max-w-[1600px] mx-auto px-6 py-12">
+                    <div className="bg-red-50 rounded-xl shadow-lg border-2 border-red-200 p-12 text-center">
+                        <div className="text-red-600 text-5xl mb-4">⚠️</div>
+                        <h3 className="text-xl font-bold text-red-800 mb-2">Error Loading Data</h3>
+                        <p className="text-red-600">{error}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Content */}
+            {!loading && !error && (
+                <div className="max-w-[1600px] mx-auto px-6 py-4">
+                    <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead className="bg-gradient-to-r from-slate-100 to-slate-50 sticky top-0">
+                                    <tr className="border-b-2 border-slate-300">
+                                        <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Category
+                                        </th>
+                                        <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            SKU/Medicine
+                                        </th>
+                                        <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Alert
+                                        </th>
+                                        <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Flow
+                                        </th>
+                                        <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Tag
+                                        </th>
+                                        <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Location
+                                        </th>
+                                        <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            OTIF
+                                        </th>
+                                        <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Daily Demand
+                                        </th>
+                                        <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Supply
+                                        </th>
+                                        <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Stock Available
+                                        </th>
+                                        <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Forecast%
+                                        </th>
+                                        <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Agent Suggestion
+                                        </th>
+                                        <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Human Feedback
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200">
+                                    {medicineData.map((medicine, index) => (
+                                        <tr
+                                            key={medicine.id}
+                                            className={`transition - all hover: bg - blue - 50 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} `}
+                                        >
+                                            {/* Category */}
+                                            <td className="px-4 py-4">
+                                                <span className="font-semibold text-slate-800 px-3 py-1 bg-slate-100 rounded-full text-xs">
+                                                    {medicine.category}
+                                                </span>
+                                            </td>
+
+                                            {/* SKU/Medicine */}
+                                            <td className="px-4 py-4">
+                                                <div className="space-y-1.5">
+                                                    <div className="font-bold text-slate-900">{medicine.medicineName}</div>
+                                                    <div className="text-xs text-slate-600">
+                                                        <span className="font-mono bg-slate-100 px-2 py-0.5 rounded">SKU: {medicine.sku}</span>
+                                                    </div>
+                                                    <div className="text-xs text-slate-600">
+                                                        <span className="font-mono bg-slate-100 px-2 py-0.5 rounded">Batch: {medicine.batchCode}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                                            {medicine.velocity}
+                                                        </span>
+                                                        <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
+                                                            {medicine.drugLabel}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            {/* Alert */}
+                                            <td className="px-4 py-4">
+                                                <div className="relative group">
+                                                    <div className={`px - 3 py - 2 rounded - lg border - 2 font - bold text - xs inline - flex items - center gap - 1.5 shadow - sm ${alertDefinitions[medicine.alert].color} `}>
+                                                        {medicine.alert}
+                                                        <Info size={14} />
+                                                    </div>
+                                                    <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-20 bg-slate-900 text-white text-xs rounded-lg px-4 py-3 whitespace-nowrap shadow-xl border border-slate-700">
+                                                        <div className="font-semibold mb-1">{medicine.alert}</div>
+                                                        <div className="text-slate-300">{alertDefinitions[medicine.alert].definition}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            {/* Flow */}
+                                            <td className="px-4 py-4">
+                                                <button
+                                                    onClick={() => handleViewFlow(medicine)}
+                                                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold text-xs hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
+                                                >
+                                                    <Eye size={14} />
+                                                    View Flow
+                                                </button>
+                                            </td>
+
+                                            {/* Tag */}
+                                            <td className="px-4 py-4">
+                                                <select
+                                                    value={tags[medicine.id] || medicine.tag}
+                                                    onChange={(e) => handleTagChange(medicine.id, e.target.value)}
+                                                    className="px-3 py-2 border-2 border-slate-300 rounded-lg text-xs bg-white text-slate-700 font-semibold hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                >
+                                                    <option value="Must Have">Must Have</option>
+                                                    <option value="Patient Based">Patient Based</option>
+                                                    <option value="General">General</option>
+                                                </select>
+                                            </td>
+
+                                            {/* Location */}
+                                            <td className="px-4 py-4">
+                                                <span className="text-slate-800 font-semibold">{medicine.location}</span>
+                                            </td>
+
+                                            {/* OTIF */}
+                                            <td className="px-4 py-4 text-center">
+                                                <span className={`px - 3 py - 2 rounded - lg text - sm ${getOTIFColor(medicine.otif)} `}>
+                                                    {medicine.otif}%
+                                                </span>
+                                            </td>
+
+                                            {/* Daily Demand */}
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="font-bold text-blue-700 text-base">{medicine.dailyDemand}</span>
+                                            </td>
+
+                                            {/* Supply */}
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="font-bold text-green-700 text-base">{medicine.supply}</span>
+                                            </td>
+
+                                            {/* Stock Available */}
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="font-bold text-purple-700 text-base">{medicine.stockAvailable}</span>
+                                            </td>
+
+                                            {/* Forecast */}
+                                            <td className="px-4 py-4 text-center">
+                                                <span className="font-bold text-amber-700 text-base">{medicine.forecast}%</span>
+                                            </td>
+
+                                            {/* Agent Suggestion */}
+                                            <td className="px-4 py-4">
+                                                <div className="max-w-xs">
+                                                    <span className="text-slate-700 text-xs leading-relaxed">{medicine.agentSuggestion}</span>
+                                                </div>
+                                            </td>
+
+                                            {/* Human Feedback */}
+                                            <td className="px-4 py-4">
+                                                <select
+                                                    value={humanFeedback[medicine.id] || ''}
+                                                    onChange={(e) => handleFeedbackChange(medicine.id, e.target.value)}
+                                                    className="px-3 py-2 border-2 border-slate-300 rounded-lg text-xs bg-white text-slate-700 font-semibold hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-44 transition-all"
+                                                >
+                                                    <option value="">Select Reason</option>
+                                                    <option value="Supplier Delay">Supplier Delay</option>
+                                                    <option value="High Demand">High Demand</option>
+                                                    <option value="Quality Issue">Quality Issue</option>
+                                                    <option value="Regulatory Hold">Regulatory Hold</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+
+                            {/* Empty State - Context-Aware Message */}
+                            {medicineData.length === 0 && (
+                                <>
+                                    {/* Case 1: Expected items but API returned empty - Data Sync Issue */}
+                                    {actionType?.subcategory?.count > 0 ? (
+                                        <div className="py-16 px-6 text-center bg-gradient-to-br from-blue-50 to-indigo-50">
+                                            <div className="max-w-md mx-auto">
+                                                <div className="text-6xl mb-4">🔄</div>
+                                                <h3 className="text-2xl font-bold text-slate-800 mb-3">
+                                                    Data Sync in Progress
+                                                </h3>
+                                                <p className="text-slate-600 text-lg mb-2">
+                                                    We're currently updating the inventory data for this category.
+                                                </p>
+                                                <p className="text-slate-500 text-sm mb-4">
+                                                    Expected {actionType.subcategory.count} item{actionType.subcategory.count !== 1 ? 's' : ''} to display. Please refresh in a moment or contact support if this persists.
+                                                </p>
+                                                <div className="mt-6 flex items-center justify-center gap-2 text-sm text-slate-500">
+                                                    <Info size={16} className="text-blue-600" />
+                                                    <span>System is processing latest updates</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* Case 2: Truly no items - Positive Message */
+                                        <div className="py-16 px-6 text-center bg-gradient-to-br from-green-50 to-blue-50">
+                                            <div className="max-w-md mx-auto">
+                                                <div className="text-6xl mb-4">✨</div>
+                                                <h3 className="text-2xl font-bold text-slate-800 mb-3">
+                                                    Great News! Everything Looks Good
+                                                </h3>
+                                                <p className="text-slate-600 text-lg mb-2">
+                                                    No items require attention in this category at the moment.
+                                                </p>
+                                                <p className="text-slate-500 text-sm">
+                                                    Your inventory is well-managed and all stock levels are optimal. Keep up the excellent work!
+                                                </p>
+                                                <div className="mt-6 flex items-center justify-center gap-2 text-sm text-slate-500">
+                                                    <CheckCircle size={16} className="text-green-600" />
+                                                    <span>All systems operating normally</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Product Journey Modal */}
             <ProductJourneyModal

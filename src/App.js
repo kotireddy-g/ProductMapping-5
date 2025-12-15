@@ -260,6 +260,8 @@ function App() {
       <>
         <DecisionActionsScreen
           actionType={selectedAction}
+          mainAction={selectedAction?.mainAction}
+          subAction={selectedAction?.subAction}
           onBack={handleBackToDashboard}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
