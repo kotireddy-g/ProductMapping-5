@@ -3,7 +3,7 @@ import { X, Upload, FileSpreadsheet, CheckCircle, AlertCircle, Zap, Trash2 } fro
 import uploadService from '../../services/uploadService';
 
 const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadStatus, setUploadStatus] = useState('idle'); // idle, file-selected, uploading, processing, success, error
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -14,8 +14,11 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
   if (!isOpen) return null;
 
   // File validation
-  const validateAndSetFile = (file) => {
-    if (!file) return;
+  const validateAndSetFiles = (files) => {
+    if (!files || files.length === 0) return;
+
+    const validFiles = [];
+    const errors = [];
 
     // Check file type
     const validTypes = [
@@ -23,20 +26,32 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
       'application/vnd.ms-excel',
     ];
 
-    if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx')) {
-      setError('Please upload an Excel file (.xlsx)');
-      return;
+    Array.from(files).forEach((file, index) => {
+      // Check file type
+      if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx')) {
+        errors.push(`${file.name}: Invalid file type (must be .xlsx)`);
+        return;
+      }
+
+      // Check file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        errors.push(`${file.name}: File too large (max 10MB)`);
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    if (errors.length > 0) {
+      setError(errors.join('\n'));
+    } else {
+      setError('');
     }
 
-    // Check file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('File size must be less than 10MB');
-      return;
+    if (validFiles.length > 0) {
+      setSelectedFiles(validFiles);
+      setUploadStatus('file-selected');
     }
-
-    setSelectedFile(file);
-    setUploadStatus('file-selected');
-    setError('');
   };
 
   // Drag & drop handlers
@@ -53,14 +68,14 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    validateAndSetFile(file);
+    const files = e.dataTransfer.files;
+    validateAndSetFiles(files);
   };
 
   // File input handler
   const handleFileInput = (e) => {
-    const file = e.target.files[0];
-    validateAndSetFile(file);
+    const files = e.target.files;
+    validateAndSetFiles(files);
   };
 
   // Browse files
@@ -69,10 +84,11 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
   };
 
   // Remove file
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    setUploadStatus('idle');
-    setError('');
+  const handleRemoveFile = (indexToRemove) => {
+    setSelectedFiles(prev => prev.filter((_, index) => index !== indexToRemove));
+    if (selectedFiles.length === 1) {
+      setUploadStatus('idle');
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -80,7 +96,7 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
 
   // Submit handler - Two-step API process
   const handleSubmit = async () => {
-    if (!selectedFile) return;
+    if (!selectedFiles || selectedFiles.length === 0) return;
 
     try {
       // Step 1: Upload file
@@ -100,29 +116,37 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
         });
       }, 200);
 
-      const uploadResponse = await uploadService.uploadWorkbook(selectedFile, 1);
+      // Upload all files sequentially
+      const uploadResults = [];
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        const uploadResponse = await uploadService.uploadWorkbook(file, 1);
+
+        if (!uploadResponse.upload_id) {
+          throw new Error(`Upload failed for ${file.name}. No upload ID received.`);
+        }
+
+        uploadResults.push(uploadResponse);
+      }
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      // If we get here, upload was successful (201 status)
-      // Check if we have upload_id in response
-      if (!uploadResponse.upload_id) {
-        throw new Error('Upload failed. No upload ID received.');
-      }
-
       // Small delay before step 2
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Step 2: Process upload and recompute KPIs
+      // Step 2: Process all uploads
       setCurrentStep(2);
       setUploadStatus('processing');
 
-      const processResponse = await uploadService.processUpload(
-        uploadResponse.upload_id,
-        1,
-        'last_30_days'
-      );
+      // Process each upload
+      for (const uploadResponse of uploadResults) {
+        await uploadService.processUpload(
+          uploadResponse.upload_id,
+          1,
+          'last_30_days'
+        );
+      }
 
       // If we get here, processing was successful
       // Success!
@@ -131,7 +155,8 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
       // Auto-close and refresh after 2 seconds
       setTimeout(() => {
         if (onUploadComplete) {
-          onUploadComplete(processResponse);
+          // Pass the last process response or a generic success indicator
+          onUploadComplete(uploadResults[uploadResults.length - 1]);
         }
         handleClose();
       }, 2000);
@@ -144,7 +169,7 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
 
   // Close handler
   const handleClose = () => {
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setUploadStatus('idle');
     setCurrentStep(1);
     setUploadProgress(0);
@@ -206,8 +231,8 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FileSpreadsheet className="w-8 h-8 text-blue-600" />
                 </div>
-                <p className="text-gray-800 font-semibold mb-2">
-                  Drag & drop your Excel file here
+                <p className="text-gray-600 text-lg">
+                  Drag & drop your Excel files here
                 </p>
                 <p className="text-gray-500 text-sm mb-4">or</p>
                 <button
@@ -220,6 +245,7 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
                   ref={fileInputRef}
                   type="file"
                   accept=".xlsx,.xls"
+                  multiple
                   onChange={handleFileInput}
                   className="hidden"
                 />
@@ -236,24 +262,28 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
           )}
 
           {/* File Selected State */}
-          {uploadStatus === 'file-selected' && selectedFile && (
+          {uploadStatus === 'file-selected' && selectedFiles.length > 0 && (
             <>
-              <div className="border-2 border-blue-200 bg-blue-50 rounded-xl p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileSpreadsheet className="w-6 h-6 text-white" />
+              <div className="space-y-3">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="border-2 border-blue-200 bg-blue-50 rounded-xl p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileSpreadsheet className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-gray-800 font-semibold truncate">{file.name}</p>
+                        <p className="text-gray-500 text-sm mt-1">{formatFileSize(file.size)}</p>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveFile(index)}
+                        className="p-2 hover:bg-blue-100 rounded-lg transition-colors flex-shrink-0"
+                      >
+                        <Trash2 className="w-5 h-5 text-red-500" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-gray-800 font-semibold truncate">{selectedFile.name}</p>
-                    <p className="text-gray-500 text-sm mt-1">{formatFileSize(selectedFile.size)}</p>
-                  </div>
-                  <button
-                    onClick={handleRemoveFile}
-                    className="p-2 hover:bg-blue-100 rounded-lg transition-colors flex-shrink-0"
-                  >
-                    <Trash2 className="w-5 h-5 text-red-500" />
-                  </button>
-                </div>
+                ))}
               </div>
 
               <div className="mt-6 flex gap-3">
