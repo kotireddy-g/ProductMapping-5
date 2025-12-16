@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './i18n'; // Initialize i18n
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
 import Header from './components/Layout/Header';

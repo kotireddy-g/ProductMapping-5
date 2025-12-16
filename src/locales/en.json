@@ -1,0 +1,110 @@
+{
+    "common": {
+        "search": "Search",
+        "back": "Back",
+        "cancel": "Cancel",
+        "submit": "Submit",
+        "upload": "Upload",
+        "download": "Download",
+        "save": "Save",
+        "delete": "Delete",
+        "edit": "Edit",
+        "close": "Close",
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success"
+    },
+    "header": {
+        "uploadForecast": "Upload Forecast",
+        "supplierReport": "Supplier Forecast Report",
+        "notifications": "Notifications",
+        "adminUser": "Admin User"
+    },
+    "search": {
+        "placeholder": "Search: OTIF, MEDICINE, Action, Labels (Voice or Text)",
+        "noResults": "Sorry, we couldn't find any results for \"{{query}}\".",
+        "trySearching": "Try searching for:",
+        "departments": "Department names (ICU, Ward, OPD)",
+        "forecast": "Forecast queries (ICU forecast, OPD prediction)",
+        "actions": "Decision actions (Fast moving, Stockout, Usage Velocity)"
+    },
+    "landing": {
+        "title": "Hospital Pharma Procurement",
+        "otif": "OTIF",
+        "ot": "OT",
+        "if": "IF",
+        "departmentPerformance": "Department-wise On-Time In-Full Performance",
+        "supplyDemand": "Supply & Demand Flow",
+        "supplyDemandDesc": "Interactive visualization of hospital supply chain",
+        "movementSpeed": "Movement Speed",
+        "fast": "Fast",
+        "medium": "Medium",
+        "slow": "Slow",
+        "occasional": "Occasional",
+        "supply": "Supply",
+        "demand": "Demand",
+        "level": "Level",
+        "resetView": "Reset View",
+        "expand": "Expand"
+    },
+    "departments": {
+        "icu": "ICU",
+        "ward": "Ward",
+        "opd": "OPD",
+        "emergency": "Emergency & Critical Care",
+        "operating": "Operating Theatres & Procedure Suites",
+        "lab": "Lab",
+        "radiology": "Radiology",
+        "pharmacy": "Pharmacy",
+        "dialysis": "Dialysis",
+        "nicu": "NICU",
+        "oncology": "Oncology",
+        "daycare": "Daycare",
+        "er": "ER"
+    },
+    "decisionActions": {
+        "title": "Decision Actions",
+        "pending": "Pending",
+        "viewDetails": "View Details",
+        "usageVelocity": "Usage / Velocity",
+        "stockPosition": "Stock Position",
+        "supplierPerformance": "Supplier Performance",
+        "costOptimization": "Cost Optimization",
+        "expiryShelfLife": "Expiry / Shelf-Life",
+        "criticalityService": "Criticality & Service Level",
+        "demandPattern": "Demand Pattern & Predictability",
+        "policyHandling": "Policy / Handling"
+    },
+    "forecast": {
+        "title": "Forecast",
+        "surge": "Surge",
+        "areas": "Areas",
+        "viewDetails": "View Details",
+        "today": "Today",
+        "next7Days": "Next 7 Days",
+        "next14Days": "Next 14 Days",
+        "next21Days": "Next 21 Days",
+        "next30Days": "Next 30 Days"
+    },
+    "commandCenter": {
+        "title": "Command Center",
+        "backToDashboard": "Back to Dashboard",
+        "overview": "Overview",
+        "demandRisk": "Demand Risk & Forecast",
+        "recommendations": "Agent Recommendations",
+        "rca": "Root Cause Analysis"
+    },
+    "upload": {
+        "title": "Upload Forecast Data",
+        "description": "Upload Excel file to update dashboard",
+        "dragDrop": "Drag & drop your Excel files here",
+        "or": "or",
+        "browseFiles": "Browse Files",
+        "supportedFormat": "Supported format:",
+        "maxSize": "Maximum size:",
+        "uploading": "Uploading",
+        "processing": "Processing",
+        "uploadSuccess": "Upload Successful!",
+        "uploadError": "Upload Failed"
+    }
+}

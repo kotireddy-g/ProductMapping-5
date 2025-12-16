@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, TrendingUp, TrendingDown, AlertCircle, CheckCircle, X } from 'lucide-react';
-import { getForecastDetails } from '../../services/forecastService';
+import { useTranslation } from 'react-i18next';
+import { ArrowLeft, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
+import ToastNotification from '../Layout/ToastNotification';
+import forecastService from '../../services/forecastService';
 
-const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastArea = 'ICU' }) => {
+const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastArea }) => {
+    const { t } = useTranslation();
     const [selectedPeriod, setSelectedPeriod] = useState('Today');
     const [selectedMedicine, setSelectedMedicine] = useState('');
     const [whatIfScenario, setWhatIfScenario] = useState('do_nothing');
@@ -31,7 +34,8 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                 setError(null);
                 const areaId = selectedForecastArea.toLowerCase();
                 const timePeriod = periodToApiParam[selectedPeriod];
-                const response = await getForecastDetails(areaId, timePeriod);
+                const response = await forecastService.getForecastDetails(areaId, timePeriod);
+
 
                 if (response.success && response.data) {
                     setApiData(response.data);
@@ -83,8 +87,8 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
     //         ];
     //     }
     //     return [
-    //         { id: 1, name: `${selectedForecastArea} - Unit 1`, demand: 300, stockAvailable: 800, forecast: 350, additional: 50, status: 'normal' },
-    //         { id: 2, name: `${selectedForecastArea} - Unit 2`, demand: 250, stockAvailable: 650, forecast: 280, additional: 30, status: 'normal' }
+    //         { id: 1, name: `${ selectedForecastArea } - Unit 1`, demand: 300, stockAvailable: 800, forecast: 350, additional: 50, status: 'normal' },
+    //         { id: 2, name: `${ selectedForecastArea } - Unit 2`, demand: 250, stockAvailable: 650, forecast: 280, additional: 30, status: 'normal' }
     //     ];
     // };
 
@@ -192,12 +196,12 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                         className="flex items-center gap-2 text-slate-600 hover:text-blue-600 mb-4 transition-colors group"
                     >
                         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                        <span className="font-semibold">Back to Dashboard</span>
+                        <span className="font-semibold">{t('common.back')}</span>
                     </button>
 
                     <div className="flex items-center justify-between mb-6">
                         <h1 className="text-4xl font-bold text-slate-800">
-                            {selectedForecastArea.toUpperCase()} FORECAST
+                            {selectedForecastArea.toUpperCase()} {t('forecast.title').toUpperCase()}
                         </h1>
 
                         {/* Periodic Filters - Moved to Right */}
@@ -277,13 +281,13 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                 </thead>
                                 <tbody className="divide-y divide-slate-200">
                                     {departments.map((dept, index) => (
-                                        <tr key={dept.id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
+                                        <tr key={dept.id} className={`hover: bg - blue - 50 transition - colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} `}>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-3 h-3 rounded-full ${dept.status === 'critical' ? 'bg-red-500' :
+                                                    <div className={`w - 3 h - 3 rounded - full ${dept.status === 'critical' ? 'bg-red-500' :
                                                         dept.status === 'warning' ? 'bg-yellow-500' :
                                                             'bg-green-500'
-                                                        }`}></div>
+                                                        } `}></div>
                                                     <span className="font-bold text-slate-900">{dept.name}</span>
                                                 </div>
                                             </td>
@@ -297,7 +301,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                                 <span className="font-bold text-green-700 text-lg">{dept.forecast}</span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                <span className={`font-bold text-lg ${dept.additional > 50 ? 'text-red-600' : dept.additional > 30 ? 'text-orange-600' : 'text-green-600'}`}>
+                                                <span className={`font - bold text - lg ${dept.additional > 50 ? 'text-red-600' : dept.additional > 30 ? 'text-orange-600' : 'text-green-600'} `}>
                                                     +{dept.additional}
                                                 </span>
                                             </td>
@@ -328,7 +332,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                     <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
                         <div className="px-6 py-4 bg-gradient-to-r from-amber-100 to-amber-50 border-b border-amber-200">
                             <h2 className="text-2xl font-bold text-amber-900 flex items-center gap-2">
-                                <AlertCircle size={28} />
+                                <AlertTriangle size={28} />
                                 WHAT-IF Analysis
                             </h2>
                         </div>
@@ -403,7 +407,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                                 <div className="text-xs text-slate-600 mb-1">OTIF</div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-2xl font-bold text-slate-900">{results.otif.value}%</span>
-                                                    <div className={`flex items-center gap-1 ${results.otif.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                                                    <div className={`flex items - center gap - 1 ${results.otif.direction === 'up' ? 'text-green-600' : 'text-red-600'} `}>
                                                         {results.otif.direction === 'up' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                                                         <span className="font-semibold">{results.otif.change > 0 ? '+' : ''}{results.otif.change}%</span>
                                                     </div>
@@ -414,7 +418,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
                                                 <div className="text-xs text-slate-600 mb-1">Cost</div>
                                                 <div className="text-xl font-bold text-orange-700">
-                                                    {results.cost.value > 0 ? `RM ${results.cost.value.toLocaleString()}` : 'RM 0'}
+                                                    {results.cost.value > 0 ? `RM ${results.cost.value.toLocaleString()} ` : 'RM 0'}
                                                 </div>
                                                 <div className="text-xs text-slate-600 mt-1">{results.cost.label}</div>
                                             </div>
@@ -422,7 +426,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             {/* Revenue */}
                                             <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
                                                 <div className="text-xs text-slate-600 mb-1">Revenue</div>
-                                                <div className={`text-xl font-bold ${results.revenue.value >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                                <div className={`text - xl font - bold ${results.revenue.value >= 0 ? 'text-green-700' : 'text-red-700'} `}>
                                                     {results.revenue.value >= 0 ? '+' : ''}RM {Math.abs(results.revenue.value).toLocaleString()}
                                                 </div>
                                                 <div className="text-xs text-slate-600 mt-1">{results.revenue.label}</div>
@@ -432,7 +436,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
                                                 <div className="text-xs text-slate-600 mb-1">Patient Satisfaction</div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`text-2xl font-bold ${results.patient_satisfaction.direction === 'up' ? 'text-green-700' : 'text-red-700'}`}>
+                                                    <span className={`text - 2xl font - bold ${results.patient_satisfaction.direction === 'up' ? 'text-green-700' : 'text-red-700'} `}>
                                                         {results.patient_satisfaction.value > 0 ? '+' : ''}{results.patient_satisfaction.value}%
                                                     </span>
                                                     {results.patient_satisfaction.direction === 'up' ? <TrendingUp size={20} className="text-green-600" /> : <TrendingDown size={20} className="text-red-600" />}
@@ -498,7 +502,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             </div>
 
                                             <button
-                                                onClick={() => showToastNotification(`✓ Selected: ${rec.title} - ${rec.action}`)}
+                                                onClick={() => showToastNotification(`Selected: ${rec.title} - ${rec.action} `)}
                                                 className="w-full mt-4 px-4 py-2 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-900 transition-colors"
                                             >
                                                 Select This Option
@@ -522,7 +526,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                             onClick={() => setShowToast(false)}
                             className="ml-auto p-1 hover:bg-green-700 rounded transition-colors"
                         >
-                            <X className="w-4 h-4" />
+                            <XCircle className="w-5 h-5" />
                         </button>
                     </div>
                 </div>

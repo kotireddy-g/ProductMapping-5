@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Search, ExternalLink, Mic, MicOff, X, ChevronRight,
   Heart, Activity, Bed, Users, Truck, Stethoscope, Pill,
@@ -21,6 +22,8 @@ import ChordDiagram from './ChordDiagram';
 import KPIDashboard from './KPIDashboard';
 import dashboardService from '../services/dashboardService';
 import { parseSearchQuery } from '../utils/searchParser';
+import { getTranslatedActionName } from '../utils/translationHelpers';
+
 
 // Icon mapping for department cards (API returns string names)
 const iconMap = {
@@ -39,6 +42,7 @@ const iconMap = {
 };
 
 const LandingPage = ({ onNavigate }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -283,7 +287,7 @@ const LandingPage = ({ onNavigate }) => {
               onKeyPress={handleSearchKeyPress}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              placeholder="Search: OTIF, MEDICINE, Action, Labels (Voice or Text)"
+              placeholder={t('search.placeholder')}
               className="w-full pl-16 pr-20 py-6 text-xl border-2 border-blue-300 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 shadow-lg bg-white transition-all"
             />
 
@@ -327,15 +331,15 @@ const LandingPage = ({ onNavigate }) => {
           <div className="mb-8">
             <div>
               <h2 className="text-5xl font-bold text-gray-800">
-                OTIF: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+                {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
               </h2>
               {/* OT and IF as subheader */}
               <p className="text-gray-600 mt-2 text-lg">
-                OT: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
+                {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
                 {' '}<span className="text-gray-400">|</span>{' '}
-                IF: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
+                {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
               </p>
-              <p className="text-gray-500 mt-1 text-sm">Department-wise On-Time In-Full Performance</p>
+              <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
             </div>
           </div>
 
@@ -449,9 +453,9 @@ const LandingPage = ({ onNavigate }) => {
           {/* Action Header */}
           <div className="mb-8">
             <h2 className="text-5xl font-bold text-gray-800">
-              Decision Actions: <span className="text-red-600">{totalPendingActions}</span>
+              {t('decisionActions.title')}: <span className="text-red-600">{totalPendingActions}</span>
             </h2>
-            <p className="text-gray-600 mt-2">Pending actions requiring immediate attention</p>
+            <p className="text-gray-600 mt-2">{t('decisionActions.pending')} actions requiring immediate attention</p>
           </div>
 
           {/* Action Grid Cards */}
@@ -477,7 +481,7 @@ const LandingPage = ({ onNavigate }) => {
 
                   <div className="pr-12">
                     <h3 className={`text-sm font-bold ${colors.text} mb-1`}>
-                      {action.name}
+                      {getTranslatedActionName(action.name, t)}
                     </h3>
                     <p className="text-xs text-gray-700">{action.description}</p>
                   </div>

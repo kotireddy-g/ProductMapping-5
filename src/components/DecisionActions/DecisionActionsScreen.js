@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Info, Eye, CheckCircle } from 'lucide-react';
 import ProductJourneyModal from '../ForecastReview/ProductJourneyModal';
 import { getDecisionActionsData } from '../../services/decisionActionsService';
+import { getTranslatedActionName } from '../../utils/translationHelpers';
 
 const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) => {
+    const { t } = useTranslation();
     const [humanFeedback, setHumanFeedback] = useState({});
     const [tags, setTags] = useState({});
     const [showFlowModal, setShowFlowModal] = useState(false);
@@ -279,13 +282,13 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) =>
                         className="flex items-center gap-2 text-slate-600 hover:text-blue-600 mb-4 transition-colors group"
                     >
                         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                        <span className="font-semibold">Back to Dashboard</span>
+                        <span className="font-semibold">{t('common.back')}</span>
                     </button>
 
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-4xl font-bold text-slate-800 mb-2">
-                                Decision Actions: {actionType?.name || 'All Actions'}
+                                {t('decisionActions.title')}: {actionType?.name ? getTranslatedActionName(actionType.name, t) : t('decisionActions.title')}
                             </h1>
                             <p className="text-slate-600">
                                 {actionType?.description || 'Items with abnormal usage patterns or velocity changes'}

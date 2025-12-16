@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { getDepartmentData, getOTIFColorClass, timePeriods } from '../../data/commandCenterData';
 import { getCommandCenterData } from '../../services/commandCenterService';
@@ -7,8 +8,10 @@ import RootCausesSection from './RootCausesSection';
 import MedicineTypeImpactSection from './MedicineTypeImpactSection';
 import DemandForecastSection from './DemandForecastSection';
 import AgentRecommendationsSection from './AgentRecommendationsSection';
+import { getTranslatedDepartmentName } from '../../utils/translationHelpers';
 
 const CommandCenterDashboard = ({ departmentId, onBack }) => {
+    const { t } = useTranslation();
     const [selectedTimePeriod, setSelectedTimePeriod] = useState('next_7_days');
     const [showMedicineModal, setShowMedicineModal] = useState(false);
     const [apiData, setApiData] = useState(null);
@@ -102,12 +105,12 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
                         className="flex items-center gap-2 text-slate-600 hover:text-slate-800 mb-4 transition-colors"
                     >
                         <ArrowLeft size={20} />
-                        <span className="font-medium">Back to Dashboard</span>
+                        <span className="font-medium">{t('commandCenter.backToDashboard')}</span>
                     </button>
 
                     {/* Department Title */}
                     <h1 className="text-4xl font-bold text-slate-800 mb-6">
-                        {name.toUpperCase()} COMMAND CENTER
+                        {getTranslatedDepartmentName(departmentId, t).toUpperCase()} {t('commandCenter.title').toUpperCase()}
                     </h1>
 
                     {/* Key Metrics and Filters Row */}
