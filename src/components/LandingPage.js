@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Search, ExternalLink, Mic, MicOff, X, ChevronRight,
+  Search, ExternalLink, Mic, MicOff, X, ChevronRight, Info,
   Heart, Activity, Bed, Users, Truck, Stethoscope, Pill,
   FlaskConical, Syringe, Thermometer, ClipboardList, Building2
 } from 'lucide-react';
@@ -20,6 +20,7 @@ import {
 import { decisionActionSubcategories as mockDecisionActionSubcategories } from '../data/decisionActionSubcategories';
 import ChordDiagram from './ChordDiagram';
 import KPIDashboard from './KPIDashboard';
+import OTIFBreakdownDrawer from './OTIF/OTIFBreakdownDrawer';
 import dashboardService from '../services/dashboardService';
 import { parseSearchQuery } from '../utils/searchParser';
 import { getTranslatedActionName } from '../utils/translationHelpers';
@@ -48,15 +49,15 @@ const LandingPage = ({ onNavigate }) => {
   const [isListening, setIsListening] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
   const [showSubcategoriesModal, setShowSubcategoriesModal] = useState(false);
+  const [showOTIFDrawer, setShowOTIFDrawer] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('daily');
+  const [apiData, setApiData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const recognitionRef = useRef(null);
 
-  // API data state
-  const [overviewData, setOverviewData] = useState(null);
-  const [decisionActionsData, setDecisionActionsData] = useState(null);
-  const [forecastData, setForecastData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Use API data or fall back to mock data
+  // Extract data from API or use mock
+  const overviewData = apiData?.overview;
   const overallOTIF = overviewData?.overallOTIF || mockOverallOTIF;
   const overallOT = overviewData?.overallOT || 95.0;
   const overallIF = overviewData?.overallIF || 94.8;
@@ -77,9 +78,9 @@ const LandingPage = ({ onNavigate }) => {
     return reordered;
   }, [rawDepartments]);
 
-  const decisionActions = decisionActionsData?.decisionActions || mockDecisionActions;
-  const decisionActionSubcategories = decisionActionsData?.decisionActionSubcategories || mockDecisionActionSubcategories;
-  const forecastAreas = forecastData || mockForecastAreas;
+  const decisionActions = apiData?.decisionActions?.decisionActions || mockDecisionActions;
+  const decisionActionSubcategories = apiData?.decisionActions?.decisionActionSubcategories || mockDecisionActionSubcategories;
+  const forecastAreas = apiData?.forecast || mockForecastAreas;
 
   // Fetch all dashboard data on mount
   useEffect(() => {
@@ -104,15 +105,17 @@ const LandingPage = ({ onNavigate }) => {
         ]);
 
         // Update state with API data if successful
+        const newApiData = {};
         if (overviewResponse?.success) {
-          setOverviewData(overviewResponse.data);
+          newApiData.overview = overviewResponse.data;
         }
         if (actionsResponse?.success) {
-          setDecisionActionsData(actionsResponse.data);
+          newApiData.decisionActions = actionsResponse.data;
         }
         if (forecastResponse?.success) {
-          setForecastData(forecastResponse.data);
+          newApiData.forecast = forecastResponse.data;
         }
+        setApiData(newApiData);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
         // Component will use mock data as fallback
@@ -330,8 +333,18 @@ const LandingPage = ({ onNavigate }) => {
           {/* OTIF Header */}
           <div className="mb-8">
             <div>
-              <h2 className="text-5xl font-bold text-gray-800">
+              <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
                 {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+                <button
+                  onClick={() => setShowOTIFDrawer(true)}
+                  className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                  title="Click for detailed breakdown"
+                >
+                  <Info size={28} className="text-blue-600" />
+                  <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                    Click for detailed breakdown
+                  </span>
+                </button>
               </h2>
               {/* OT and IF as subheader */}
               <p className="text-gray-600 mt-2 text-lg">
@@ -648,6 +661,13 @@ const LandingPage = ({ onNavigate }) => {
           </div>
         </div>
       )}
+
+      {/* OTIF Breakdown Drawer */}
+      <OTIFBreakdownDrawer
+        isOpen={showOTIFDrawer}
+        onClose={() => setShowOTIFDrawer(false)}
+        breakdownData={overviewData?.overallBreakdown}
+      />
     </div>
   );
 };
