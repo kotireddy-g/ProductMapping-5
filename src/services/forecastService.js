@@ -28,6 +28,28 @@ export const getForecastDetails = async (areaId, timePeriod = 'today') => {
     }
 };
 
+/**
+ * Get forecast medicine details for a specific department
+ * @param {string} departmentId - Department ID in uppercase (e.g., 'ICU_MED')
+ * @param {string} timePeriod - Time period (today, next_7_days, etc.)
+ * @returns {Promise} API response with medicine details
+ */
+export const getForecastMedicineDetails = async (departmentId, timePeriod = 'today') => {
+    try {
+        const response = await axios.get(
+            `${API_BASE_URL}/api/forecast/${departmentId}/`,
+            {
+                params: { time_period: timePeriod }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching forecast medicine details:', error);
+        throw error;
+    }
+};
+
 export default {
-    getForecastDetails
+    getForecastDetails,
+    getForecastMedicineDetails
 };

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircle, Clock, DollarSign, Eye } from 'lucide-react';
 import ToastNotification from '../Layout/ToastNotification';
+import ForecastMedicineDetailsModal from './ForecastMedicineDetailsModal';
 import forecastService from '../../services/forecastService';
 
 const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastArea }) => {
@@ -14,6 +15,8 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
     const [apiData, setApiData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showMedicineModal, setShowMedicineModal] = useState(false);
+    const [selectedDepartment, setSelectedDepartment] = useState(null);
 
     const periods = ['Today', 'Next 7 Days', 'Next 14 Days', 'Next 21 Days', 'Next 30 Days'];
 
@@ -275,6 +278,9 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             Additional
                                         </th>
                                         <th className="px-6 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                            Details
+                                        </th>
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
@@ -301,9 +307,21 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                                 <span className="font-bold text-green-700 text-lg">{dept.forecast}</span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                <span className={`font - bold text - lg ${dept.additional > 50 ? 'text-red-600' : dept.additional > 30 ? 'text-orange-600' : 'text-green-600'} `}>
-                                                    +{dept.additional}
+                                                <span className={`font-bold text-lg ${dept.additional > 50 ? 'text-red-600' : dept.additional > 30 ? 'text-orange-600' : 'text-green-600'}`}>
+                                                    {dept.additional}
                                                 </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedDepartment(dept);
+                                                        setShowMedicineModal(true);
+                                                    }}
+                                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-1.5 mx-auto"
+                                                >
+                                                    <Eye size={16} />
+                                                    View
+                                                </button>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-center gap-2">
@@ -355,9 +373,8 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                 </select>
                             </div>
 
-                            {/* Scenario Checkboxes */}
-                            {/* Scenario Selection - Always visible */}
-                            <>
+                            {/* Scenario Checkboxes - Only show when medicine is selected */}
+                            {selectedMedicine && (
                                 <div className="space-y-3">
                                     <label className="flex items-center gap-3 p-4 border-2 border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
                                         <input
@@ -395,57 +412,57 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                         <span className="font-semibold text-slate-800">Wait 7 Days</span>
                                     </label>
                                 </div>
+                            )}
 
-                                {/* Results */}
-                                {results && (
-                                    <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
-                                        <h3 className="text-lg font-bold text-slate-800 mb-4">Results:</h3>
+                            {/* Results */}
+                            {results && (
+                                <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
+                                    <h3 className="text-lg font-bold text-slate-800 mb-4">Results:</h3>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                            {/* OTIF */}
-                                            <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                                                <div className="text-xs text-slate-600 mb-1">OTIF</div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-2xl font-bold text-slate-900">{results.otif.value}%</span>
-                                                    <div className={`flex items - center gap - 1 ${results.otif.direction === 'up' ? 'text-green-600' : 'text-red-600'} `}>
-                                                        {results.otif.direction === 'up' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-                                                        <span className="font-semibold">{results.otif.change > 0 ? '+' : ''}{results.otif.change}%</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Cost */}
-                                            <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                                                <div className="text-xs text-slate-600 mb-1">Cost</div>
-                                                <div className="text-xl font-bold text-orange-700">
-                                                    {results.cost.value > 0 ? `RM ${results.cost.value.toLocaleString()} ` : 'RM 0'}
-                                                </div>
-                                                <div className="text-xs text-slate-600 mt-1">{results.cost.label}</div>
-                                            </div>
-
-                                            {/* Revenue */}
-                                            <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                                                <div className="text-xs text-slate-600 mb-1">Revenue</div>
-                                                <div className={`text - xl font - bold ${results.revenue.value >= 0 ? 'text-green-700' : 'text-red-700'} `}>
-                                                    {results.revenue.value >= 0 ? '+' : ''}RM {Math.abs(results.revenue.value).toLocaleString()}
-                                                </div>
-                                                <div className="text-xs text-slate-600 mt-1">{results.revenue.label}</div>
-                                            </div>
-
-                                            {/* Patient Satisfaction */}
-                                            <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                                                <div className="text-xs text-slate-600 mb-1">Patient Satisfaction</div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text - 2xl font - bold ${results.patient_satisfaction.direction === 'up' ? 'text-green-700' : 'text-red-700'} `}>
-                                                        {results.patient_satisfaction.value > 0 ? '+' : ''}{results.patient_satisfaction.value}%
-                                                    </span>
-                                                    {results.patient_satisfaction.direction === 'up' ? <TrendingUp size={20} className="text-green-600" /> : <TrendingDown size={20} className="text-red-600" />}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        {/* OTIF */}
+                                        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                            <div className="text-xs text-slate-600 mb-1">OTIF</div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-2xl font-bold text-slate-900">{results.otif.value}%</span>
+                                                <div className={`flex items - center gap - 1 ${results.otif.direction === 'up' ? 'text-green-600' : 'text-red-600'} `}>
+                                                    {results.otif.direction === 'up' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                                                    <span className="font-semibold">{results.otif.change > 0 ? '+' : ''}{results.otif.change}%</span>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Cost */}
+                                        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                            <div className="text-xs text-slate-600 mb-1">Cost</div>
+                                            <div className="text-xl font-bold text-orange-700">
+                                                {results.cost.value > 0 ? `RM ${results.cost.value.toLocaleString()} ` : 'RM 0'}
+                                            </div>
+                                            <div className="text-xs text-slate-600 mt-1">{results.cost.label}</div>
+                                        </div>
+
+                                        {/* Revenue */}
+                                        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                            <div className="text-xs text-slate-600 mb-1">Revenue</div>
+                                            <div className={`text - xl font - bold ${results.revenue.value >= 0 ? 'text-green-700' : 'text-red-700'} `}>
+                                                {results.revenue.value >= 0 ? '+' : ''}RM {Math.abs(results.revenue.value).toLocaleString()}
+                                            </div>
+                                            <div className="text-xs text-slate-600 mt-1">{results.revenue.label}</div>
+                                        </div>
+
+                                        {/* Patient Satisfaction */}
+                                        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                            <div className="text-xs text-slate-600 mb-1">Patient Satisfaction</div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text - 2xl font - bold ${results.patient_satisfaction.direction === 'up' ? 'text-green-700' : 'text-red-700'} `}>
+                                                    {results.patient_satisfaction.value > 0 ? '+' : ''}{results.patient_satisfaction.value}%
+                                                </span>
+                                                {results.patient_satisfaction.direction === 'up' ? <TrendingUp size={20} className="text-green-600" /> : <TrendingDown size={20} className="text-red-600" />}
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                            </>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -531,6 +548,15 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                     </div>
                 </div>
             )}
+
+            {/* Medicine Details Modal */}
+            <ForecastMedicineDetailsModal
+                isOpen={showMedicineModal}
+                onClose={() => setShowMedicineModal(false)}
+                departmentId={selectedDepartment?.id}
+                timePeriod={periodToApiParam[selectedPeriod]}
+                locationName={selectedDepartment?.name}
+            />
         </div>
     );
 };
