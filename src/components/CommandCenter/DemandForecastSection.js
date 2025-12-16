@@ -242,7 +242,7 @@ const DemandForecastSection = ({ data, selectedTimePeriod = 'today' }) => {
                                     {selectedMedicine.name}
                                 </h3>
                                 <p className="text-slate-600 mt-1">
-                                    {selectedMedicine.format} - OTIF {selectedMedicine.otif}%
+                                    {selectedMedicine.format} - OTIF {Number(selectedMedicine.otif).toFixed(2)}%
                                 </p>
                             </div>
                             <button
@@ -305,7 +305,7 @@ const DemandForecastSection = ({ data, selectedTimePeriod = 'today' }) => {
                                                         <div className="text-blue-700 font-semibold">RM {dept.revenue.toLocaleString()}</div>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 font-semibold text-amber-700">{dept.forecast}%</td>
+                                                <td className="px-4 py-3 font-semibold text-amber-700">{Number(dept.forecast).toFixed(2)}%</td>
                                                 <td className="px-4 py-3 text-slate-700 text-sm">{dept.vendor}</td>
                                                 <td className="px-4 py-3 font-semibold text-cyan-700">{dept.stockOrder}</td>
                                             </tr>

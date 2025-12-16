@@ -121,9 +121,9 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                                                             <div
                                                                 key={cellIdx}
                                                                 className={`${bgColor} ${opacity} rounded-md h-12 flex items-center justify-center text-white font-bold text-sm hover:scale-105 transition-transform cursor-pointer shadow-sm`}
-                                                                title={`${row.category} - ${cell.period}: ${cell.otif}% OTIF`}
+                                                                title={`${row.category} - ${cell.period}: ${Number(cell.otif).toFixed(2)}% OTIF`}
                                                             >
-                                                                {cell.otif}%
+                                                                {Number(cell.otif).toFixed(2)}%
                                                             </div>
                                                         );
                                                     })}

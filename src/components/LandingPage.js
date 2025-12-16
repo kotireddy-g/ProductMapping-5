@@ -426,7 +426,7 @@ const LandingPage = ({ onNavigate }) => {
                       <IconComponent className={colors.text} size={18} />
                     </div>
                     <div className={`text-2xl font-bold ${colors.text}`}>
-                      {dept.otifPercentage}%
+                      {Number(dept.otifPercentage).toFixed(2)}%
                     </div>
                   </div>
                   <h3 className={`text-sm font-semibold ${colors.text}`}>
@@ -438,7 +438,7 @@ const LandingPage = ({ onNavigate }) => {
                   <div className="flex items-center justify-between mt-2 text-xs">
                     <span className="text-gray-600">vs Prev:</span>
                     <span className={`font-semibold ${trendColor} flex items-center gap-0.5`}>
-                      {changeSign}{Math.abs(dept.changePercentage)}% {trendArrow}
+                      {changeSign}{Math.abs(dept.changePercentage).toFixed(2)}% {trendArrow}
                     </span>
                   </div>
                 </button>
@@ -515,7 +515,7 @@ const LandingPage = ({ onNavigate }) => {
           {/* Forecast Header */}
           <div className="mb-8">
             <h2 className="text-5xl font-bold text-gray-800">
-              Forecast: <span className={forecastSurge >= 0 ? 'text-green-600' : 'text-red-600'}>{forecastSurge}% {forecastSurge >= 0 ? '↑' : '↓'}</span>
+              Forecast: <span className={forecastSurge >= 0 ? 'text-green-600' : 'text-red-600'}>{Number(forecastSurge).toFixed(2)}% {forecastSurge >= 0 ? '↑' : '↓'}</span>
             </h2>
             <p className="text-gray-600 mt-2">Demand forecast surge across hospital areas</p>
           </div>
@@ -543,13 +543,13 @@ const LandingPage = ({ onNavigate }) => {
 
                   <div className="space-y-1">
                     <p className={`text-xl font-bold ${colors.text}`}>
-                      {area.currentForecast}%
+                      {Number(area.currentForecast).toFixed(2)}%
                     </p>
 
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-600">vs Prev:</span>
                       <span className={`font-semibold ${area.changePercentage >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                        {changeSign}{area.changePercentage}%
+                        {changeSign}{Number(area.changePercentage).toFixed(2)}%
                       </span>
                     </div>
                   </div>

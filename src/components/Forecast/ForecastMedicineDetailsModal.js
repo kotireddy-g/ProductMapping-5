@@ -181,7 +181,7 @@ const ForecastMedicineDetailsModal = ({ isOpen, onClose, departmentId, timePerio
                                                 {/* OTIF */}
                                                 <td className="px-4 py-4 text-center">
                                                     <span className={`text-lg font-bold ${getOTIFColor(medicine.otif)}`}>
-                                                        {medicine.otif}%
+                                                        {Number(medicine.otif).toFixed(2)}%
                                                     </span>
                                                 </td>
 

@@ -464,7 +464,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) =>
                                             {/* OTIF */}
                                             <td className="px-4 py-4 text-center">
                                                 <span className={`px - 3 py - 2 rounded - lg text - sm ${getOTIFColor(medicine.otif)} `}>
-                                                    {medicine.otif}%
+                                                    {Number(medicine.otif).toFixed(2)}%
                                                 </span>
                                             </td>
 
@@ -485,7 +485,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) =>
 
                                             {/* Forecast */}
                                             <td className="px-4 py-4 text-center">
-                                                <span className="font-bold text-amber-700 text-base">{medicine.forecast}%</span>
+                                                <span className="font-bold text-amber-700 text-base">{Number(medicine.forecast).toFixed(2)}%</span>
                                             </td>
 
                                             {/* Preferred Vendor */}

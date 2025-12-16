@@ -67,15 +67,15 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                         <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-2">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-semibold text-slate-700">OTIF:</span>
-                                <span className="text-2xl font-bold text-amber-600">{otifPct.toFixed(1)}%</span>
+                                <span className="text-2xl font-bold text-amber-600">{otifPct.toFixed(2)}%</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-semibold text-slate-700">On-Time (OT):</span>
-                                <span className="text-xl font-bold text-green-600">{otPct.toFixed(1)}%</span>
+                                <span className="text-xl font-bold text-green-600">{otPct.toFixed(2)}%</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-semibold text-slate-700">In-Full (IF):</span>
-                                <span className="text-xl font-bold text-green-600">{ifPct.toFixed(1)}%</span>
+                                <span className="text-xl font-bold text-green-600">{ifPct.toFixed(2)}%</span>
                             </div>
                         </div>
                     </div>
@@ -169,7 +169,7 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-green-600 font-bold">✓</span>
                                             <span className="text-sm text-slate-700">
-                                                {otifWithinOTPct.toFixed(1)}% were also In-Full ({otifOrders.toLocaleString()})
+                                                {otifWithinOTPct.toFixed(2)}% were also In-Full ({otifOrders.toLocaleString()})
                                             </span>
                                         </div>
                                         <ProgressBar
@@ -182,7 +182,7 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-amber-600 font-bold">✗</span>
                                             <span className="text-sm text-slate-700">
-                                                {(100 - otifWithinOTPct).toFixed(1)}% were NOT In-Full ({onTimeButNotInFull.toLocaleString()})
+                                                {(100 - otifWithinOTPct).toFixed(2)}% were NOT In-Full ({onTimeButNotInFull.toLocaleString()})
                                             </span>
                                         </div>
                                         <ProgressBar
@@ -203,7 +203,7 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-green-600 font-bold">✓</span>
                                             <span className="text-sm text-slate-700">
-                                                {otifWithinIFPct.toFixed(1)}% were also On-Time ({otifOrders.toLocaleString()})
+                                                {otifWithinIFPct.toFixed(2)}% were also On-Time ({otifOrders.toLocaleString()})
                                             </span>
                                         </div>
                                         <ProgressBar
@@ -216,7 +216,7 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-amber-600 font-bold">✗</span>
                                             <span className="text-sm text-slate-700">
-                                                {(100 - otifWithinIFPct).toFixed(1)}% were NOT On-Time ({inFullButNotOnTime.toLocaleString()})
+                                                {(100 - otifWithinIFPct).toFixed(2)}% were NOT On-Time ({inFullButNotOnTime.toLocaleString()})
                                             </span>
                                         </div>
                                         <ProgressBar

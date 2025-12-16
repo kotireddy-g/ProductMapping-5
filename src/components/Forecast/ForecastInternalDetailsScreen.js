@@ -424,10 +424,10 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                         <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
                                             <div className="text-xs text-slate-600 mb-1">OTIF</div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-2xl font-bold text-slate-900">{results.otif.value}%</span>
+                                                <span className="text-2xl font-bold text-slate-900">{Number(results.otif.value).toFixed(2)}%</span>
                                                 <div className={`flex items - center gap - 1 ${results.otif.direction === 'up' ? 'text-green-600' : 'text-red-600'} `}>
                                                     {results.otif.direction === 'up' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-                                                    <span className="font-semibold">{results.otif.change > 0 ? '+' : ''}{results.otif.change}%</span>
+                                                    <span className="font-semibold">{results.otif.change > 0 ? '+' : ''}{Number(results.otif.change).toFixed(2)}%</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -455,7 +455,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             <div className="text-xs text-slate-600 mb-1">Patient Satisfaction</div>
                                             <div className="flex items-center gap-2">
                                                 <span className={`text - 2xl font - bold ${results.patient_satisfaction.direction === 'up' ? 'text-green-700' : 'text-red-700'} `}>
-                                                    {results.patient_satisfaction.value > 0 ? '+' : ''}{results.patient_satisfaction.value}%
+                                                    {results.patient_satisfaction.value > 0 ? '+' : ''}{Number(results.patient_satisfaction.value).toFixed(2)}%
                                                 </span>
                                                 {results.patient_satisfaction.direction === 'up' ? <TrendingUp size={20} className="text-green-600" /> : <TrendingDown size={20} className="text-red-600" />}
                                             </div>

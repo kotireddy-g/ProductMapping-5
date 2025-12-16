@@ -96,7 +96,7 @@ const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today' }) => {
                                 <td className="px-4 py-3 text-slate-700">{item.location}</td>
                                 <td className="px-4 py-3">
                                     <span className={`px-3 py-1 rounded-lg font-semibold ${getOTIFColor(item.otif)}`}>
-                                        {item.otif}%
+                                        {Number(item.otif).toFixed(2)}%
                                     </span>
                                 </td>
                                 <td className="px-4 py-3">
