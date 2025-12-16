@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Info, Eye, CheckCircle } from 'lucide-react';
 import ProductJourneyModal from '../ForecastReview/ProductJourneyModal';
+import VendorDetailsModal from './VendorDetailsModal';
 import { getDecisionActionsData } from '../../services/decisionActionsService';
 import { getTranslatedActionName } from '../../utils/translationHelpers';
 
@@ -11,6 +12,8 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) =>
     const [tags, setTags] = useState({});
     const [showFlowModal, setShowFlowModal] = useState(false);
     const [selectedFlowItem, setSelectedFlowItem] = useState(null);
+    const [showVendorModal, setShowVendorModal] = useState(false);
+    const [selectedMedicineVendors, setSelectedMedicineVendors] = useState(null);
     const [medicineData, setMedicineData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -368,6 +371,12 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) =>
                                             Forecast%
                                         </th>
                                         <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Preferred Vendor
+                                        </th>
+                                        <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                            Vendor Count
+                                        </th>
+                                        <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
                                             Agent Suggestion
                                         </th>
                                         <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
@@ -479,12 +488,33 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) =>
                                                 <span className="font-bold text-amber-700 text-base">{medicine.forecast}%</span>
                                             </td>
 
+                                            {/* Preferred Vendor */}
+                                            <td className="px-4 py-4">
+                                                <span className="text-slate-700 text-sm font-mono">
+                                                    {medicine.preferredVendor || 'N/A'}
+                                                </span>
+                                            </td>
+
+                                            {/* Vendor Count */}
+                                            <td className="px-4 py-4 text-center">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedMedicineVendors({ medicine, vendors: medicine.vendors || [] });
+                                                        setShowVendorModal(true);
+                                                    }}
+                                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors cursor-pointer shadow-md hover:shadow-lg"
+                                                >
+                                                    {medicine.vendorCount || 0}
+                                                </button>
+                                            </td>
+
                                             {/* Agent Suggestion */}
                                             <td className="px-4 py-4">
                                                 <div className="max-w-xs">
                                                     <span className="text-slate-700 text-xs leading-relaxed">{medicine.agentSuggestion}</span>
                                                 </div>
                                             </td>
+
 
                                             {/* Human Feedback */}
                                             <td className="px-4 py-4">
@@ -565,7 +595,16 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) =>
                 onClose={() => setShowFlowModal(false)}
                 selectedItem={selectedFlowItem}
             />
+
+            {/* Vendor Details Modal */}
+            <VendorDetailsModal
+                isOpen={showVendorModal}
+                onClose={() => setShowVendorModal(false)}
+                medicine={selectedMedicineVendors?.medicine}
+                vendors={selectedMedicineVendors?.vendors || []}
+            />
         </div>
+
     );
 };
 
