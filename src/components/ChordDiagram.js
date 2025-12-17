@@ -302,6 +302,7 @@ const getTATValue = (nodeId) => {
 };
 
 // Generate CONSISTENT connections - values won't change
+// Generate CONSISTENT connections - values won't change
 const generateConnections = (supplyItems, demandItems, flowsData) => {
   // If we have real flow data from API, use it
   if (flowsData && flowsData.length > 0) {
@@ -319,7 +320,11 @@ const generateConnections = (supplyItems, demandItems, flowsData) => {
         otif: flow.otif?.toFixed(1) || '0.0',
         tat: flow.tat?.toFixed(1) || flow.timeHours?.toFixed(1) || '0.0',
         ordered: flow.ordered,
-        delivered: flow.delivered
+        delivered: flow.delivered,
+        // Forecast data
+        forecastQty: flow.forecastQty || 0,
+        forecastSharePct: flow.forecastSharePct || 0,
+        forecastCount: flow.forecastCount || 0
       }));
   }
 
@@ -374,6 +379,7 @@ const HospitalSankeyDiagram = () => {
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: null });
   const [connections, setConnections] = useState([]);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [timePeriod, setTimePeriod] = useState('next_7_days'); // New state for time period filter
   const svgRef = useRef(null);
 
   // API data state
@@ -386,14 +392,16 @@ const HospitalSankeyDiagram = () => {
   const demandData = apiData?.demand || hospitalDemand;
   const flowsData = apiData?.flows || []; // Empty array fallback - will use mock generation in generateConnections
 
-  // Fetch data from API on mount and when drill-down changes
+  // Fetch data from API on mount and when drill-down or time period changes
   useEffect(() => {
     const fetchFlowData = async () => {
       try {
         setLoading(true);
 
-        // Build query parameters for drill-down
-        const params = {};
+        // Build query parameters for drill-down and time period
+        const params = {
+          time_period: timePeriod // Add time period to API call
+        };
         if (supplyLevel > 1 && supplyPath.length > 0) {
           params.supplyLevel = supplyLevel;
           params.supplyParent = supplyPath[supplyLevel - 2];
@@ -419,7 +427,7 @@ const HospitalSankeyDiagram = () => {
     };
 
     fetchFlowData();
-  }, [supplyLevel, demandLevel, supplyPath, demandPath]);
+  }, [supplyLevel, demandLevel, supplyPath, demandPath, timePeriod]); // Added timePeriod dependency
 
   // Get current items based on drill-down state
   const getCurrentSupplyItems = () => {
@@ -612,11 +620,11 @@ Z
     occasional: '#9ca3af'
   };
 
-  // Get OTIF-based color for ribbons
+  // Get OTIF-based color for ribbons and text
   const getOTIFColor = (otif) => {
     const otifValue = parseFloat(otif);
     if (otifValue >= 95) return '#10b981'; // Green
-    if (otifValue >= 85) return '#f59e0b'; // Amber
+    if (otifValue >= 90) return '#f59e0b'; // Yellow/Amber
     return '#ef4444'; // Red
   };
 
@@ -632,7 +640,11 @@ Z
         speed: connection.speed,
         otif: connection.otif,
         tat: connection.tat,
-        value: connection.value.toFixed(0)
+        value: connection.value.toFixed(0),
+        // Forecast data
+        forecastQty: connection.forecastQty || 0,
+        forecastSharePct: connection.forecastSharePct || 0,
+        forecastCount: connection.forecastCount || 0
       }
     });
   };
@@ -768,7 +780,8 @@ Z
 
                 {/* Supply nodes */}
                 {supplyNodes.map((node) => {
-                  const stock = getStockValue(node.id);
+                  const stock = node.stock || getStockValue(node.id);
+                  const forecastQty = node.forecastQty || 0;
                   const canDrillDown = (supplyLevel === 1 && hospitalSupply.level2[node.id]) ||
                     (supplyLevel === 2 && hospitalSupply.level3[node.id]);
 
@@ -790,7 +803,7 @@ Z
 
                       <text
                         x={node.x - 16}
-                        y={node.y}
+                        y={node.y - 8}
                         textAnchor="end"
                         dominantBaseline="middle"
                         style={{
@@ -806,24 +819,41 @@ Z
 
                       <text
                         x={node.x - 16}
-                        y={node.y + 16}
+                        y={node.y + 8}
                         textAnchor="end"
                         style={{
-                          fontSize: '0.75rem',
+                          fontSize: '0.7rem',
                           fill: '#64748b',
                           pointerEvents: 'none'
                         }}
                       >
-                        In-Stock: {stock}
+                        Stock: {stock}
                       </text>
+
+                      {forecastQty > 0 && (
+                        <text
+                          x={node.x - 16}
+                          y={node.y + 22}
+                          textAnchor="end"
+                          style={{
+                            fontSize: '0.875rem',
+                            fill: '#2563eb',
+                            fontWeight: 700,
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          Forecast: {forecastQty.toLocaleString()}
+                        </text>
+                      )}
                     </g>
                   );
                 })}
 
                 {/* Demand nodes */}
                 {demandNodes.map((node) => {
-                  const otif = getOTIFValue(node.id);
-                  const tat = getTATValue(node.id);
+                  const otif = node.otif || getOTIFValue(node.id);
+                  const forecastOtif = node.otifForecastPct || null;
+                  const tat = node.tat || getTATValue(node.id);
                   const canDrillDown = (demandLevel === 1 && hospitalDemand.level2[node.id]) ||
                     (demandLevel === 2 && hospitalDemand.level3[node.id]);
 
@@ -845,7 +875,7 @@ Z
 
                       <text
                         x={node.x + nodeWidth + 16}
-                        y={node.y}
+                        y={node.y - 12}
                         textAnchor="start"
                         dominantBaseline="middle"
                         style={{
@@ -861,15 +891,45 @@ Z
 
                       <text
                         x={node.x + nodeWidth + 16}
-                        y={node.y + 16}
+                        y={node.y + 4}
                         textAnchor="start"
                         style={{
-                          fontSize: '0.75rem',
+                          fontSize: '0.7rem',
+                          fill: getOTIFColor(otif),
+                          fontWeight: 600,
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        OTIF: {typeof otif === 'number' ? otif.toFixed(1) : otif}%
+                      </text>
+
+                      {forecastOtif !== null && (
+                        <text
+                          x={node.x + nodeWidth + 16}
+                          y={node.y + 18}
+                          textAnchor="start"
+                          style={{
+                            fontSize: '0.875rem',
+                            fill: getOTIFColor(forecastOtif),
+                            fontWeight: 700,
+                            pointerEvents: 'none'
+                          }}
+                        >
+                          Forecast: {forecastOtif.toFixed(1)}%
+                        </text>
+                      )}
+
+                      <text
+                        x={node.x + nodeWidth + 16}
+                        y={node.y + (forecastOtif !== null ? 32 : 18)}
+                        textAnchor="start"
+                        style={{
+                          fontSize: '0.7rem',
                           fill: '#64748b',
                           pointerEvents: 'none'
                         }}
                       >
-                        OTIF: {otif}% | TAT: {tat}h
+                        TAT: {typeof tat === 'number' ? tat.toFixed(1) : tat}h
                       </text>
                     </g>
                   );
@@ -889,7 +949,7 @@ Z
                   padding: '0.75rem 1rem',
                   pointerEvents: 'none',
                   zIndex: 1000,
-                  minWidth: '200px',
+                  minWidth: '240px',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
                 }}>
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
@@ -898,9 +958,32 @@ Z
                   <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e2e8f0', marginBottom: '0.25rem' }}>
                     {tooltip.content.source}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.75rem' }}>
                     → {tooltip.content.target}
                   </div>
+
+                  {/* Forecast Data - Prominent */}
+                  {tooltip.content.forecastQty > 0 && (
+                    <div style={{
+                      background: 'rgba(37, 99, 235, 0.15)',
+                      borderRadius: '6px',
+                      padding: '0.5rem',
+                      marginBottom: '0.75rem',
+                      border: '1px solid rgba(37, 99, 235, 0.3)'
+                    }}>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '0.25rem' }}>
+                        FORECAST
+                      </div>
+                      <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#60a5fa', marginBottom: '0.25rem' }}>
+                        {tooltip.content.forecastQty.toLocaleString()} units
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                        {tooltip.content.forecastSharePct}% share • {tooltip.content.forecastCount} items
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Current Data */}
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',
@@ -920,12 +1003,12 @@ Z
                       </div>
                     </div>
                     <div>
-                      <div style={{ color: '#94a3b8' }}>Value</div>
+                      <div style={{ color: '#94a3b8' }}>Current</div>
                       <div style={{ color: '#e2e8f0', fontWeight: 600 }}>{tooltip.content.value}</div>
                     </div>
                     <div>
                       <div style={{ color: '#94a3b8' }}>OTIF</div>
-                      <div style={{ color: '#10b981', fontWeight: 600 }}>{tooltip.content.otif}%</div>
+                      <div style={{ color: getOTIFColor(tooltip.content.otif), fontWeight: 600 }}>{tooltip.content.otif}%</div>
                     </div>
                     <div>
                       <div style={{ color: '#94a3b8' }}>TAT</div>
@@ -978,13 +1061,36 @@ Z
               <h3 className="text-2xl font-bold text-gray-800">Supply & Demand Flow</h3>
               <p className="text-sm text-gray-600">Interactive visualization of hospital supply chain</p>
             </div>
-            <button
-              onClick={() => setIsFullScreen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Maximize2 size={16} />
-              Expand
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Periodic Filters */}
+              <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-1">
+                {[
+                  { label: 'Today', value: 'today' },
+                  { label: 'Next 7 Days', value: 'next_7_days' },
+                  { label: 'Next 14 Days', value: 'next_14_days' },
+                  { label: 'Next 28 Days', value: 'next_28_days' }
+                ].map((filter) => (
+                  <button
+                    key={filter.value}
+                    onClick={() => setTimePeriod(filter.value)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filter.value === timePeriod
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-600 hover:bg-slate-200'
+                      }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+              {/* Expand Button - Icon Only */}
+              <button
+                onClick={() => setIsFullScreen(true)}
+                className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                title="Expand to fullscreen"
+              >
+                <Maximize2 size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Movement Speed Legend */}
@@ -1079,7 +1185,8 @@ Z
 
               {/* Supply nodes */}
               {supplyNodes.map((node) => {
-                const stock = getStockValue(node.id);
+                const stock = node.stock || getStockValue(node.id);
+                const forecastQty = node.forecastQty || 0;
                 const canDrillDown = (supplyLevel === 1 && hospitalSupply.level2[node.id]) ||
                   (supplyLevel === 2 && hospitalSupply.level3[node.id]);
 
@@ -1103,7 +1210,7 @@ Z
                     {/* Label - fully visible to the LEFT */}
                     <text
                       x={node.x - 16}
-                      y={node.y}
+                      y={node.y - 8}
                       textAnchor="end"
                       dominantBaseline="middle"
                       style={{
@@ -1120,24 +1227,42 @@ Z
                     {/* Stock count */}
                     <text
                       x={node.x - 16}
-                      y={node.y + 16}
+                      y={node.y + 8}
                       textAnchor="end"
                       style={{
-                        fontSize: '0.75rem',
+                        fontSize: '0.7rem',
                         fill: '#64748b',
                         pointerEvents: 'none'
                       }}
                     >
-                      In-Stock: {stock}
+                      Stock: {stock}
                     </text>
+
+                    {/* Forecast Quantity - Prominent */}
+                    {forecastQty > 0 && (
+                      <text
+                        x={node.x - 16}
+                        y={node.y + 22}
+                        textAnchor="end"
+                        style={{
+                          fontSize: '0.875rem',
+                          fill: '#2563eb',
+                          fontWeight: 700,
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        Forecast: {forecastQty.toLocaleString()}
+                      </text>
+                    )}
                   </g>
                 );
               })}
 
               {/* Demand nodes */}
               {demandNodes.map((node) => {
-                const otif = getOTIFValue(node.id);
-                const tat = getTATValue(node.id);
+                const otif = node.otif || getOTIFValue(node.id);
+                const forecastOtif = node.otifForecastPct || null;
+                const tat = node.tat || getTATValue(node.id);
                 const canDrillDown = (demandLevel === 1 && hospitalDemand.level2[node.id]) ||
                   (demandLevel === 2 && hospitalDemand.level3[node.id]);
 
@@ -1161,7 +1286,7 @@ Z
                     {/* Label - fully visible to the RIGHT */}
                     <text
                       x={node.x + nodeWidth + 16}
-                      y={node.y}
+                      y={node.y - 12}
                       textAnchor="start"
                       dominantBaseline="middle"
                       style={{
@@ -1175,18 +1300,50 @@ Z
                       {node.name}
                     </text>
 
-                    {/* Metrics */}
+                    {/* Current OTIF - Color-coded */}
                     <text
                       x={node.x + nodeWidth + 16}
-                      y={node.y + 16}
+                      y={node.y + 4}
                       textAnchor="start"
                       style={{
-                        fontSize: '0.75rem',
+                        fontSize: '0.7rem',
+                        fill: getOTIFColor(otif),
+                        fontWeight: 600,
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      OTIF: {typeof otif === 'number' ? otif.toFixed(1) : otif}%
+                    </text>
+
+                    {/* Forecast OTIF - Prominent, Color-coded */}
+                    {forecastOtif !== null && (
+                      <text
+                        x={node.x + nodeWidth + 16}
+                        y={node.y + 18}
+                        textAnchor="start"
+                        style={{
+                          fontSize: '0.875rem',
+                          fill: getOTIFColor(forecastOtif),
+                          fontWeight: 700,
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        Forecast: {forecastOtif.toFixed(1)}%
+                      </text>
+                    )}
+
+                    {/* TAT */}
+                    <text
+                      x={node.x + nodeWidth + 16}
+                      y={node.y + (forecastOtif !== null ? 32 : 18)}
+                      textAnchor="start"
+                      style={{
+                        fontSize: '0.7rem',
                         fill: '#64748b',
                         pointerEvents: 'none'
                       }}
                     >
-                      OTIF: {otif}% | TAT: {tat}h
+                      TAT: {typeof tat === 'number' ? tat.toFixed(1) : tat}h
                     </text>
                   </g>
                 );
@@ -1206,7 +1363,7 @@ Z
                 padding: '0.75rem 1rem',
                 pointerEvents: 'none',
                 zIndex: 1000,
-                minWidth: '200px',
+                minWidth: '240px',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
               }}>
                 <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
@@ -1215,9 +1372,32 @@ Z
                 <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e2e8f0', marginBottom: '0.25rem' }}>
                   {tooltip.content.source}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.75rem' }}>
                   → {tooltip.content.target}
                 </div>
+
+                {/* Forecast Data - Prominent */}
+                {tooltip.content.forecastQty > 0 && (
+                  <div style={{
+                    background: 'rgba(37, 99, 235, 0.15)',
+                    borderRadius: '6px',
+                    padding: '0.5rem',
+                    marginBottom: '0.75rem',
+                    border: '1px solid rgba(37, 99, 235, 0.3)'
+                  }}>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginBottom: '0.25rem' }}>
+                      FORECAST
+                    </div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#60a5fa', marginBottom: '0.25rem' }}>
+                      {tooltip.content.forecastQty.toLocaleString()} units
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                      {tooltip.content.forecastSharePct}% share • {tooltip.content.forecastCount} items
+                    </div>
+                  </div>
+                )}
+
+                {/* Current Data */}
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
@@ -1237,12 +1417,12 @@ Z
                     </div>
                   </div>
                   <div>
-                    <div style={{ color: '#94a3b8' }}>Value</div>
+                    <div style={{ color: '#94a3b8' }}>Current</div>
                     <div style={{ color: '#e2e8f0', fontWeight: 600 }}>{tooltip.content.value}</div>
                   </div>
                   <div>
                     <div style={{ color: '#94a3b8' }}>OTIF</div>
-                    <div style={{ color: '#10b981', fontWeight: 600 }}>{tooltip.content.otif}%</div>
+                    <div style={{ color: getOTIFColor(tooltip.content.otif), fontWeight: 600 }}>{tooltip.content.otif}%</div>
                   </div>
                   <div>
                     <div style={{ color: '#94a3b8' }}>TAT</div>
@@ -1251,38 +1431,40 @@ Z
                 </div>
               </div>
             )}
-          </div>
+          </div >
 
           {/* Bottom Stats Cards */}
-          <div className="grid grid-cols-3 gap-4 mt-6">
-            {[
-              {
-                label: 'Current Pending Supply',
-                value: apiData?.metrics?.currentPendingSupply?.toLocaleString() || '0',
-                color: '#f59e0b'
-              },
-              {
-                label: 'Forecast Next Hour',
-                value: apiData?.metrics?.forecastNextHour?.toLocaleString() || '0',
-                color: '#10b981'
-              },
-              {
-                label: 'Today Demand',
-                value: apiData?.metrics?.todayDemand?.toLocaleString() || '0',
-                color: '#3b82f6'
-              }
-            ].map((stat, i) => (
-              <div key={i} className="bg-slate-50 rounded-lg p-4 border-l-4" style={{ borderLeftColor: stat.color }}>
-                <div className="text-sm text-gray-600 mb-1 font-medium">
-                  {stat.label}
+          < div className="grid grid-cols-3 gap-4 mt-6" >
+            {
+              [
+                {
+                  label: 'Current Pending Supply',
+                  value: apiData?.metrics?.currentPendingSupply?.toLocaleString() || '0',
+                  color: '#f59e0b'
+                },
+                {
+                  label: 'Forecast Next Hour',
+                  value: apiData?.metrics?.forecastNextHour?.toLocaleString() || '0',
+                  color: '#10b981'
+                },
+                {
+                  label: 'Today Demand',
+                  value: apiData?.metrics?.todayDemand?.toLocaleString() || '0',
+                  color: '#3b82f6'
+                }
+              ].map((stat, i) => (
+                <div key={i} className="bg-slate-50 rounded-lg p-4 border-l-4" style={{ borderLeftColor: stat.color }}>
+                  <div className="text-sm text-gray-600 mb-1 font-medium">
+                    {stat.label}
+                  </div>
+                  <div className="text-3xl font-bold" style={{ color: stat.color }}>
+                    {stat.value}
+                  </div>
                 </div>
-                <div className="text-3xl font-bold" style={{ color: stat.color }}>
-                  {stat.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))
+            }
+          </div >
+        </div >
       )}
     </>
   );

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Search, ExternalLink, Mic, MicOff, X, ChevronRight, Info,
   Heart, Activity, Bed, Users, Truck, Stethoscope, Pill,
-  FlaskConical, Syringe, Thermometer, ClipboardList, Building2
+  FlaskConical, Syringe, Thermometer, ClipboardList, Building2, TrendingUp
 } from 'lucide-react';
 import {
   overallOTIF as mockOverallOTIF,
@@ -21,6 +21,7 @@ import { decisionActionSubcategories as mockDecisionActionSubcategories } from '
 import ChordDiagram from './ChordDiagram';
 import KPIDashboard from './KPIDashboard';
 import OTIFBreakdownDrawer from './OTIF/OTIFBreakdownDrawer';
+import HospitalPerformanceDrawer from './CommandCenter/HospitalPerformanceDrawer';
 import dashboardService from '../services/dashboardService';
 import { parseSearchQuery } from '../utils/searchParser';
 import { getTranslatedActionName } from '../utils/translationHelpers';
@@ -50,6 +51,7 @@ const LandingPage = ({ onNavigate }) => {
   const [selectedAction, setSelectedAction] = useState(null);
   const [showSubcategoriesModal, setShowSubcategoriesModal] = useState(false);
   const [showOTIFDrawer, setShowOTIFDrawer] = useState(false);
+  const [showPerformanceDrawer, setShowPerformanceDrawer] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('daily');
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -332,27 +334,37 @@ const LandingPage = ({ onNavigate }) => {
         <div className="mb-16">
           {/* OTIF Header */}
           <div className="mb-8">
-            <div>
-              <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
-                <button
-                  onClick={() => setShowOTIFDrawer(true)}
-                  className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                  title="Click for detailed breakdown"
-                >
-                  <Info size={28} className="text-blue-600" />
-                  <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                    Click for detailed breakdown
-                  </span>
-                </button>
-              </h2>
-              {/* OT and IF as subheader */}
-              <p className="text-gray-600 mt-2 text-lg">
-                {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
-                {' '}<span className="text-gray-400">|</span>{' '}
-                {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
-              </p>
-              <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                  {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+                  <button
+                    onClick={() => setShowOTIFDrawer(true)}
+                    className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                    title="Click for detailed breakdown"
+                  >
+                    <Info size={28} className="text-blue-600" />
+                    <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                      Click for detailed breakdown
+                    </span>
+                  </button>
+                </h2>
+                {/* OT and IF as subheader */}
+                <p className="text-gray-600 mt-2 text-lg">
+                  {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
+                  {' '}<span className="text-gray-400">|</span>{' '}
+                  {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
+                </p>
+                <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
+              </div>
+              {/* Hospital Performance Index Button */}
+              <button
+                onClick={() => setShowPerformanceDrawer(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+              >
+                <TrendingUp size={20} />
+                <span className="font-semibold">Performance Index</span>
+              </button>
             </div>
           </div>
 
@@ -667,6 +679,38 @@ const LandingPage = ({ onNavigate }) => {
         isOpen={showOTIFDrawer}
         onClose={() => setShowOTIFDrawer(false)}
         breakdownData={overviewData?.overallBreakdown}
+      />
+
+      {/* Hospital Performance Index Drawer */}
+      <HospitalPerformanceDrawer
+        isOpen={showPerformanceDrawer}
+        onClose={() => setShowPerformanceDrawer(false)}
+        performanceData={overviewData?.forecastInsights?.hospitalPerformanceIndex || {
+          currentScore: 77.71,
+          ifAchievedScore: 79.32,
+          ifMissedScore: 77.71,
+          formula: "0.30 × OTIF_norm + 0.25 × Revenue_norm + 0.20 × Cost_efficiency_norm + 0.15 × Patient_Sat_norm + 0.10 × Clinical_Risk_norm",
+          inputs: {
+            components: {
+              OTIF_norm: 92.36,
+              Revenue_norm: 0,
+              Cost_efficiency_norm: 0,
+              Patient_Sat_norm: 96.18,
+              Clinical_Risk_norm: 100
+            },
+            currentOtifPct: 92.36,
+            forecastVendorOtifPct: 97.69,
+            vendorCoveragePct: 30,
+            totalForecastQty: 6100
+          },
+          medicineImpact: {
+            deltaOtifPct: 5.37,
+            protectedUnitsIfAchieved: 652.47,
+            riskUnitsIfMissed: 0,
+            protectedValueIfAchieved: 0,
+            riskValueIfMissed: 0
+          }
+        }}
       />
     </div>
   );
