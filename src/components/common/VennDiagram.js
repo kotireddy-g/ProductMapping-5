@@ -1,10 +1,10 @@
 import React from 'react';
 
-const VennDiagram = ({ totalOrders, onTimeOrders, inFullOrders, otifOrders }) => {
-    // Calculate percentages for display
-    const otifPct = ((otifOrders / totalOrders) * 100).toFixed(1);
-    const otPct = ((onTimeOrders / totalOrders) * 100).toFixed(1);
-    const ifPct = ((inFullOrders / totalOrders) * 100).toFixed(1);
+const VennDiagram = ({ totalOrders = 0, onTimeOrders = 0, inFullOrders = 0, otifOrders = 0 }) => {
+    // Calculate percentages for display with safe defaults
+    const otifPct = totalOrders > 0 ? ((otifOrders / totalOrders) * 100).toFixed(1) : '0.0';
+    const otPct = totalOrders > 0 ? ((onTimeOrders / totalOrders) * 100).toFixed(1) : '0.0';
+    const ifPct = totalOrders > 0 ? ((inFullOrders / totalOrders) * 100).toFixed(1) : '0.0';
 
     // Calculate gaps
     const onlyOT = onTimeOrders - otifOrders;

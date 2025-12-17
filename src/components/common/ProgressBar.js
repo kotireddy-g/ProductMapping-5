@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ProgressBar = ({ value, label, count, color = 'blue', showPercentage = true, description }) => {
+const ProgressBar = ({ value = 0, label, count, color = 'blue', showPercentage = true, description }) => {
     const getColorClasses = () => {
         switch (color) {
             case 'green':
@@ -43,6 +43,8 @@ const ProgressBar = ({ value, label, count, color = 'blue', showPercentage = tru
     };
 
     const colors = getColorClasses();
+    const safeValue = typeof value === 'number' ? value : 0;
+    const safeCount = typeof count === 'number' ? count : 0;
 
     return (
         <div className="w-full">
@@ -51,22 +53,22 @@ const ProgressBar = ({ value, label, count, color = 'blue', showPercentage = tru
                     <span className="text-sm font-semibold text-slate-700">{label}</span>
                     {showPercentage && (
                         <span className={`text-sm font-bold ${colors.text}`}>
-                            {value.toFixed(1)}%
+                            {safeValue.toFixed(1)}%
                         </span>
                     )}
                 </div>
             )}
 
-            {count && (
+            {count !== undefined && count !== null && (
                 <div className="text-xs text-slate-600 mb-2">
-                    {count.toLocaleString()} orders
+                    {safeCount.toLocaleString()} orders
                 </div>
             )}
 
             <div className={`w-full h-2 ${colors.lightBg} rounded-full overflow-hidden`}>
                 <div
                     className={`h-full ${colors.bg} rounded-full transition-all duration-500 ease-out`}
-                    style={{ width: `${Math.min(value, 100)}%` }}
+                    style={{ width: `${Math.min(safeValue, 100)}%` }}
                 />
             </div>
 
