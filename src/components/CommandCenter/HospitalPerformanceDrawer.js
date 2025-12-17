@@ -100,7 +100,7 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                 </div>
                                 <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
                                     <TrendingUp className="w-3 h-3" />
-                                    +{(ifAchievedScore - currentScore).toFixed(2)}
+                                    +{(ifAchievedScore - currentScore).toFixed(2)}%
                                 </div>
                             </div>
 
@@ -112,7 +112,7 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                 </div>
                                 <div className="text-xs text-red-600 mt-1 flex items-center gap-1">
                                     <TrendingUp className="w-3 h-3 rotate-180" />
-                                    {(ifMissedScore - currentScore).toFixed(2)}
+                                    {(ifMissedScore - currentScore).toFixed(2)}%
                                 </div>
                             </div>
                         </div>
@@ -141,9 +141,9 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                 />
                             </div>
                             <div className="flex items-center justify-between mt-2 text-xs">
-                                <span className="text-red-600">Missed: {ifMissedScore.toFixed(1)}%</span>
-                                <span className="text-blue-600 font-bold">Current: {currentScore.toFixed(1)}%</span>
-                                <span className="text-green-600">Achieved: {ifAchievedScore.toFixed(1)}%</span>
+                                <span className="text-red-600">Missed: {ifMissedScore.toFixed(1)}</span>
+                                <span className="text-blue-600 font-bold">Current: {currentScore.toFixed(1)}</span>
+                                <span className="text-green-600">Achieved: {ifAchievedScore.toFixed(1)}</span>
                             </div>
                         </div>
                     </div>
