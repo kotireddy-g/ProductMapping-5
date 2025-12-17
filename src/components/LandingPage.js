@@ -466,7 +466,7 @@ const LandingPage = ({ onNavigate }) => {
           {/* Action Header */}
           <div className="mb-8">
             <h2 className="text-5xl font-bold text-gray-800">
-              {t('decisionActions.title')}: <span className="text-red-600">{totalPendingActions}</span>
+              {t('decisionActions.title')}: <span className="text-red-600">{apiData?.decisionActions?.totalDecisionActionsCount || totalPendingActions}</span>
             </h2>
             <p className="text-gray-600 mt-2">{t('decisionActions.pending')} actions requiring immediate attention</p>
           </div>
