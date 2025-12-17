@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Upload, Bell, LogOut, User, FileText } from 'lucide-react';
 import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
 import LanguageSwitcher from './LanguageSwitcher';
+import ModuleSelector from './ModuleSelector';
 
 const Header = ({
   currentUser,
@@ -54,6 +55,8 @@ const Header = ({
               <FileText className="w-4 h-4" />
               {t('header.supplierReport')}
             </button>
+
+            <ModuleSelector />
 
             <button
               onClick={onNotificationClick}
