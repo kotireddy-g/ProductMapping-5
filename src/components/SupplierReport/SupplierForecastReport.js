@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Filter, Download, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Filter, Download, Users, ChevronLeft, ChevronRight, CheckCircle, X } from 'lucide-react';
 import supplierForecastService from '../../services/supplierForecastService';
 import VendorDetailsModal from '../DecisionActions/VendorDetailsModal';
 
@@ -11,6 +11,7 @@ const SupplierForecastReport = ({ onBack }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50);
+  const [notification, setNotification] = useState(null); // Notification state
 
   const tabs = [
     { id: 'all', label: 'All Items' },
@@ -65,6 +66,31 @@ const SupplierForecastReport = ({ onBack }) => {
       case 'red': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Handle vendor recommendation
+  const handleVendorRecommend = (vendor, medicine) => {
+    // Update the table data with the new current vendor
+    setReportData(prevData => ({
+      ...prevData,
+      items: prevData.items.map(item =>
+        item.id === medicine.id
+          ? { ...item, vendorName: vendor.vendorName }
+          : item
+      )
+    }));
+
+    // Show success notification
+    setNotification({
+      message: `Vendor "${vendor.vendorName}" recommended for "${medicine.medicineName}"`,
+      type: 'success'
+    });
+
+    // Auto-hide notification after 4 seconds
+    setTimeout(() => setNotification(null), 4000);
+
+    // Close the modal
+    setShowVendorModal(false);
   };
 
   const getInventoryColor = (color) => {
@@ -250,7 +276,20 @@ const SupplierForecastReport = ({ onBack }) => {
                         )}
                       </td>
                       <td className="px-4 py-4">
-                        <div className="flex items-center">
+                        <button
+                          onClick={() => {
+                            // Find the current vendor from the vendors list
+                            const currentVendor = item.vendors?.find(v => v.vendorName === item.vendorName);
+                            if (currentVendor) {
+                              setSelectedItem({
+                                ...item,
+                                vendors: [currentVendor] // Show only the current vendor
+                              });
+                              setShowVendorModal(true);
+                            }
+                          }}
+                          className="flex items-center hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors cursor-pointer"
+                        >
                           <div className="text-sm text-gray-900 mr-2">{Number(item.agentConfidence).toFixed(2)}%</div>
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div
@@ -258,7 +297,7 @@ const SupplierForecastReport = ({ onBack }) => {
                               style={{ width: `${item.agentConfidence}%` }}
                             ></div>
                           </div>
-                        </div>
+                        </button>
                       </td>
                       <td className="px-4 py-4">
                         <button
@@ -308,8 +347,8 @@ const SupplierForecastReport = ({ onBack }) => {
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={!reportData.pagination.hasPreviousPage}
                   className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${reportData.pagination.hasPreviousPage
-                      ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -355,8 +394,8 @@ const SupplierForecastReport = ({ onBack }) => {
                           key={i}
                           onClick={() => handlePageChange(i)}
                           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${i === currentPage
-                              ? 'bg-blue-600 text-white'
-                              : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                            ? 'bg-blue-600 text-white'
+                            : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >
                           {i}
@@ -391,8 +430,8 @@ const SupplierForecastReport = ({ onBack }) => {
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={!reportData.pagination.hasNextPage}
                   className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${reportData.pagination.hasNextPage
-                      ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
                 >
                   Next
@@ -412,9 +451,32 @@ const SupplierForecastReport = ({ onBack }) => {
             setShowVendorModal(false);
             setSelectedItem(null);
           }}
-          medicine={{ name: selectedItem.product }}
+          medicine={{
+            id: selectedItem.id,
+            medicineName: selectedItem.product
+          }}
           vendors={selectedItem.vendors || []}
+          showRecommendButton={true}
+          onRecommend={handleVendorRecommend}
         />
+      )}
+
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-in">
+          <div className="bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[350px] max-w-md">
+            <CheckCircle size={24} className="flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-sm leading-relaxed">{notification.message}</p>
+            </div>
+            <button
+              onClick={() => setNotification(null)}
+              className="text-white hover:text-green-100 transition-colors flex-shrink-0"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

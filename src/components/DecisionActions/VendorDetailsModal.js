@@ -1,7 +1,7 @@
 import React from 'react';
-import { X, Star, MapPin, Phone, Mail, Award, Clock, DollarSign, Package, TrendingUp } from 'lucide-react';
+import { X, Star, MapPin, Phone, Mail, Award, Clock, DollarSign, Package, TrendingUp, ThumbsUp } from 'lucide-react';
 
-const VendorDetailsModal = ({ isOpen, onClose, medicine, vendors }) => {
+const VendorDetailsModal = ({ isOpen, onClose, medicine, vendors, onRecommend, showRecommendButton = false }) => {
     if (!isOpen || !vendors || vendors.length === 0) return null;
 
     // Helper function to render star rating
@@ -52,8 +52,8 @@ const VendorDetailsModal = ({ isOpen, onClose, medicine, vendors }) => {
                                 <div
                                     key={vendor.vendorCode || index}
                                     className={`border-2 rounded-xl overflow-hidden transition-all ${isPreferred
-                                            ? 'border-green-400 bg-green-50'
-                                            : 'border-slate-200 bg-white hover:border-blue-300'
+                                        ? 'border-green-400 bg-green-50'
+                                        : 'border-slate-200 bg-white hover:border-blue-300'
                                         }`}
                                 >
                                     {/* Vendor Header */}
@@ -76,14 +76,28 @@ const VendorDetailsModal = ({ isOpen, onClose, medicine, vendors }) => {
                                                 </p>
                                             </div>
 
-                                            {/* Rating */}
-                                            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border-2 border-slate-200">
-                                                <div className="flex gap-0.5">
-                                                    {renderStars(vendor.rating)}
+                                            {/* Rating and Recommend Button */}
+                                            <div className="flex items-center gap-3">
+                                                {/* Rating */}
+                                                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border-2 border-slate-200">
+                                                    <div className="flex gap-0.5">
+                                                        {renderStars(vendor.rating)}
+                                                    </div>
+                                                    <span className="text-lg font-bold text-slate-700">
+                                                        {vendor.rating.toFixed(1)}
+                                                    </span>
                                                 </div>
-                                                <span className="text-lg font-bold text-slate-700">
-                                                    {vendor.rating.toFixed(1)}
-                                                </span>
+
+                                                {/* Recommend Button - Only show when enabled */}
+                                                {showRecommendButton && (
+                                                    <button
+                                                        onClick={() => onRecommend(vendor, medicine)}
+                                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md hover:shadow-lg"
+                                                    >
+                                                        <ThumbsUp size={16} />
+                                                        Recommend
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

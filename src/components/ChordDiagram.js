@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronLeft, Maximize2, X } from 'lucide-react';
 import supplyDemandService from '../services/supplyDemandService';
 
@@ -380,6 +380,8 @@ const HospitalSankeyDiagram = () => {
   const [connections, setConnections] = useState([]);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [timePeriod, setTimePeriod] = useState('next_7_days'); // New state for time period filter
+  const [focusedSupplyNode, setFocusedSupplyNode] = useState(null); // Focus mode state
+  const [focusedDemandNode, setFocusedDemandNode] = useState(null); // Focus mode state
   const svgRef = useRef(null);
 
   // API data state
@@ -466,23 +468,45 @@ const HospitalSankeyDiagram = () => {
 
   // Handle supply node click
   const handleSupplyClick = (item) => {
-    if (supplyLevel === 1) {
-      setSupplyLevel(2);
-      setSupplyPath([item.id]);
-    } else if (supplyLevel === 2) {
-      setSupplyLevel(3);
-      setSupplyPath([...supplyPath, item.id]);
+    // Check if this node is already focused
+    if (focusedSupplyNode?.id === item.id) {
+      // Second click - perform drill-down
+      setFocusedSupplyNode(null); // Clear focus before drill-down
+
+      // Existing drill-down logic
+      if (supplyLevel === 1) {
+        setSupplyLevel(2);
+        setSupplyPath([item.id]);
+      } else if (supplyLevel === 2) {
+        setSupplyLevel(3);
+        setSupplyPath([...supplyPath, item.id]);
+      }
+    } else {
+      // First click - enter focus mode
+      setFocusedSupplyNode(item);
+      setFocusedDemandNode(null); // Clear opposite side focus
     }
   };
 
   // Handle demand node click
   const handleDemandClick = (item) => {
-    if (demandLevel === 1) {
-      setDemandLevel(2);
-      setDemandPath([item.id]);
-    } else if (demandLevel === 2) {
-      setDemandLevel(3);
-      setDemandPath([...demandPath, item.id]);
+    // Check if this node is already focused
+    if (focusedDemandNode?.id === item.id) {
+      // Second click - perform drill-down
+      setFocusedDemandNode(null); // Clear focus before drill-down
+
+      // Existing drill-down logic
+      if (demandLevel === 1) {
+        setDemandLevel(2);
+        setDemandPath([item.id]);
+      } else if (demandLevel === 2) {
+        setDemandLevel(3);
+        setDemandPath([...demandPath, item.id]);
+      }
+    } else {
+      // First click - enter focus mode
+      setFocusedDemandNode(item);
+      setFocusedSupplyNode(null); // Clear opposite side focus
     }
   };
 
@@ -492,7 +516,21 @@ const HospitalSankeyDiagram = () => {
     setDemandLevel(1);
     setSupplyPath([]);
     setDemandPath([]);
+    setFocusedSupplyNode(null); // Clear focus
+    setFocusedDemandNode(null); // Clear focus
   };
+
+  // Clear focus function
+  const clearFocus = () => {
+    setFocusedSupplyNode(null);
+    setFocusedDemandNode(null);
+  };
+
+  // Auto-clear focus when level changes
+  useEffect(() => {
+    setFocusedSupplyNode(null);
+    setFocusedDemandNode(null);
+  }, [supplyLevel, demandLevel]);
 
   // Go back one level on supply side
   const goBackSupply = () => {
@@ -562,6 +600,32 @@ const HospitalSankeyDiagram = () => {
     y: i * nodeSpacing + nodeSpacing / 2,
     height: nodeSpacing * 0.7
   }));
+
+  // Filter nodes based on focus mode
+  const visibleSupplyNodes = focusedSupplyNode
+    ? supplyNodes.filter(n => n.id === focusedSupplyNode.id)
+    : supplyNodes;
+
+  const visibleDemandNodes = focusedDemandNode
+    ? demandNodes.filter(n => n.id === focusedDemandNode.id)
+    : demandNodes;
+
+  // Filter connections based on focus mode
+  const visibleConnections = useMemo(() => {
+    let filtered = connections;
+
+    // Filter by focused supply node
+    if (focusedSupplyNode) {
+      filtered = filtered.filter(conn => conn.source === focusedSupplyNode.id);
+    }
+
+    // Filter by focused demand node
+    if (focusedDemandNode) {
+      filtered = filtered.filter(conn => conn.target === focusedDemandNode.id);
+    }
+
+    return filtered;
+  }, [connections, focusedSupplyNode, focusedDemandNode]);
 
   // Create flow paths using FULL bar height
   const createFlowPath = (sourceNode, targetNode, sourceConnections, connectionIndex) => {
@@ -714,12 +778,24 @@ Z
                 <span className="text-sm text-gray-600">{getSupplyBreadcrumb()}</span>
               </div>
 
-              <button
-                onClick={resetView}
-                className="px-4 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
-              >
-                Reset View
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Clear Focus button - only show when in focus mode */}
+                {(focusedSupplyNode || focusedDemandNode) && (
+                  <button
+                    onClick={clearFocus}
+                    className="px-4 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm font-medium"
+                  >
+                    Clear Focus
+                  </button>
+                )}
+
+                <button
+                  onClick={resetView}
+                  className="px-4 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
+                >
+                  Reset View
+                </button>
+              </div>
 
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-600">{getDemandBreadcrumb()}</span>
@@ -744,11 +820,11 @@ Z
                 style={{ overflow: 'visible' }}
               >
                 {/* Draw flows first (so they're behind nodes) */}
-                {supplyNodes.map(sourceNode => {
-                  const sourceConnections = connections.filter(c => c.source === sourceNode.id);
+                {visibleSupplyNodes.map(sourceNode => {
+                  const sourceConnections = visibleConnections.filter(c => c.source === sourceNode.id);
 
                   return sourceConnections.map((conn, connIdx) => {
-                    const targetNode = demandNodes.find(n => n.id === conn.target);
+                    const targetNode = visibleDemandNodes.find(n => n.id === conn.target);
                     if (!targetNode) return null;
 
                     const sourceName = sourceNode.name;
@@ -779,7 +855,7 @@ Z
                 })}
 
                 {/* Supply nodes */}
-                {supplyNodes.map((node) => {
+                {visibleSupplyNodes.map((node) => {
                   const stock = node.stock || getStockValue(node.id);
                   const forecastQty = node.forecastQty || 0;
                   const canDrillDown = (supplyLevel === 1 && hospitalSupply.level2[node.id]) ||
@@ -850,7 +926,7 @@ Z
                 })}
 
                 {/* Demand nodes */}
-                {demandNodes.map((node) => {
+                {visibleDemandNodes.map((node) => {
                   const otif = node.otif || getOTIFValue(node.id);
                   const forecastOtif = node.otifForecastPct || null;
                   const tat = node.tat || getTATValue(node.id);
@@ -1119,12 +1195,24 @@ Z
               <span className="text-sm text-gray-600">{getSupplyBreadcrumb()}</span>
             </div>
 
-            <button
-              onClick={resetView}
-              className="px-4 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
-            >
-              Reset View
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Clear Focus button - only show when in focus mode */}
+              {(focusedSupplyNode || focusedDemandNode) && (
+                <button
+                  onClick={clearFocus}
+                  className="px-4 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm font-medium"
+                >
+                  Clear Focus
+                </button>
+              )}
+
+              <button
+                onClick={resetView}
+                className="px-4 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
+              >
+                Reset View
+              </button>
+            </div>
 
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600">{getDemandBreadcrumb()}</span>
@@ -1149,11 +1237,11 @@ Z
               style={{ overflow: 'visible' }}
             >
               {/* Draw flows first (so they're behind nodes) */}
-              {supplyNodes.map(sourceNode => {
-                const sourceConnections = connections.filter(c => c.source === sourceNode.id);
+              {visibleSupplyNodes.map(sourceNode => {
+                const sourceConnections = visibleConnections.filter(c => c.source === sourceNode.id);
 
                 return sourceConnections.map((conn, connIdx) => {
-                  const targetNode = demandNodes.find(n => n.id === conn.target);
+                  const targetNode = visibleDemandNodes.find(n => n.id === conn.target);
                   if (!targetNode) return null;
 
                   const sourceName = sourceNode.name;
@@ -1184,7 +1272,7 @@ Z
               })}
 
               {/* Supply nodes */}
-              {supplyNodes.map((node) => {
+              {visibleSupplyNodes.map((node) => {
                 const stock = node.stock || getStockValue(node.id);
                 const forecastQty = node.forecastQty || 0;
                 const canDrillDown = (supplyLevel === 1 && hospitalSupply.level2[node.id]) ||
@@ -1259,7 +1347,7 @@ Z
               })}
 
               {/* Demand nodes */}
-              {demandNodes.map((node) => {
+              {visibleDemandNodes.map((node) => {
                 const otif = node.otif || getOTIFValue(node.id);
                 const forecastOtif = node.otifForecastPct || null;
                 const tat = node.tat || getTATValue(node.id);

@@ -192,10 +192,10 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                                 </div>
                                 <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-6">
                                     <VennDiagram
-                                        otif={otifOrders}
-                                        onTime={onTimeOrders}
-                                        inFull={inFullOrders}
-                                        total={totalOrders}
+                                        totalOrders={totalOrders}
+                                        onTimeOrders={onTimeOrders}
+                                        inFullOrders={inFullOrders}
+                                        otifOrders={otifOrders}
                                     />
                                 </div>
                             </div>
