@@ -10,8 +10,13 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
         ifMissedScore,
         formula,
         inputs,
-        medicineImpact
+        medicineImpact,
+        explanation
     } = performanceData;
+
+    // Debug: Log explanation data
+    console.log('HospitalPerformanceDrawer - performanceData:', performanceData);
+    console.log('HospitalPerformanceDrawer - explanation:', explanation);
 
     const getScoreColor = (score) => {
         if (score >= 70) return 'text-green-600';
@@ -85,16 +90,39 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                         <div className="grid grid-cols-3 gap-4">
                             {/* Current Score */}
                             <div className={`border-2 rounded-xl p-4 ${getScoreBgColor(currentScore)}`}>
-                                <div className="text-xs font-semibold text-slate-600 mb-1">Current</div>
+                                <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                                    Current
+                                    {explanation?.current && (
+                                        <div className="group relative">
+                                            <Info className="w-3 h-3 text-slate-400 cursor-help" />
+                                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
+                                                {explanation.current}
+                                                <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className={`text-3xl font-bold ${getScoreColor(currentScore)}`}>
                                     {currentScore.toFixed(2)}
                                 </div>
                                 <div className="text-xs text-slate-500 mt-1">Active Score</div>
+
                             </div>
 
                             {/* If Achieved */}
                             <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
-                                <div className="text-xs font-semibold text-slate-600 mb-1">If Achieved</div>
+                                <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                                    If Achieved
+                                    {explanation?.ifAchieved && (
+                                        <div className="group relative">
+                                            <Info className="w-3 h-3 text-slate-400 cursor-help" />
+                                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
+                                                {explanation.ifAchieved}
+                                                <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="text-3xl font-bold text-green-600">
                                     {ifAchievedScore.toFixed(2)}
                                 </div>
@@ -102,11 +130,23 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                     <TrendingUp className="w-3 h-3" />
                                     +{(ifAchievedScore - currentScore).toFixed(2)}%
                                 </div>
+
                             </div>
 
                             {/* If Missed */}
                             <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                                <div className="text-xs font-semibold text-slate-600 mb-1">If Missed</div>
+                                <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                                    If Missed
+                                    {explanation?.ifMissed && (
+                                        <div className="group relative">
+                                            <Info className="w-3 h-3 text-slate-400 cursor-help" />
+                                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
+                                                {explanation.ifMissed}
+                                                <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="text-3xl font-bold text-red-600">
                                     {ifMissedScore.toFixed(2)}
                                 </div>
@@ -114,6 +154,7 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                     <TrendingUp className="w-3 h-3 rotate-180" />
                                     {(ifMissedScore - currentScore).toFixed(2)}%
                                 </div>
+
                             </div>
                         </div>
 

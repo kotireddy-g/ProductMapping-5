@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload, Bell, LogOut, User, FileText } from 'lucide-react';
+import { Upload, Bell, LogOut, User, FileText, Layout } from 'lucide-react';
 import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
 import LanguageSwitcher from './LanguageSwitcher';
 import ModuleSelector from './ModuleSelector';
+import TemplateSelectorModal from '../TemplateSelector/TemplateSelectorModal';
 
 const Header = ({
   currentUser,
@@ -16,6 +17,15 @@ const Header = ({
 }) => {
   const { t } = useTranslation();
   const unreadCount = notifications?.filter(n => !n.read).length || 0;
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [currentTemplate, setCurrentTemplate] = useState(
+    localStorage.getItem('dashboardTemplate') || 'executive'
+  );
+
+  const handleTemplateChange = (templateId) => {
+    setCurrentTemplate(templateId);
+    localStorage.setItem('dashboardTemplate', templateId);
+  };
 
   return (
     <header className="bg-white border-b border-slate-200 shadow-sm">
@@ -58,6 +68,15 @@ const Header = ({
 
             <ModuleSelector />
 
+            {/* Template Selector Button */}
+            <button
+              onClick={() => setShowTemplateSelector(true)}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              title="Change Dashboard Layout"
+            >
+              <Layout className="w-5 h-5 text-slate-600" />
+            </button>
+
             <button
               onClick={onNotificationClick}
               className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -90,6 +109,14 @@ const Header = ({
           </div>
         </div>
       </div>
+
+      {/* Template Selector Modal */}
+      <TemplateSelectorModal
+        isOpen={showTemplateSelector}
+        onClose={() => setShowTemplateSelector(false)}
+        currentTemplate={currentTemplate}
+        onTemplateChange={handleTemplateChange}
+      />
     </header>
   );
 };

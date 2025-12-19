@@ -709,6 +709,12 @@ const LandingPage = ({ onNavigate }) => {
             riskUnitsIfMissed: 0,
             protectedValueIfAchieved: 0,
             riskValueIfMissed: 0
+          },
+          explanation: {
+            about: "Hospital Performance Index blends five normalised components — OTIF (30%), revenue coverage (25%), cost efficiency via forecast accuracy (20%), patient satisfaction proxy (15%), and clinical risk (10%) — to describe how resilient the hospital pharmacy is for the selected time period.",
+            current: "Current Performance Index is 77.71 based on present OTIF 92.36%, forecast accuracy 0.0% and RM 0.00 of revenue already protected.",
+            ifAchieved: "If we meet the forecast OTIF of 97.69%, the index would rise to 79.32 with revenue protection improving to RM 0.00.",
+            ifMissed: "If OTIF slips to 87.03%, the index will fall to 77.71 and revenue protection may drop to RM 0.00."
           }
         }}
       />
