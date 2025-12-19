@@ -5,10 +5,12 @@ import {
     AlertTriangle,
     TrendingUp,
     Clock,
-    DollarSign
+    DollarSign,
+    Star
 } from 'lucide-react';
 import { kpiData as mockKpiData, getStatusColor } from '../data/kpiData';
 import kpiService from '../services/kpiService';
+import EnhancedKPITrendGraph from './KPI/EnhancedKPITrendGraph';
 
 const KPIDashboard = () => {
     const [kpiData, setKpiData] = useState(mockKpiData);
@@ -224,7 +226,12 @@ const KPIDashboard = () => {
         const chartColor = data.status === 'healthy' ? '#10b981' : data.status === 'warning' ? '#f59e0b' : '#ef4444';
 
         return (
-            <div className={`bg-white rounded-xl shadow-md border-2 ${colors.border} p-6 hover:shadow-lg transition-shadow`}>
+            <div className={`bg-white rounded-xl shadow-md border-2 ${colors.border} p-6 hover:shadow-lg transition-shadow relative`}>
+                {/* Star Icon - Top Right */}
+                <div className="absolute top-4 right-4">
+                    <Star size={16} className="text-yellow-500 fill-yellow-500" />
+                </div>
+
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -333,10 +340,15 @@ const KPIDashboard = () => {
                     )}
                 </div>
 
-                {/* Trend Graph with Time Period Selector */}
+                {/* Enhanced Trend Graph */}
                 <div className="mb-3">
                     <div className="text-xs text-gray-600 mb-2">Trend</div>
-                    <TrendChart data={data.trend} color={chartColor} kpiKey={kpiKey} />
+                    <EnhancedKPITrendGraph
+                        trendData={data.trendData}
+                        goal={data.goal}
+                        status={data.status}
+                        unit={data.unit}
+                    />
                 </div>
 
                 {/* Additional Breakdowns */}
@@ -381,7 +393,7 @@ const KPIDashboard = () => {
         <div className="mb-16">
             {/* KPI Dashboard Header */}
             <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-800">Key Performance Indicators</h2>
+                <h2 className="text-3xl font-bold text-gray-800">Key Performance Indicators (Priority)</h2>
                 <p className="text-gray-600 mt-2">Critical pharmacy performance metrics and trends</p>
             </div>
 
@@ -393,6 +405,11 @@ const KPIDashboard = () => {
                 <KPICard kpiKey="forecastAccuracy" data={kpiData.forecastAccuracy} icon={TrendingUp} />
                 <KPICard kpiKey="fulfillmentTime" data={kpiData.fulfillmentTime} icon={Clock} />
                 <KPICard kpiKey="revenueProtection" data={kpiData.revenueProtection} icon={DollarSign} />
+            </div>
+
+            {/* Footer Text */}
+            <div className="mt-6 text-center">
+                <p className="text-xs text-gray-500 italic">Use search bar for other KPIs</p>
             </div>
         </div>
     );
