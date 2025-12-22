@@ -107,55 +107,6 @@ const HPISimulationTab = ({ baselineData }) => {
                 </p>
             </div>
 
-            {/* HPI Score Comparison */}
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border-2 border-blue-100">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">HPI Score Comparison</h3>
-                <div className="flex items-center justify-center gap-8">
-                    {/* Baseline */}
-                    <div className="text-center">
-                        <div className="text-sm text-gray-600 mb-2">Baseline</div>
-                        <div className="text-5xl font-bold text-gray-800">
-                            {baseline.hpi.toFixed(2)}
-                        </div>
-                    </div>
-
-                    {/* Arrow */}
-                    <div className="text-4xl text-gray-400">→</div>
-
-                    {/* Simulated */}
-                    <div className="text-center">
-                        <div className="text-sm text-gray-600 mb-2">Simulated</div>
-                        {loading ? (
-                            <div className="text-5xl font-bold text-gray-400 flex items-center justify-center">
-                                <Loader className="w-12 h-12 animate-spin" />
-                            </div>
-                        ) : (
-                            <div className={`text-5xl font-bold ${scenario?.hpi > baseline.hpi ? 'text-green-600' : scenario?.hpi < baseline.hpi ? 'text-red-600' : 'text-gray-800'}`}>
-                                {scenario?.hpi?.toFixed(2) || baseline.hpi.toFixed(2)}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Delta */}
-                {scenario && !loading && (
-                    <div className="text-center mt-4">
-                        <span className={`text-xl font-semibold ${scenario.deltaHpi > 0 ? 'text-green-600' : scenario.deltaHpi < 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                            {scenario.deltaHpi > 0 ? '+' : ''}
-                            {scenario.deltaHpi.toFixed(2)}
-                            {' '}({scenario.deltaHpi > 0 ? '+' : ''}
-                            {((scenario.deltaHpi / baseline.hpi) * 100).toFixed(1)}%)
-                            {scenario.deltaHpi > 0 ? ' ↑' : scenario.deltaHpi < 0 ? ' ↓' : ''}
-                        </span>
-                    </div>
-                )}
-
-                {error && (
-                    <div className="text-center mt-4">
-                        <span className="text-sm text-red-600">{error}</span>
-                    </div>
-                )}
-            </div>
 
             {/* Sliders Section */}
             <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
@@ -214,6 +165,56 @@ const HPISimulationTab = ({ baselineData }) => {
                     <RotateCcw className="w-4 h-4" />
                     Reset to Baseline
                 </button>
+            </div>
+
+            {/* HPI Score Comparison */}
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border-2 border-blue-100">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">HPI Score Comparison</h3>
+                <div className="flex items-center justify-center gap-8">
+                    {/* Baseline */}
+                    <div className="text-center">
+                        <div className="text-sm text-gray-600 mb-2">Baseline</div>
+                        <div className="text-5xl font-bold text-gray-800">
+                            {baseline.hpi.toFixed(2)}
+                        </div>
+                    </div>
+
+                    {/* Arrow */}
+                    <div className="text-4xl text-gray-400">→</div>
+
+                    {/* Simulated */}
+                    <div className="text-center">
+                        <div className="text-sm text-gray-600 mb-2">Simulated</div>
+                        {loading ? (
+                            <div className="text-5xl font-bold text-gray-400 flex items-center justify-center">
+                                <Loader className="w-12 h-12 animate-spin" />
+                            </div>
+                        ) : (
+                            <div className={`text-5xl font-bold ${scenario?.hpi > baseline.hpi ? 'text-green-600' : scenario?.hpi < baseline.hpi ? 'text-red-600' : 'text-gray-800'}`}>
+                                {scenario?.hpi?.toFixed(2) || baseline.hpi.toFixed(2)}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Delta */}
+                {scenario && !loading && (
+                    <div className="text-center mt-4">
+                        <span className={`text-xl font-semibold ${scenario.deltaHpi > 0 ? 'text-green-600' : scenario.deltaHpi < 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                            {scenario.deltaHpi > 0 ? '+' : ''}
+                            {scenario.deltaHpi.toFixed(2)}
+                            {' '}({scenario.deltaHpi > 0 ? '+' : ''}
+                            {((scenario.deltaHpi / baseline.hpi) * 100).toFixed(1)}%)
+                            {scenario.deltaHpi > 0 ? ' ↑' : scenario.deltaHpi < 0 ? ' ↓' : ''}
+                        </span>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="text-center mt-4">
+                        <span className="text-sm text-red-600">{error}</span>
+                    </div>
+                )}
             </div>
 
         </div>
