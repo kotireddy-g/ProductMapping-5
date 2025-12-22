@@ -416,13 +416,18 @@ const LandingPage = ({ currentUser, onNavigate }) => {
                 </div>
               ) : (
                 // Admin User: Show Performance Index button on right
-                <button
-                  onClick={() => setShowPerformanceDrawer(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
-                >
-                  <TrendingUp size={20} />
-                  <span className="font-semibold">Performance Index</span>
-                </button>
+                <div className="text-right">
+                  <button
+                    onClick={() => setShowPerformanceDrawer(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+                  >
+                    <TrendingUp size={20} />
+                    <span className="font-semibold">Performance Index</span>
+                  </button>
+                  <div className="text-sm text-gray-600 mt-2">
+                    Current Score: <span className="font-semibold text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}</span>
+                  </div>
+                </div>
               )}
             </div>
           </div>
