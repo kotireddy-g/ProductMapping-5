@@ -1,7 +1,9 @@
-import React from 'react';
-import { X, TrendingUp, AlertCircle, CheckCircle, Info, BarChart3, DollarSign, Users, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, TrendingUp, AlertCircle, CheckCircle, Info, BarChart3, DollarSign, Users, Activity, Sliders } from 'lucide-react';
+import HPISimulationTab from './HPISimulationTab';
 
 const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
+    const [activeTab, setActiveTab] = useState('overview');
     if (!isOpen || !performanceData) return null;
 
     const {
@@ -65,261 +67,302 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                     }`}
             >
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b-2 border-slate-200 px-6 py-4 flex items-center justify-between z-10">
-                    <div className="flex items-center gap-3">
-                        <BarChart3 className="w-6 h-6 text-blue-600" />
-                        <h2 className="text-xl font-bold text-slate-800">Hospital Performance Index</h2>
+                <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 z-10">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <BarChart3 className="w-6 h-6 text-blue-600" />
+                            <h2 className="text-xl font-bold text-slate-800">Hospital Performance Index</h2>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                            <X size={24} className="text-slate-600" />
+                        </button>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                    >
-                        <X size={24} className="text-slate-600" />
-                    </button>
+
+                    {/* Tabs */}
+                    <div className="flex gap-2 border-b border-slate-200">
+                        <button
+                            onClick={() => setActiveTab('overview')}
+                            className={`px-4 py-2 font-medium text-sm transition-colors relative ${activeTab === 'overview'
+                                ? 'text-blue-600'
+                                : 'text-slate-600 hover:text-slate-800'
+                                }`}
+                        >
+                            Overview
+                            {activeTab === 'overview' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('simulation')}
+                            className={`px-4 py-2 font-medium text-sm transition-colors relative flex items-center gap-2 ${activeTab === 'simulation'
+                                ? 'text-blue-600'
+                                : 'text-slate-600 hover:text-slate-800'
+                                }`}
+                        >
+                            <Sliders className="w-4 h-4" />
+                            Simulation
+                            {activeTab === 'simulation' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
+                            )}
+                        </button>
+                    </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-6 space-y-6">
-                    {/* Section 1: Score Overview */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <TrendingUp size={20} className="text-blue-600" />
-                            <h3 className="text-lg font-bold text-slate-800">PERFORMANCE SCORES</h3>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4">
-                            {/* Current Score */}
-                            <div className={`border-2 rounded-xl p-4 ${getScoreBgColor(currentScore)}`}>
-                                <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
-                                    Current
-                                    {explanation?.current && (
-                                        <div className="group relative">
-                                            <Info className="w-3 h-3 text-slate-400 cursor-help" />
-                                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
-                                                {explanation.current}
-                                                <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={`text-3xl font-bold ${getScoreColor(currentScore)}`}>
-                                    {currentScore.toFixed(2)}
-                                </div>
-                                <div className="text-xs text-slate-500 mt-1">Active Score</div>
-
-                            </div>
-
-                            {/* If Achieved */}
-                            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
-                                <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
-                                    If Achieved
-                                    {explanation?.ifAchieved && (
-                                        <div className="group relative">
-                                            <Info className="w-3 h-3 text-slate-400 cursor-help" />
-                                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
-                                                {explanation.ifAchieved}
-                                                <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="text-3xl font-bold text-green-600">
-                                    {ifAchievedScore.toFixed(2)}
-                                </div>
-                                <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                                    <TrendingUp className="w-3 h-3" />
-                                    +{(ifAchievedScore - currentScore).toFixed(2)}%
-                                </div>
-
-                            </div>
-
-                            {/* If Missed */}
-                            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                                <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
-                                    If Missed
-                                    {explanation?.ifMissed && (
-                                        <div className="group relative">
-                                            <Info className="w-3 h-3 text-slate-400 cursor-help" />
-                                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
-                                                {explanation.ifMissed}
-                                                <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="text-3xl font-bold text-red-600">
-                                    {ifMissedScore.toFixed(2)}
-                                </div>
-                                <div className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                                    <TrendingUp className="w-3 h-3 rotate-180" />
-                                    {(ifMissedScore - currentScore).toFixed(2)}%
-                                </div>
-
-                            </div>
-                        </div>
-
-                        {/* Score Comparison Bar */}
-                        <div className="mt-4 bg-slate-100 rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-semibold text-slate-600">Score Range</span>
-                                <span className="text-xs text-slate-500">0 - 100</span>
-                            </div>
-                            <div className="relative h-8 bg-slate-200 rounded-full overflow-hidden">
-                                {/* Missed marker */}
-                                <div
-                                    className="absolute top-0 h-full w-1 bg-red-500"
-                                    style={{ left: `${ifMissedScore}%` }}
-                                />
-                                {/* Current marker */}
-                                <div
-                                    className="absolute top-0 h-full w-2 bg-blue-600"
-                                    style={{ left: `${currentScore}%` }}
-                                />
-                                {/* Achieved marker */}
-                                <div
-                                    className="absolute top-0 h-full w-1 bg-green-500"
-                                    style={{ left: `${ifAchievedScore}%` }}
-                                />
-                            </div>
-                            <div className="flex items-center justify-between mt-2 text-xs">
-                                <span className="text-red-600">Missed: {ifMissedScore.toFixed(1)}</span>
-                                <span className="text-blue-600 font-bold">Current: {currentScore.toFixed(1)}</span>
-                                <span className="text-green-600">Achieved: {ifAchievedScore.toFixed(1)}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Section 2: Formula */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-3">
-                            <Info size={20} className="text-blue-600" />
-                            <h3 className="text-lg font-bold text-slate-800">CALCULATION FORMULA</h3>
-                        </div>
-                        <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-4">
-                            <div className="text-sm text-slate-700 font-mono leading-relaxed">
-                                {formula}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Section 3: Component Breakdown */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <BarChart3 size={20} className="text-blue-600" />
-                            <h3 className="text-lg font-bold text-slate-800">COMPONENT BREAKDOWN</h3>
-                        </div>
-
-                        <div className="space-y-3">
-                            {componentWeights.map((comp) => {
-                                const value = components[comp.key] || 0;
-                                const weightedValue = (value * comp.weight) / 100;
-                                const colors = getComponentColor(comp.color);
-                                const Icon = comp.icon;
-
-                                return (
-                                    <div key={comp.key} className={`${colors.light} border-2 border-${comp.color}-200 rounded-xl p-4`}>
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <Icon className={`w-5 h-5 ${colors.text}`} />
-                                                <div>
-                                                    <div className="font-bold text-slate-800">{comp.name}</div>
-                                                    <div className="text-xs text-slate-600">Weight: {comp.weight}%</div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className={`text-2xl font-bold ${colors.text}`}>
-                                                    {value.toFixed(2)}%
-                                                </div>
-                                                <div className="text-xs text-slate-600">
-                                                    Contributes: {weightedValue.toFixed(2)}%
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="w-full bg-slate-200 rounded-full h-2">
-                                            <div
-                                                className={`${colors.bg} h-2 rounded-full transition-all duration-500`}
-                                                style={{ width: `${value}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Section 4: Medicine Impact */}
-                    {medicineImpact && (
+                {/* Tab Content */}
+                {activeTab === 'simulation' ? (
+                    <HPISimulationTab baselineData={{
+                        otifPct: inputs?.components?.OTIF_norm || 0.92,
+                        revenueNorm: inputs?.components?.Revenue_norm || 1.0,
+                        costEfficiencyNorm: inputs?.components?.Cost_efficiency_norm || 1.0,
+                        patientSatisfaction: inputs?.components?.Patient_Sat_norm || 0.82,
+                        hpi: currentScore
+                    }} />
+                ) : (
+                    <div className="p-6 space-y-6">
+                        {/* Section 1: Score Overview */}
                         <div>
                             <div className="flex items-center gap-2 mb-4">
-                                <AlertCircle size={20} className="text-blue-600" />
-                                <h3 className="text-lg font-bold text-slate-800">MEDICINE IMPACT</h3>
+                                <TrendingUp size={20} className="text-blue-600" />
+                                <h3 className="text-lg font-bold text-slate-800">PERFORMANCE SCORES</h3>
                             </div>
 
-                            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-5">
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div className="bg-white rounded-lg p-3 border border-blue-200">
-                                        <div className="text-xs font-semibold text-slate-600 mb-1">OTIF Delta</div>
-                                        <div className="text-2xl font-bold text-blue-600">
-                                            +{medicineImpact.deltaOtifPct.toFixed(2)}%
-                                        </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                {/* Current Score */}
+                                <div className={`border-2 rounded-xl p-4 ${getScoreBgColor(currentScore)}`}>
+                                    <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                                        Current
+                                        {explanation?.current && (
+                                            <div className="group relative">
+                                                <Info className="w-3 h-3 text-slate-400 cursor-help" />
+                                                <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
+                                                    {explanation.current}
+                                                    <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="bg-white rounded-lg p-3 border border-green-200">
-                                        <div className="text-xs font-semibold text-slate-600 mb-1">Protected Units</div>
-                                        <div className="text-2xl font-bold text-green-600">
-                                            {medicineImpact.protectedUnitsIfAchieved.toFixed(0)}
-                                        </div>
+                                    <div className={`text-3xl font-bold ${getScoreColor(currentScore)}`}>
+                                        {currentScore.toFixed(2)}
                                     </div>
+                                    <div className="text-xs text-slate-500 mt-1">Active Score</div>
+
                                 </div>
 
-                                {medicineImpact.riskUnitsIfMissed > 0 && (
-                                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                        <div className="text-xs font-semibold text-red-700 mb-1">Risk Units if Missed</div>
-                                        <div className="text-xl font-bold text-red-600">
-                                            {medicineImpact.riskUnitsIfMissed.toFixed(0)} units
-                                        </div>
+                                {/* If Achieved */}
+                                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+                                    <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                                        If Achieved
+                                        {explanation?.ifAchieved && (
+                                            <div className="group relative">
+                                                <Info className="w-3 h-3 text-slate-400 cursor-help" />
+                                                <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
+                                                    {explanation.ifAchieved}
+                                                    <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                    <div className="text-3xl font-bold text-green-600">
+                                        {ifAchievedScore.toFixed(2)}
+                                    </div>
+                                    <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                        <TrendingUp className="w-3 h-3" />
+                                        +{(ifAchievedScore - currentScore).toFixed(2)}%
+                                    </div>
 
-                                <div className="mt-4 text-sm text-slate-700 bg-white rounded-lg p-3 border border-slate-200">
-                                    <span className="font-semibold">Impact Summary:</span> Achieving the forecast OTIF
-                                    will improve overall performance by {medicineImpact.deltaOtifPct.toFixed(2)}% and
-                                    protect {medicineImpact.protectedUnitsIfAchieved.toFixed(0)} units from stockouts.
+                                </div>
+
+                                {/* If Missed */}
+                                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                                    <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                                        If Missed
+                                        {explanation?.ifMissed && (
+                                            <div className="group relative">
+                                                <Info className="w-3 h-3 text-slate-400 cursor-help" />
+                                                <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
+                                                    {explanation.ifMissed}
+                                                    <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="text-3xl font-bold text-red-600">
+                                        {ifMissedScore.toFixed(2)}
+                                    </div>
+                                    <div className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                        <TrendingUp className="w-3 h-3 rotate-180" />
+                                        {(ifMissedScore - currentScore).toFixed(2)}%
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            {/* Score Comparison Bar */}
+                            <div className="mt-4 bg-slate-100 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-semibold text-slate-600">Score Range</span>
+                                    <span className="text-xs text-slate-500">0 - 100</span>
+                                </div>
+                                <div className="relative h-8 bg-slate-200 rounded-full overflow-hidden">
+                                    {/* Missed marker */}
+                                    <div
+                                        className="absolute top-0 h-full w-1 bg-red-500"
+                                        style={{ left: `${ifMissedScore}%` }}
+                                    />
+                                    {/* Current marker */}
+                                    <div
+                                        className="absolute top-0 h-full w-2 bg-blue-600"
+                                        style={{ left: `${currentScore}%` }}
+                                    />
+                                    {/* Achieved marker */}
+                                    <div
+                                        className="absolute top-0 h-full w-1 bg-green-500"
+                                        style={{ left: `${ifAchievedScore}%` }}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between mt-2 text-xs">
+                                    <span className="text-red-600">Missed: {ifMissedScore.toFixed(1)}</span>
+                                    <span className="text-blue-600 font-bold">Current: {currentScore.toFixed(1)}</span>
+                                    <span className="text-green-600">Achieved: {ifAchievedScore.toFixed(1)}</span>
                                 </div>
                             </div>
                         </div>
-                    )}
 
-                    {/* Section 5: Key Inputs */}
-                    {inputs && (
+                        {/* Section 2: Formula */}
                         <div>
                             <div className="flex items-center gap-2 mb-3">
                                 <Info size={20} className="text-blue-600" />
-                                <h3 className="text-lg font-bold text-slate-800">KEY INPUTS</h3>
+                                <h3 className="text-lg font-bold text-slate-800">CALCULATION FORMULA</h3>
                             </div>
-
                             <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-4">
-                                <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Current OTIF:</span>
-                                        <span className="font-bold">{inputs.currentOtifPct?.toFixed(2)}%</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Forecast Vendor OTIF:</span>
-                                        <span className="font-bold">{inputs.forecastVendorOtifPct?.toFixed(2)}%</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Vendor Coverage:</span>
-                                        <span className="font-bold">{inputs.vendorCoveragePct?.toFixed(0)}%</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Total Forecast Qty:</span>
-                                        <span className="font-bold">{inputs.totalForecastQty?.toLocaleString()}</span>
-                                    </div>
+                                <div className="text-sm text-slate-700 font-mono leading-relaxed">
+                                    {formula}
                                 </div>
                             </div>
                         </div>
-                    )}
-                </div>
+
+                        {/* Section 3: Component Breakdown */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <BarChart3 size={20} className="text-blue-600" />
+                                <h3 className="text-lg font-bold text-slate-800">COMPONENT BREAKDOWN</h3>
+                            </div>
+
+                            <div className="space-y-3">
+                                {componentWeights.map((comp) => {
+                                    const value = components[comp.key] || 0;
+                                    const weightedValue = (value * comp.weight) / 100;
+                                    const colors = getComponentColor(comp.color);
+                                    const Icon = comp.icon;
+
+                                    return (
+                                        <div key={comp.key} className={`${colors.light} border-2 border-${comp.color}-200 rounded-xl p-4`}>
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Icon className={`w-5 h-5 ${colors.text}`} />
+                                                    <div>
+                                                        <div className="font-bold text-slate-800">{comp.name}</div>
+                                                        <div className="text-xs text-slate-600">Weight: {comp.weight}%</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className={`text-2xl font-bold ${colors.text}`}>
+                                                        {value.toFixed(2)}%
+                                                    </div>
+                                                    <div className="text-xs text-slate-600">
+                                                        Contributes: {weightedValue.toFixed(2)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="w-full bg-slate-200 rounded-full h-2">
+                                                <div
+                                                    className={`${colors.bg} h-2 rounded-full transition-all duration-500`}
+                                                    style={{ width: `${value}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Section 4: Medicine Impact */}
+                        {medicineImpact && (
+                            <div>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <AlertCircle size={20} className="text-blue-600" />
+                                    <h3 className="text-lg font-bold text-slate-800">MEDICINE IMPACT</h3>
+                                </div>
+
+                                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-5">
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div className="bg-white rounded-lg p-3 border border-blue-200">
+                                            <div className="text-xs font-semibold text-slate-600 mb-1">OTIF Delta</div>
+                                            <div className="text-2xl font-bold text-blue-600">
+                                                +{medicineImpact.deltaOtifPct.toFixed(2)}%
+                                            </div>
+                                        </div>
+                                        <div className="bg-white rounded-lg p-3 border border-green-200">
+                                            <div className="text-xs font-semibold text-slate-600 mb-1">Protected Units</div>
+                                            <div className="text-2xl font-bold text-green-600">
+                                                {medicineImpact.protectedUnitsIfAchieved.toFixed(0)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {medicineImpact.riskUnitsIfMissed > 0 && (
+                                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                            <div className="text-xs font-semibold text-red-700 mb-1">Risk Units if Missed</div>
+                                            <div className="text-xl font-bold text-red-600">
+                                                {medicineImpact.riskUnitsIfMissed.toFixed(0)} units
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 text-sm text-slate-700 bg-white rounded-lg p-3 border border-slate-200">
+                                        <span className="font-semibold">Impact Summary:</span> Achieving the forecast OTIF
+                                        will improve overall performance by {medicineImpact.deltaOtifPct.toFixed(2)}% and
+                                        protect {medicineImpact.protectedUnitsIfAchieved.toFixed(0)} units from stockouts.
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Section 5: Key Inputs */}
+                        {inputs && (
+                            <div>
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Info size={20} className="text-blue-600" />
+                                    <h3 className="text-lg font-bold text-slate-800">KEY INPUTS</h3>
+                                </div>
+
+                                <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-4">
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">Current OTIF:</span>
+                                            <span className="font-bold">{inputs.currentOtifPct?.toFixed(2)}%</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">Forecast Vendor OTIF:</span>
+                                            <span className="font-bold">{inputs.forecastVendorOtifPct?.toFixed(2)}%</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">Vendor Coverage:</span>
+                                            <span className="font-bold">{inputs.vendorCoveragePct?.toFixed(0)}%</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-600">Total Forecast Qty:</span>
+                                            <span className="font-bold">{inputs.totalForecastQty?.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </>
     );
