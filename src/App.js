@@ -295,6 +295,7 @@ function App() {
       />
 
       <LandingPage
+        currentUser={currentUser}
         onNavigate={handleLandingPageNavigate}
       />
 

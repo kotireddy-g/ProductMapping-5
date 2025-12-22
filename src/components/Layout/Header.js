@@ -5,6 +5,7 @@ import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
 import LanguageSwitcher from './LanguageSwitcher';
 import ModuleSelector from './ModuleSelector';
 import TemplateSelectorModal from '../TemplateSelector/TemplateSelectorModal';
+import { getUserRole, USER_ROLES } from '../../utils/userRoles';
 
 const Header = ({
   currentUser,
@@ -21,6 +22,10 @@ const Header = ({
   const [currentTemplate, setCurrentTemplate] = useState(
     localStorage.getItem('dashboardTemplate') || 'executive'
   );
+
+  // Get user role for display
+  const userRole = getUserRole(currentUser?.email);
+  const userLabel = userRole === USER_ROLES.MANAGEMENT ? 'MANAGEMENT USER' : 'ADMIN USER';
 
   const handleTemplateChange = (templateId) => {
     setCurrentTemplate(templateId);
@@ -95,7 +100,7 @@ const Header = ({
                   <User className="w-4 h-4 text-blue-600" />
                 </div>
                 <span className="text-sm font-medium text-slate-700">
-                  {currentUser?.name || 'Admin'}
+                  {userLabel}
                 </span>
               </div>
               <button

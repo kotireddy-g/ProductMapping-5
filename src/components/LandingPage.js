@@ -25,6 +25,7 @@ import HospitalPerformanceDrawer from './CommandCenter/HospitalPerformanceDrawer
 import dashboardService from '../services/dashboardService';
 import { parseSearchQuery } from '../utils/searchParser';
 import { getTranslatedActionName } from '../utils/translationHelpers';
+import { getUserRole, USER_ROLES } from '../utils/userRoles';
 
 
 // Icon mapping for department cards (API returns string names)
@@ -43,7 +44,7 @@ const iconMap = {
   'Building2': Building2
 };
 
-const LandingPage = ({ onNavigate }) => {
+const LandingPage = ({ currentUser, onNavigate }) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -57,6 +58,9 @@ const LandingPage = ({ onNavigate }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const recognitionRef = useRef(null);
+
+  // Get user role
+  const userRole = getUserRole(currentUser?.email);
 
   // Extract data from API or use mock
   const overviewData = apiData?.overview;
@@ -332,39 +336,94 @@ const LandingPage = ({ onNavigate }) => {
 
         {/* OTIF Section */}
         <div className="mb-16">
-          {/* OTIF Header */}
+          {/* OTIF/Performance Index Header */}
           <div className="mb-8">
             <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                  {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
-                  <button
-                    onClick={() => setShowOTIFDrawer(true)}
-                    className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                    title="Click for detailed breakdown"
-                  >
-                    <Info size={28} className="text-blue-600" />
-                    <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                      Click for detailed breakdown
-                    </span>
-                  </button>
-                </h2>
-                {/* OT and IF as subheader */}
-                <p className="text-gray-600 mt-2 text-lg">
-                  {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
-                  {' '}<span className="text-gray-400">|</span>{' '}
-                  {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
-                </p>
-                <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
-              </div>
-              {/* Hospital Performance Index Button */}
-              <button
-                onClick={() => setShowPerformanceDrawer(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
-              >
-                <TrendingUp size={20} />
-                <span className="font-semibold">Performance Index</span>
-              </button>
+              {/* Left Side - Conditional based on role */}
+              {userRole === USER_ROLES.MANAGEMENT ? (
+                // Management User: Show Performance Index on left
+                <div>
+                  <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                    Performance Index: <span className="text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}</span>
+                    <button
+                      onClick={() => setShowPerformanceDrawer(true)}
+                      className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                      title="Click for detailed breakdown"
+                    >
+                      <Info size={28} className="text-blue-600" />
+                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                        Click for detailed breakdown
+                      </span>
+                    </button>
+                  </h2>
+                  {/* If Achieved and If Missed as subheader */}
+                  <p className="text-gray-600 mt-2 text-lg">
+                    If Achieved: <span className="font-semibold text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifAchievedScore?.toFixed(2) || '79.32'}</span>
+                    {' '}<span className="text-gray-400">|</span>{' '}
+                    If Missed: <span className="font-semibold text-red-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifMissedScore?.toFixed(2) || '77.71'}</span>
+                  </p>
+                  <p className="text-gray-500 mt-1 text-sm">Hospital Performance Index Score</p>
+                </div>
+              ) : (
+                // Admin User: Show OTIF on left
+                <div>
+                  <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                    {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+                    <button
+                      onClick={() => setShowOTIFDrawer(true)}
+                      className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                      title="Click for detailed breakdown"
+                    >
+                      <Info size={28} className="text-blue-600" />
+                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                        Click for detailed breakdown
+                      </span>
+                    </button>
+                  </h2>
+                  {/* OT and IF as subheader */}
+                  <p className="text-gray-600 mt-2 text-lg">
+                    {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
+                    {' '}<span className="text-gray-400">|</span>{' '}
+                    {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
+                  </p>
+                  <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
+                </div>
+              )}
+
+              {/* Right Side - Conditional based on role */}
+              {userRole === USER_ROLES.MANAGEMENT ? (
+                // Management User: Show OTIF section on right
+                <div>
+                  <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                    {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+                    <button
+                      onClick={() => setShowOTIFDrawer(true)}
+                      className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                      title="Click for detailed breakdown"
+                    >
+                      <Info size={28} className="text-blue-600" />
+                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                        Click for detailed breakdown
+                      </span>
+                    </button>
+                  </h2>
+                  <p className="text-gray-600 mt-2 text-lg">
+                    {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
+                    {' '}<span className="text-gray-400">|</span>{' '}
+                    {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
+                  </p>
+                  <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
+                </div>
+              ) : (
+                // Admin User: Show Performance Index button on right
+                <button
+                  onClick={() => setShowPerformanceDrawer(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+                >
+                  <TrendingUp size={20} />
+                  <span className="font-semibold">Performance Index</span>
+                </button>
+              )}
             </div>
           </div>
 
