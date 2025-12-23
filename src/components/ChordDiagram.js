@@ -1169,15 +1169,32 @@ Z
             </div>
           </div>
 
-          {/* Movement Speed Legend */}
-          <div className="flex gap-6 items-center mb-4 p-3 bg-slate-50 rounded-lg">
-            <span className="font-semibold text-gray-700 text-sm">Movement Speed:</span>
-            {Object.entries(speedColors).map(([speed, color]) => (
-              <div key={speed} className="flex items-center gap-2">
-                <div style={{ width: '32px', height: '8px', background: color, borderRadius: '4px' }} />
-                <span className="text-sm text-gray-700 capitalize">{speed}</span>
+          {/* Movement Speed Legend and Color Coding */}
+          <div className="flex justify-between items-center mb-4 p-3 bg-slate-50 rounded-lg">
+            {/* Movement Speed - Left Side */}
+            <div className="flex gap-6 items-center">
+              <span className="font-semibold text-gray-700 text-xs">Movement Speed:</span>
+              {Object.entries(speedColors).map(([speed, color]) => (
+                <div key={speed} className="flex items-center gap-2">
+                  <div style={{ width: '32px', height: '8px', background: color, borderRadius: '4px' }} />
+                  <span className="text-xs text-gray-700 capitalize">{speed}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Color Coding - Right Side */}
+            <div className="flex gap-6 items-center">
+              <span className="font-semibold text-gray-700 text-xs">Color Coding (OTIF):</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs">🟢 Green: 95-100%</span>
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <span className="text-xs">🟠 Amber: 85-95%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs">🔴 Red: &lt;85%</span>
+              </div>
+            </div>
           </div>
 
           {/* Breadcrumbs */}

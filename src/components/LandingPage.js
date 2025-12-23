@@ -521,20 +521,6 @@ const LandingPage = ({ currentUser, onNavigate }) => {
               );
             })}
           </div>
-
-          {/* Color Legend */}
-          <div className="mt-6 flex flex-wrap items-center gap-6 text-sm text-gray-600 bg-white p-4 rounded-lg shadow-sm">
-            <span className="font-semibold text-gray-700">Color Coding:</span>
-            <div className="flex items-center gap-2">
-              <span>🟢 Green: 95-100%</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>🟠 Amber: 85-95%</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>🔴 Red: &lt;85%</span>
-            </div>
-          </div>
         </div>
 
         {/* Decision Actions Section */}
