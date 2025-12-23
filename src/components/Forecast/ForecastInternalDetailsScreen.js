@@ -7,7 +7,7 @@ import forecastService from '../../services/forecastService';
 
 const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastArea }) => {
     const { t } = useTranslation();
-    const [selectedPeriod, setSelectedPeriod] = useState('Today');
+    const [selectedPeriod, setSelectedPeriod] = useState('Next 7 Days');
     const [selectedMedicine, setSelectedMedicine] = useState('');
     const [whatIfScenario, setWhatIfScenario] = useState('do_nothing');
     const [showToast, setShowToast] = useState(false);
@@ -414,8 +414,8 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                 </div>
                             )}
 
-                            {/* Results */}
-                            {results && (
+                            {/* Results - Only show when medicine is selected */}
+                            {selectedMedicine && results && (
                                 <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
                                     <h3 className="text-lg font-bold text-slate-800 mb-4">Results:</h3>
 
