@@ -12,7 +12,7 @@ import { kpiData as mockKpiData, getStatusColor } from '../data/kpiData';
 import kpiService from '../services/kpiService';
 import EnhancedKPITrendGraph from './KPI/EnhancedKPITrendGraph';
 
-const KPIDashboard = () => {
+const KPIDashboard = ({ onNavigate }) => {
     const [kpiData, setKpiData] = useState(mockKpiData);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -225,8 +225,17 @@ const KPIDashboard = () => {
         const isPositiveChange = data.change >= 0;
         const chartColor = data.status === 'healthy' ? '#10b981' : data.status === 'warning' ? '#f59e0b' : '#ef4444';
 
+        const handleCardClick = () => {
+            if (onNavigate) {
+                onNavigate('kpi-detail', { id: kpiKey, name: data.title });
+            }
+        };
+
         return (
-            <div className={`bg-white rounded-xl shadow-md border-2 ${colors.border} p-6 hover:shadow-lg transition-shadow relative`}>
+            <button
+                onClick={handleCardClick}
+                className={`bg-white rounded-xl shadow-md border-2 ${colors.border} p-6 hover:shadow-lg transition-all relative text-left w-full cursor-pointer group`}
+            >
                 {/* Star Icon - Top Right */}
                 <div className="absolute top-4 right-4">
                     <Star size={16} className="text-yellow-500 fill-yellow-500" />
@@ -385,7 +394,7 @@ const KPIDashboard = () => {
                         {data.whyItMatters}
                     </div>
                 </div>
-            </div>
+            </button>
         );
     };
 

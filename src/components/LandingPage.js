@@ -628,7 +628,7 @@ const LandingPage = ({ currentUser, onNavigate }) => {
         </div>
 
         {/* KPI Dashboard */}
-        <KPIDashboard />
+        <KPIDashboard onNavigate={onNavigate} />
 
         {/* Footer with Links */}
         <div className="bg-white border-t border-gray-200 shadow-sm mt-12">

@@ -14,6 +14,7 @@ import ForecastReviewPage from './components/ForecastReview/ForecastReviewPage';
 import CommandCenterDashboard from './components/CommandCenter/CommandCenterDashboard';
 import DecisionActionsScreen from './components/DecisionActions/DecisionActionsScreen';
 import ForecastInternalDetailsScreen from './components/Forecast/ForecastInternalDetailsScreen';
+import KPIDetailScreen from './components/KPI/KPIDetailScreen';
 import { notifications as initialNotifications } from './data/unifiedPharmaData';
 import notificationsService from './services/notificationsService';
 import authService from './services/authService';
@@ -29,6 +30,7 @@ function App() {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [selectedAction, setSelectedAction] = useState(null);
   const [selectedForecastData, setSelectedForecastData] = useState(null);
+  const [selectedKPI, setSelectedKPI] = useState(null);
 
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -129,6 +131,12 @@ function App() {
     setSelectedDepartment(null);
     setSelectedAction(null);
     setSelectedForecastData(null);
+    setSelectedKPI(null);
+  };
+
+  const handleNavigateToKPIDetail = (kpiData) => {
+    setSelectedKPI(kpiData);
+    setCurrentScreen('kpi-detail');
   };
 
   const handleNavigateToCommandCenter = (departmentData) => {
@@ -149,6 +157,9 @@ function App() {
       case 'forecast-detail':
         setSelectedForecastData(data);
         setCurrentScreen('forecast-internal-details');
+        break;
+      case 'kpi-detail':
+        handleNavigateToKPIDetail(data);
         break;
       default:
         break;
@@ -264,6 +275,19 @@ function App() {
           mainAction={selectedAction?.mainAction}
           subAction={selectedAction?.subAction}
           onBack={handleBackToDashboard}
+        />
+        <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
+      </>
+    );
+  }
+
+  if (currentScreen === 'kpi-detail') {
+    return (
+      <>
+        <KPIDetailScreen
+          selectedKPI={selectedKPI}
+          onBack={handleBackToDashboard}
+          onNavigateToKPI={handleNavigateToKPIDetail}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
       </>
