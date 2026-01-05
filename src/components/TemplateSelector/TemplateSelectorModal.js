@@ -7,7 +7,19 @@ const TemplateSelectorModal = ({ isOpen, onClose, currentTemplate, onTemplateCha
     if (!isOpen) return null;
 
     const handleApply = (templateId) => {
-        onTemplateChange(templateId);
+        // Save to localStorage
+        localStorage.setItem('dashboardTemplate', templateId);
+
+        // Dispatch custom event for same-tab updates
+        window.dispatchEvent(new CustomEvent('templateChanged', {
+            detail: { template: templateId }
+        }));
+
+        // Call parent callback if provided
+        if (onTemplateChange) {
+            onTemplateChange(templateId);
+        }
+
         onClose();
     };
 

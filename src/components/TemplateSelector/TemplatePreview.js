@@ -2,29 +2,32 @@ import React from 'react';
 import { getWidgetLabel } from '../../config/dashboardTemplates';
 
 const TemplatePreview = ({ layout }) => {
+    // Get all rows in order
+    const rows = Object.keys(layout).sort();
+
     return (
         <div className="space-y-2">
-            {Object.entries(layout).map(([rowKey, widgets]) => (
-                <div key={rowKey} className="flex gap-2">
-                    {widgets.map(widget => (
-                        <div
-                            key={widget}
-                            className={`
-                h-12 rounded bg-gradient-to-br from-blue-100 to-blue-200
-                border border-blue-300 flex items-center justify-center
-                ${widgets.length === 1 ? 'flex-1' : 'flex-1'}
-              `}
-                            style={{
-                                flex: widgets.length === 1 ? '1' : `1 1 ${100 / widgets.length}%`
-                            }}
-                        >
-                            <span className="text-xs font-semibold text-blue-700">
+            {rows.map((rowKey, index) => {
+                const widgets = layout[rowKey];
+                return widgets.map(widget => (
+                    <div
+                        key={`${rowKey}-${widget}`}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200"
+                    >
+                        {/* Number Badge */}
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                            {index + 1}
+                        </div>
+
+                        {/* Component Label */}
+                        <div className="flex-1">
+                            <span className="text-sm font-semibold text-gray-800">
                                 {getWidgetLabel(widget)}
                             </span>
                         </div>
-                    ))}
-                </div>
-            ))}
+                    </div>
+                ));
+            })}
         </div>
     );
 };

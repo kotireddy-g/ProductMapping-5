@@ -28,6 +28,7 @@ import dashboardService from '../services/dashboardService';
 import { parseSearchQuery } from '../utils/searchParser';
 import { getTranslatedActionName } from '../utils/translationHelpers';
 import { getUserRole, USER_ROLES } from '../utils/userRoles';
+import { DASHBOARD_TEMPLATES } from '../config/dashboardTemplates';
 
 
 // Icon mapping for department cards (API returns string names)
@@ -48,6 +49,35 @@ const iconMap = {
 
 const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
   const { t } = useTranslation();
+
+  // State for current template - reactive to changes
+  const [currentTemplate, setCurrentTemplate] = useState(
+    localStorage.getItem('dashboardTemplate') || 'executive'
+  );
+  const templateConfig = DASHBOARD_TEMPLATES[currentTemplate] || DASHBOARD_TEMPLATES.executive;
+
+  // Listen for template changes from localStorage
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'dashboardTemplate' && e.newValue) {
+        setCurrentTemplate(e.newValue);
+      }
+    };
+
+    // Listen for storage events from other tabs/windows
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom event for same-tab updates
+    const handleTemplateChange = (e) => {
+      setCurrentTemplate(e.detail.template);
+    };
+    window.addEventListener('templateChanged', handleTemplateChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('templateChanged', handleTemplateChange);
+    };
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -286,6 +316,372 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
     }
   };
 
+  // Create component mapping for template-based rendering
+  const componentMapping = useMemo(() => {
+    return {
+      performanceOtif: 'performanceOtif',
+      supplyDemand: 'supplyDemand',
+      departments: 'departments',
+      decisions: 'decisions',
+      forecast: 'forecast',
+      kpis: 'kpis'
+    };
+  }, []);
+
+  // Helper function to render component by key
+  const renderComponent = (componentKey) => {
+    const key = `section-${componentKey}`;
+
+    switch (componentKey) {
+      case 'performanceOtif':
+        // Performance/OTIF Section (originally at line 397-518)
+        return (
+          <div key={key} className="mb-16">
+            {/* OTIF/Performance Index Header */}
+            <div className="mb-8">
+              <div className="flex items-start justify-between">
+                {/* Left Side - Conditional based on role */}
+                {userRole === USER_ROLES.MANAGEMENT ? (
+                  // Management User: Show Performance Index on left
+                  <div>
+                    <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                      Performance Index: <span className="text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}</span>
+                      <button
+                        onClick={() => setShowPerformanceDrawer(true)}
+                        className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                        title="Click for detailed breakdown"
+                      >
+                        <Info size={28} className="text-blue-600" />
+                        <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                          Click for detailed breakdown
+                        </span>
+                      </button>
+                    </h2>
+                    {/* Trend Indicator - Below header */}
+                    <div className="flex items-center gap-1 mt-1">
+                      <ArrowDown className="text-red-600" size={14} />
+                      <span className="text-red-600 font-semibold text-xs">DOWN: 18%</span>
+                    </div>
+                    {/* If Achieved and If Missed as subheader */}
+                    <p className="text-gray-600 mt-2 text-lg">
+                      If Achieved: <span className="font-semibold text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifAchievedScore?.toFixed(2) || '79.32'}</span>
+                      {' '}<span className="text-gray-400">|</span>{' '}
+                      If Missed: <span className="font-semibold text-red-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifMissedScore?.toFixed(2) || '77.71'}</span>
+                    </p>
+                    {/* Root Causes Link - Inline */}
+                    <button
+                      onClick={() => setShowRootCauses('performance')}
+                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
+                    >
+                      <AlertCircle size={14} />
+                      <span className="font-semibold">3 Root Causes</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  // Admin User: Show OTIF on left
+                  <div>
+                    <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                      {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+                      <button
+                        onClick={() => setShowOTIFDrawer(true)}
+                        className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                        title="Click for detailed breakdown"
+                      >
+                        <Info size={28} className="text-blue-600" />
+                        <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                          Click for detailed breakdown
+                        </span>
+                      </button>
+                    </h2>
+                    {/* OT and IF as subheader */}
+                    <p className="text-gray-600 mt-2 text-lg">
+                      {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
+                      {' '}<span className="text-gray-400">|</span>{' '}
+                      {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
+                    </p>
+                    <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
+                  </div>
+                )}
+
+                {/* Right Side - Conditional based on role */}
+                {userRole === USER_ROLES.MANAGEMENT ? (
+                  // Management User: Show OTIF section on right
+                  <div>
+                    <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                      {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+                      <button
+                        onClick={() => setShowOTIFDrawer(true)}
+                        className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                        title="Click for detailed breakdown"
+                      >
+                        <Info size={28} className="text-blue-600" />
+                        <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                          Click for detailed breakdown
+                        </span>
+                      </button>
+                    </h2>
+                    {/* Gap Indicator - Below header */}
+                    <div className="mt-1">
+                      <span className="text-orange-700 font-semibold text-xs">16% lower goal</span>
+                    </div>
+                    <p className="text-gray-600 mt-2 text-lg">
+                      {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
+                      {' '}<span className="text-gray-400">|</span>{' '}
+                      {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
+                    </p>
+                    {/* Root Causes Link - Inline */}
+                    <button
+                      onClick={() => setShowRootCauses('otif')}
+                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
+                    >
+                      <AlertCircle size={14} />
+                      <span className="font-semibold">4 Root Causes</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  // Admin User: Show Performance Index button on right
+                  <div className="text-right">
+                    <button
+                      onClick={() => setShowPerformanceDrawer(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+                    >
+                      <TrendingUp size={20} />
+                      <span className="font-semibold">Performance Index</span>
+                    </button>
+                    <div className="text-sm text-gray-600 mt-2">
+                      Current Score: <span className="font-semibold text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'supplyDemand':
+        // Supply & Demand Flow (originally at line 520)
+        return (
+          <div key={key} className="mb-16">
+            <ChordDiagram selectedModule={selectedModule} />
+          </div>
+        );
+
+      case 'departments':
+        // Department Cards Section
+        return (
+          <div key={key} className="mb-16">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+              {otifDepartments.map((dept) => {
+                // Special grey styling for Lab and Radiology
+                const isGreyCard = dept.id === 'lab' || dept.id === 'radiology';
+
+                // Get colors based on API status field
+                const getColorsByStatus = (status) => {
+                  switch (status) {
+                    case 'green':
+                      return {
+                        bg: 'bg-green-50',
+                        border: 'border-green-400',
+                        iconBg: 'bg-green-100',
+                        text: 'text-green-700'
+                      };
+                    case 'amber':
+                      return {
+                        bg: 'bg-amber-50',
+                        border: 'border-amber-400',
+                        iconBg: 'bg-amber-100',
+                        text: 'text-amber-700'
+                      };
+                    case 'red':
+                      return {
+                        bg: 'bg-red-50',
+                        border: 'border-red-400',
+                        iconBg: 'bg-red-100',
+                        text: 'text-red-700'
+                      };
+                    default:
+                      return getOTIFColorByPercentage(dept.otifPercentage);
+                  }
+                };
+
+                const colors = isGreyCard
+                  ? {
+                    bg: 'bg-gray-100',
+                    border: 'border-gray-300',
+                    iconBg: 'bg-gray-200',
+                    text: 'text-gray-700'
+                  }
+                  : getColorsByStatus(dept.status);
+
+                // Get icon component from string name (API) or use directly if already a component (mock)
+                const IconComponent = typeof dept.icon === 'string' ? iconMap[dept.icon] || Heart : dept.icon;
+                const changeSign = dept.changePercentage >= 0 ? '+' : '';
+                const trendColor = dept.changePercentage >= 0 ? 'text-green-700' : 'text-red-700';
+                const trendArrow = dept.changePercentage >= 0 ? '↑' : '↓';
+
+                return (
+                  <button
+                    key={dept.id}
+                    onClick={() => {
+                      if (isGreyCard) {
+                        alert(`${dept.name} is currently disabled and will be enabled after integration.`);
+                      } else {
+                        onNavigate && onNavigate('otif-detail', dept);
+                      }
+                    }}
+                    className={`${colors.bg} ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`${colors.iconBg} p-2 rounded-md`}>
+                        <IconComponent className={colors.text} size={18} />
+                      </div>
+                      <div className={`text-2xl font-bold ${colors.text}`}>
+                        {Number(dept.otifPercentage).toFixed(2)}%
+                      </div>
+                    </div>
+                    <h3 className={`text-sm font-semibold ${colors.text}`}>
+                      {dept.name}
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-1">{dept.description}</p>
+
+                    {/* Percentage Change Indicator */}
+                    <div className="flex items-center justify-between mt-2 text-xs">
+                      <span className="text-gray-600">vs Prev:</span>
+                      <span className={`font-semibold ${trendColor} flex items-center gap-0.5`}>
+                        {changeSign}{Math.abs(dept.changePercentage).toFixed(2)}% {trendArrow}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+
+      case 'decisions':
+        // Decision Actions Section
+        return (
+          <div key={key} className="mb-16">
+            {/* Action Header */}
+            <div className="mb-8">
+              <h2 className="text-5xl font-bold text-gray-800">
+                {t('decisionActions.title')}: <span className="text-red-600">{apiData?.decisionActions?.totalDecisionActionsCount || totalPendingActions}</span>
+              </h2>
+              <p className="text-gray-600 mt-2">{t('decisionActions.pending')} actions requiring immediate attention</p>
+            </div>
+
+            {/* Action Grid Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3">
+              {decisionActions.map((action) => {
+                const colors = getActionColorClass(action.severity);
+
+                return (
+                  <button
+                    key={action.id}
+                    onClick={() => {
+                      setSelectedAction(action);
+                      setShowSubcategoriesModal(true);
+                    }}
+                    className={`${colors.bg} ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left relative`}
+                  >
+                    {/* Pending Count Badge */}
+                    <div className="absolute top-2 right-2">
+                      <div className={`${colors.badge} px-2 py-1 rounded-full text-sm font-bold`}>
+                        {action.pendingCount}
+                      </div>
+                    </div>
+
+                    <div className="pr-12">
+                      <h3 className={`text-sm font-bold ${colors.text} mb-1`}>
+                        {getTranslatedActionName(action.name, t)}
+                      </h3>
+                      <p className="text-xs text-gray-700">{action.description}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Note Point */}
+            <div className="mt-4 flex items-start gap-2 text-sm text-slate-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <span className="font-semibold">Note:</span>
+              <span>All actionable insights are based on demand and supply, stock availability</span>
+            </div>
+          </div>
+        );
+
+      case 'forecast':
+        // Forecast Section
+        return (
+          <div key={key} className="mb-12">
+            {/* Forecast Header */}
+            <div className="mb-8">
+              <h2 className="text-5xl font-bold text-gray-800">
+                Forecast: <span className={forecastSurge >= 0 ? 'text-green-600' : 'text-red-600'}>{Number(forecastSurge).toFixed(2)}% {forecastSurge >= 0 ? '↑' : '↓'}</span>
+              </h2>
+              <p className="text-gray-600 mt-2">Demand forecast surge across hospital areas</p>
+            </div>
+
+            {/* Forecast Grid Cards - WITH WHITE BACKGROUNDS */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {forecastAreas.map((area) => {
+                const colors = getForecastColorClass(area.trend);
+                const changeSign = area.changePercentage >= 0 ? '+' : '';
+
+                return (
+                  <button
+                    key={area.id}
+                    onClick={() => onNavigate && onNavigate('forecast-detail', area)}
+                    className={`bg-white ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className={`text-base font-bold ${colors.text}`}>
+                        {area.areaName}
+                      </h3>
+                      <div className={`${colors.badge} px-1.5 py-0.5 rounded-full text-xs font-bold`}>
+                        {colors.arrow}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className={`text-xl font-bold ${colors.text}`}>
+                        {Number(area.currentForecast).toFixed(2)}%
+                      </p>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600">vs Prev:</span>
+                        <span className={`font-semibold ${area.changePercentage >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                          {changeSign}{Number(area.changePercentage).toFixed(2)}%
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Note Point */}
+            <div className="mt-4 flex items-start gap-2 text-sm text-slate-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
+              <span className="font-semibold">Note:</span>
+              <span>All data is measured compared with previous week</span>
+            </div>
+          </div>
+        );
+      case 'kpis':
+        // KPI Dashboard (originally at line 715)
+        return (
+          <div key={key}>
+            <KPIDashboard onNavigate={onNavigate} selectedModule={selectedModule} />
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
       {/* Main Content Container */}
@@ -340,326 +736,8 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
           </div>
         </div>
 
-        {/* OTIF Section */}
-        <div className="mb-16">
-          {/* OTIF/Performance Index Header */}
-          <div className="mb-8">
-            <div className="flex items-start justify-between">
-              {/* Left Side - Conditional based on role */}
-              {userRole === USER_ROLES.MANAGEMENT ? (
-                // Management User: Show Performance Index on left
-                <div>
-                  <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                    Performance Index: <span className="text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}</span>
-                    <button
-                      onClick={() => setShowPerformanceDrawer(true)}
-                      className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                      title="Click for detailed breakdown"
-                    >
-                      <Info size={28} className="text-blue-600" />
-                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                        Click for detailed breakdown
-                      </span>
-                    </button>
-                  </h2>
-                  {/* Trend Indicator - Below header */}
-                  <div className="flex items-center gap-1 mt-1">
-                    <ArrowDown className="text-red-600" size={14} />
-                    <span className="text-red-600 font-semibold text-xs">DOWN: 18%</span>
-                  </div>
-                  {/* If Achieved and If Missed as subheader */}
-                  <p className="text-gray-600 mt-2 text-lg">
-                    If Achieved: <span className="font-semibold text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifAchievedScore?.toFixed(2) || '79.32'}</span>
-                    {' '}<span className="text-gray-400">|</span>{' '}
-                    If Missed: <span className="font-semibold text-red-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifMissedScore?.toFixed(2) || '77.71'}</span>
-                  </p>
-                  {/* Root Causes Link - Inline */}
-                  <button
-                    onClick={() => setShowRootCauses('performance')}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
-                  >
-                    <AlertCircle size={14} />
-                    <span className="font-semibold">3 Root Causes</span>
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              ) : (
-                // Admin User: Show OTIF on left
-                <div>
-                  <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                    {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
-                    <button
-                      onClick={() => setShowOTIFDrawer(true)}
-                      className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                      title="Click for detailed breakdown"
-                    >
-                      <Info size={28} className="text-blue-600" />
-                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                        Click for detailed breakdown
-                      </span>
-                    </button>
-                  </h2>
-                  {/* OT and IF as subheader */}
-                  <p className="text-gray-600 mt-2 text-lg">
-                    {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
-                    {' '}<span className="text-gray-400">|</span>{' '}
-                    {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
-                  </p>
-                  <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
-                </div>
-              )}
-
-              {/* Right Side - Conditional based on role */}
-              {userRole === USER_ROLES.MANAGEMENT ? (
-                // Management User: Show OTIF section on right
-                <div>
-                  <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                    {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
-                    <button
-                      onClick={() => setShowOTIFDrawer(true)}
-                      className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                      title="Click for detailed breakdown"
-                    >
-                      <Info size={28} className="text-blue-600" />
-                      <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                        Click for detailed breakdown
-                      </span>
-                    </button>
-                  </h2>
-                  {/* Gap Indicator - Below header */}
-                  <div className="mt-1">
-                    <span className="text-orange-700 font-semibold text-xs">16% lower goal</span>
-                  </div>
-                  <p className="text-gray-600 mt-2 text-lg">
-                    {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
-                    {' '}<span className="text-gray-400">|</span>{' '}
-                    {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
-                  </p>
-                  {/* Root Causes Link - Inline */}
-                  <button
-                    onClick={() => setShowRootCauses('otif')}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
-                  >
-                    <AlertCircle size={14} />
-                    <span className="font-semibold">4 Root Causes</span>
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              ) : (
-                // Admin User: Show Performance Index button on right
-                <div className="text-right">
-                  <button
-                    onClick={() => setShowPerformanceDrawer(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
-                  >
-                    <TrendingUp size={20} />
-                    <span className="font-semibold">Performance Index</span>
-                  </button>
-                  <div className="text-sm text-gray-600 mt-2">
-                    Current Score: <span className="font-semibold text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Chord Diagram */}
-          <ChordDiagram selectedModule={selectedModule} />
-
-          {/* OTIF Department Grid Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-            {otifDepartments.map((dept) => {
-              // Special grey styling for Lab and Radiology
-              const isGreyCard = dept.id === 'lab' || dept.id === 'radiology';
-
-              // Get colors based on API status field
-              const getColorsByStatus = (status) => {
-                switch (status) {
-                  case 'green':
-                    return {
-                      bg: 'bg-green-50',
-                      border: 'border-green-400',
-                      iconBg: 'bg-green-100',
-                      text: 'text-green-700'
-                    };
-                  case 'amber':
-                    return {
-                      bg: 'bg-amber-50',
-                      border: 'border-amber-400',
-                      iconBg: 'bg-amber-100',
-                      text: 'text-amber-700'
-                    };
-                  case 'red':
-                    return {
-                      bg: 'bg-red-50',
-                      border: 'border-red-400',
-                      iconBg: 'bg-red-100',
-                      text: 'text-red-700'
-                    };
-                  default:
-                    return getOTIFColorByPercentage(dept.otifPercentage);
-                }
-              };
-
-              const colors = isGreyCard
-                ? {
-                  bg: 'bg-gray-100',
-                  border: 'border-gray-300',
-                  iconBg: 'bg-gray-200',
-                  text: 'text-gray-700'
-                }
-                : getColorsByStatus(dept.status);
-
-              // Get icon component from string name (API) or use directly if already a component (mock)
-              const IconComponent = typeof dept.icon === 'string' ? iconMap[dept.icon] || Heart : dept.icon;
-              const changeSign = dept.changePercentage >= 0 ? '+' : '';
-              const trendColor = dept.changePercentage >= 0 ? 'text-green-700' : 'text-red-700';
-              const trendArrow = dept.changePercentage >= 0 ? '↑' : '↓';
-
-              return (
-                <button
-                  key={dept.id}
-                  onClick={() => {
-                    if (isGreyCard) {
-                      alert(`${dept.name} is currently disabled and will be enabled after integration.`);
-                    } else {
-                      onNavigate && onNavigate('otif-detail', dept);
-                    }
-                  }}
-                  className={`${colors.bg} ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className={`${colors.iconBg} p-2 rounded-md`}>
-                      <IconComponent className={colors.text} size={18} />
-                    </div>
-                    <div className={`text-2xl font-bold ${colors.text}`}>
-                      {Number(dept.otifPercentage).toFixed(2)}%
-                    </div>
-                  </div>
-                  <h3 className={`text-sm font-semibold ${colors.text}`}>
-                    {dept.name}
-                  </h3>
-                  <p className="text-xs text-gray-600 mt-1">{dept.description}</p>
-
-                  {/* Percentage Change Indicator */}
-                  <div className="flex items-center justify-between mt-2 text-xs">
-                    <span className="text-gray-600">vs Prev:</span>
-                    <span className={`font-semibold ${trendColor} flex items-center gap-0.5`}>
-                      {changeSign}{Math.abs(dept.changePercentage).toFixed(2)}% {trendArrow}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Decision Actions Section */}
-        <div className="mb-16">
-          {/* Action Header */}
-          <div className="mb-8">
-            <h2 className="text-5xl font-bold text-gray-800">
-              {t('decisionActions.title')}: <span className="text-red-600">{apiData?.decisionActions?.totalDecisionActionsCount || totalPendingActions}</span>
-            </h2>
-            <p className="text-gray-600 mt-2">{t('decisionActions.pending')} actions requiring immediate attention</p>
-          </div>
-
-          {/* Action Grid Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3">
-            {decisionActions.map((action) => {
-              const colors = getActionColorClass(action.severity);
-
-              return (
-                <button
-                  key={action.id}
-                  onClick={() => {
-                    setSelectedAction(action);
-                    setShowSubcategoriesModal(true);
-                  }}
-                  className={`${colors.bg} ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left relative`}
-                >
-                  {/* Pending Count Badge */}
-                  <div className="absolute top-2 right-2">
-                    <div className={`${colors.badge} px-2 py-1 rounded-full text-sm font-bold`}>
-                      {action.pendingCount}
-                    </div>
-                  </div>
-
-                  <div className="pr-12">
-                    <h3 className={`text-sm font-bold ${colors.text} mb-1`}>
-                      {getTranslatedActionName(action.name, t)}
-                    </h3>
-                    <p className="text-xs text-gray-700">{action.description}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Note Point */}
-          <div className="mt-4 flex items-start gap-2 text-sm text-slate-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
-            <span className="font-semibold">Note:</span>
-            <span>All actionable insights are based on demand and supply, stock availability</span>
-          </div>
-        </div>
-
-        {/* Forecast Section */}
-        <div className="mb-12">
-          {/* Forecast Header */}
-          <div className="mb-8">
-            <h2 className="text-5xl font-bold text-gray-800">
-              Forecast: <span className={forecastSurge >= 0 ? 'text-green-600' : 'text-red-600'}>{Number(forecastSurge).toFixed(2)}% {forecastSurge >= 0 ? '↑' : '↓'}</span>
-            </h2>
-            <p className="text-gray-600 mt-2">Demand forecast surge across hospital areas</p>
-          </div>
-
-          {/* Forecast Grid Cards - WITH WHITE BACKGROUNDS */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {forecastAreas.map((area) => {
-              const colors = getForecastColorClass(area.trend);
-              const changeSign = area.changePercentage >= 0 ? '+' : '';
-
-              return (
-                <button
-                  key={area.id}
-                  onClick={() => onNavigate && onNavigate('forecast-detail', area)}
-                  className={`bg-white ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className={`text-base font-bold ${colors.text}`}>
-                      {area.areaName}
-                    </h3>
-                    <div className={`${colors.badge} px-1.5 py-0.5 rounded-full text-xs font-bold`}>
-                      {colors.arrow}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className={`text-xl font-bold ${colors.text}`}>
-                      {Number(area.currentForecast).toFixed(2)}%
-                    </p>
-
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">vs Prev:</span>
-                      <span className={`font-semibold ${area.changePercentage >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                        {changeSign}{Number(area.changePercentage).toFixed(2)}%
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Note Point */}
-          <div className="mt-4 flex items-start gap-2 text-sm text-slate-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
-            <span className="font-semibold">Note:</span>
-            <span>All data is measured compared with previous week</span>
-          </div>
-        </div>
-
-        {/* KPI Dashboard */}
-        <KPIDashboard onNavigate={onNavigate} selectedModule={selectedModule} />
+        {/* Render components in template-specified order */}
+        {templateConfig.componentOrder.map((componentKey) => renderComponent(componentKey))}
 
         {/* Footer with Links */}
         <div className="bg-white border-t border-gray-200 shadow-sm mt-12">
@@ -694,66 +772,68 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       </div>
 
       {/* Decision Action Subcategories Modal */}
-      {showSubcategoriesModal && selectedAction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            {/* Modal Header */}
-            <div className={`${getActionColorClass(selectedAction.severity).bg} ${getActionColorClass(selectedAction.severity).border} border-b-2 p-6 flex items-center justify-between`}>
-              <div>
-                <h3 className={`text-2xl font-bold ${getActionColorClass(selectedAction.severity).text}`}>
-                  {selectedAction.name}
-                </h3>
-                <p className="text-sm text-gray-700 mt-1">{selectedAction.description}</p>
-                <p className="text-xs text-gray-600 mt-2">Select a subcategory to view detailed actions</p>
+      {
+        showSubcategoriesModal && selectedAction && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+              {/* Modal Header */}
+              <div className={`${getActionColorClass(selectedAction.severity).bg} ${getActionColorClass(selectedAction.severity).border} border-b-2 p-6 flex items-center justify-between`}>
+                <div>
+                  <h3 className={`text-2xl font-bold ${getActionColorClass(selectedAction.severity).text}`}>
+                    {selectedAction.name}
+                  </h3>
+                  <p className="text-sm text-gray-700 mt-1">{selectedAction.description}</p>
+                  <p className="text-xs text-gray-600 mt-2">Select a subcategory to view detailed actions</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowSubcategoriesModal(false);
+                    setSelectedAction(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X size={24} className="text-gray-600" />
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  setShowSubcategoriesModal(false);
-                  setSelectedAction(null);
-                }}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X size={24} className="text-gray-600" />
-              </button>
-            </div>
 
-            {/* Modal Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {decisionActionSubcategories[selectedAction.id]?.map((subcategory) => (
-                  <button
-                    key={subcategory.id}
-                    onClick={() => {
-                      setShowSubcategoriesModal(false);
-                      onNavigate && onNavigate('action-detail', {
-                        ...selectedAction,
-                        subcategory,
-                        mainAction: selectedAction.id,
-                        subAction: subcategory.id
-                      });
-                    }}
-                    className="bg-white border-2 border-gray-200 hover:border-blue-500 rounded-lg p-4 transition-all hover:shadow-lg text-left group"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
-                        {subcategory.name}
-                      </h4>
-                      <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">
-                        {subcategory.count}
+              {/* Modal Content */}
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {decisionActionSubcategories[selectedAction.id]?.map((subcategory) => (
+                    <button
+                      key={subcategory.id}
+                      onClick={() => {
+                        setShowSubcategoriesModal(false);
+                        onNavigate && onNavigate('action-detail', {
+                          ...selectedAction,
+                          subcategory,
+                          mainAction: selectedAction.id,
+                          subAction: subcategory.id
+                        });
+                      }}
+                      className="bg-white border-2 border-gray-200 hover:border-blue-500 rounded-lg p-4 transition-all hover:shadow-lg text-left group"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                          {subcategory.name}
+                        </h4>
+                        <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">
+                          {subcategory.count}
+                        </div>
                       </div>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-2">{subcategory.description}</p>
-                    <div className="flex items-center gap-1 text-blue-600 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span>View Details</span>
-                      <ChevronRight size={14} />
-                    </div>
-                  </button>
-                ))}
+                      <p className="text-xs text-gray-600 mb-2">{subcategory.description}</p>
+                      <div className="flex items-center gap-1 text-blue-600 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span>View Details</span>
+                        <ChevronRight size={14} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* OTIF Breakdown Drawer */}
       <OTIFBreakdownDrawer
@@ -806,7 +886,7 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
         onClose={() => setShowRootCauses(null)}
         metricType={showRootCauses}
       />
-    </div>
+    </div >
   );
 };
 
