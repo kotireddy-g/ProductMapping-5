@@ -9,16 +9,15 @@ import { getUserRole, USER_ROLES } from '../../utils/userRoles';
 
 const Header = ({
   currentUser,
-  notifications,
   onUploadClick,
   onNotificationClick,
   onSupplierReportClick,
   onLogout,
-  showNotificationBadge,
-  onModuleChange
+  unreadCount = 0,
+  onModuleChange,
+  selectedModule = 'otif'
 }) => {
   const { t } = useTranslation();
-  const unreadCount = notifications?.filter(n => !n.read).length || 0;
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState(
     localStorage.getItem('dashboardTemplate') || 'executive'
@@ -72,7 +71,11 @@ const Header = ({
               {t('header.supplierReport')}
             </button>
 
-            <ModuleSelector onModuleChange={onModuleChange} />
+            {/* Module Selector */}
+            <ModuleSelector
+              selectedModule={selectedModule}
+              onModuleChange={onModuleChange}
+            />
 
             {/* Template Selector Button */}
             <button

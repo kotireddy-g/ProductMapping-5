@@ -20,8 +20,7 @@ const modules = [
     { id: 'bed-management', name: 'Bed Management', available: false, icon: Bed, color: 'text-indigo-600' }
 ];
 
-const ModuleSelector = ({ onModuleChange }) => {
-    const [selectedModule, setSelectedModule] = useState('otif');
+const ModuleSelector = ({ selectedModule = 'otif', onModuleChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showComingSoonModal, setShowComingSoonModal] = useState(false);
     const dropdownRef = useRef(null);
@@ -40,7 +39,6 @@ const ModuleSelector = ({ onModuleChange }) => {
 
     const handleModuleSelect = (module) => {
         if (module.available) {
-            setSelectedModule(module.id);
             setIsOpen(false);
             if (onModuleChange) {
                 onModuleChange(module.id);

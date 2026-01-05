@@ -339,12 +339,13 @@ function App() {
     <div className="min-h-screen bg-slate-50">
       <Header
         currentUser={currentUser}
-        notifications={notifications}
+        unreadCount={notifications.filter(n => !n.read).length}
         onUploadClick={() => setIsUploadOpen(true)}
         onNotificationClick={() => setIsNotificationOpen(true)}
         onSupplierReportClick={handleNavigateToSupplierReport}
         onLogout={handleLogout}
         onModuleChange={handleModuleChange}
+        selectedModule={selectedModule}
       />
 
       <LandingPage
