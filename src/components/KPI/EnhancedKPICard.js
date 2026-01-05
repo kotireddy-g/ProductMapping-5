@@ -33,28 +33,49 @@ const EnhancedKPICard = ({ kpiKey, data, isPriority = false, onClick }) => {
         const historical = data.trendData.history || [];
         const forecast = data.trendData.forecast;
 
-        // Start with historical data
-        const combined = historical.map(item => ({
-            date: item.date,
-            value: item.value,
-            type: 'historical'
-        }));
-
-        // Add forecast data if available
-        if (forecast && forecast.dates && forecast.values) {
-            const overlapPoints = forecast.overlapPoints || 0;
-
-            // Skip overlap points to avoid duplication
-            forecast.dates.slice(overlapPoints).forEach((date, idx) => {
-                combined.push({
-                    date: date,
-                    forecastValue: forecast.values[idx + overlapPoints],
-                    type: 'forecast'
-                });
-            });
+        // If no forecast, just return historical data
+        if (!forecast || !forecast.dates || !forecast.values) {
+            return historical.map(item => ({
+                date: item.date,
+                value: item.value,
+                type: 'historical'
+            }));
         }
 
-        return combined;
+        // Create a map of all dates to their data
+        const dataMap = new Map();
+
+        // Add all historical data
+        historical.forEach(item => {
+            dataMap.set(item.date, {
+                date: item.date,
+                value: item.value,
+                type: 'historical'
+            });
+        });
+
+        // Add forecast data - this will overlap with some historical dates
+        // The overlap creates the seamless transition between trend and forecast
+        forecast.dates.forEach((date, idx) => {
+            const existing = dataMap.get(date);
+            if (existing) {
+                // This is an overlap point - add forecast value to existing entry
+                existing.forecastValue = forecast.values[idx];
+                existing.type = 'overlap';
+            } else {
+                // This is a pure forecast point
+                dataMap.set(date, {
+                    date: date,
+                    forecastValue: forecast.values[idx],
+                    type: 'forecast'
+                });
+            }
+        });
+
+        // Convert map to sorted array
+        return Array.from(dataMap.values()).sort((a, b) =>
+            new Date(a.date) - new Date(b.date)
+        );
     }, [data]);
 
     // Calculate Y-axis domain
