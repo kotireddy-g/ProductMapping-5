@@ -423,14 +423,22 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                             {/* Alert */}
                                             <td className="px-4 py-4">
                                                 <div className="relative group">
-                                                    <div className={`px - 3 py - 2 rounded - lg border - 2 font - bold text - xs inline - flex items - center gap - 1.5 shadow - sm ${alertDefinitions[medicine.alert].color} `}>
-                                                        {medicine.alert}
-                                                        <Info size={14} />
-                                                    </div>
-                                                    <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-20 bg-slate-900 text-white text-xs rounded-lg px-4 py-3 whitespace-nowrap shadow-xl border border-slate-700">
-                                                        <div className="font-semibold mb-1">{medicine.alert}</div>
-                                                        <div className="text-slate-300">{alertDefinitions[medicine.alert].definition}</div>
-                                                    </div>
+                                                    {medicine.alert && alertDefinitions[medicine.alert] ? (
+                                                        <>
+                                                            <div className={`px-3 py-2 rounded-lg border-2 font-bold text-xs inline-flex items-center gap-1.5 shadow-sm ${alertDefinitions[medicine.alert].color}`}>
+                                                                {medicine.alert}
+                                                                <Info size={14} />
+                                                            </div>
+                                                            <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-20 bg-slate-900 text-white text-xs rounded-lg px-4 py-3 whitespace-nowrap shadow-xl border border-slate-700">
+                                                                <div className="font-semibold mb-1">{medicine.alert}</div>
+                                                                <div className="text-slate-300">{alertDefinitions[medicine.alert].definition}</div>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div className="px-3 py-2 rounded-lg border-2 font-bold text-xs inline-flex items-center gap-1.5 shadow-sm bg-gray-100 text-gray-800 border-gray-400">
+                                                            {medicine.alert || 'N/A'}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </td>
 
