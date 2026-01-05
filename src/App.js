@@ -31,6 +31,7 @@ function App() {
   const [selectedAction, setSelectedAction] = useState(null);
   const [selectedForecastData, setSelectedForecastData] = useState(null);
   const [selectedKPI, setSelectedKPI] = useState(null);
+  const [selectedModule, setSelectedModule] = useState('otif'); // Module state
 
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -189,6 +190,10 @@ function App() {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
+  const handleModuleChange = (moduleId) => {
+    setSelectedModule(moduleId);
+  };
+
   if (!isAuthenticated) {
     if (authView === 'login') {
       return (
@@ -261,6 +266,7 @@ function App() {
         <CommandCenterDashboard
           departmentId={selectedDepartment?.id}
           onBack={handleBackToDashboard}
+          selectedModule={selectedModule}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
       </>
@@ -275,6 +281,7 @@ function App() {
           mainAction={selectedAction?.mainAction}
           subAction={selectedAction?.subAction}
           onBack={handleBackToDashboard}
+          selectedModule={selectedModule}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
       </>
@@ -288,6 +295,7 @@ function App() {
           selectedKPI={selectedKPI}
           onBack={handleBackToDashboard}
           onNavigateToKPI={handleNavigateToKPIDetail}
+          selectedModule={selectedModule}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
       </>
@@ -301,6 +309,7 @@ function App() {
           forecastData={selectedForecastData}
           selectedForecastArea={selectedForecastData?.areaName || 'ICU'}
           onBack={handleBackToDashboard}
+          selectedModule={selectedModule}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
       </>
@@ -316,11 +325,13 @@ function App() {
         onNotificationClick={() => setIsNotificationOpen(true)}
         onSupplierReportClick={handleNavigateToSupplierReport}
         onLogout={handleLogout}
+        onModuleChange={handleModuleChange}
       />
 
       <LandingPage
         currentUser={currentUser}
         onNavigate={handleLandingPageNavigate}
+        selectedModule={selectedModule}
       />
 
       <NotificationPanel

@@ -8,11 +8,13 @@ import apiClient from './api';
 const dashboardService = {
     /**
      * Get dashboard overview data (OTIF metrics and departments)
+     * @param {string} module - Optional module name (e.g., 'staff-allocation')
      * @returns {Promise} API response with overview data
      */
-    getOverview: async () => {
+    getOverview: async (module = null) => {
         try {
-            const response = await apiClient.get('/api/dashboard/overview');
+            const params = module ? { module } : {};
+            const response = await apiClient.get('/api/dashboard/overview', { params });
             return response.data;
         } catch (error) {
             console.error('Get dashboard overview error:', error);
@@ -22,11 +24,13 @@ const dashboardService = {
 
     /**
      * Get decision actions data with subcategories
+     * @param {string} module - Optional module name (e.g., 'staff-allocation')
      * @returns {Promise} API response with decision actions
      */
-    getDecisionActions: async () => {
+    getDecisionActions: async (module = null) => {
         try {
-            const response = await apiClient.get('/api/dashboard/decision-actions');
+            const params = module ? { module } : {};
+            const response = await apiClient.get('/api/dashboard/decision-actions', { params });
             return response.data;
         } catch (error) {
             console.error('Get decision actions error:', error);
@@ -36,11 +40,13 @@ const dashboardService = {
 
     /**
      * Get forecast data for all areas
+     * @param {string} module - Optional module name (e.g., 'staff-allocation')
      * @returns {Promise} API response with forecast data
      */
-    getForecast: async () => {
+    getForecast: async (module = null) => {
         try {
-            const response = await apiClient.get('/api/dashboard/forecast');
+            const params = module ? { module } : {};
+            const response = await apiClient.get('/api/dashboard/forecast', { params });
             return response.data;
         } catch (error) {
             console.error('Get forecast error:', error);

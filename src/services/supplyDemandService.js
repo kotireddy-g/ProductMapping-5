@@ -12,6 +12,7 @@ const supplyDemandService = {
      * @param {number} params.supplyLevel - Supply hierarchy level (1, 2, or 3)
      * @param {string} params.supplyParent - Parent supply node ID for drill-down
      * @param {number} params.demandLevel - Demand hierarchy level (1, 2, or 3)
+     * @param {string} params.module - Optional module name (e.g., 'staff-allocation')
      * @returns {Promise} API response with flow data
      */
     getFlowData: async (params = {}) => {

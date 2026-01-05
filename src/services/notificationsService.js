@@ -8,11 +8,16 @@ import apiClient from './api';
 const notificationsService = {
     /**
      * Get all notifications for the current user
+     * @param {string} module - Optional module name (e.g., 'staff-allocation')
      * @returns {Promise} API response with notifications list and unread count
      */
-    getNotifications: async () => {
+    getNotifications: async (module = null) => {
         try {
-            const response = await apiClient.get('/api/notifications');
+            const params = {};
+            if (module) {
+                params.module = module;
+            }
+            const response = await apiClient.get('/api/notifications', { params });
             // API returns { success: true, data: [...notifications] }
             // Return in expected format: { data: { notifications: [...] } }
             return {

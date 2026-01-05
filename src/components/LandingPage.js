@@ -46,7 +46,7 @@ const iconMap = {
   'Building2': Building2
 };
 
-const LandingPage = ({ currentUser, onNavigate }) => {
+const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -91,23 +91,26 @@ const LandingPage = ({ currentUser, onNavigate }) => {
   const decisionActionSubcategories = apiData?.decisionActions?.decisionActionSubcategories || mockDecisionActionSubcategories;
   const forecastAreas = apiData?.forecast || mockForecastAreas;
 
-  // Fetch all dashboard data on mount
+  // Fetch all dashboard data on mount and when module changes
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
 
+        // Convert module ID to API format (e.g., 'staff-allocation')
+        const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+
         // Fetch all three APIs in parallel
         const [overviewResponse, actionsResponse, forecastResponse] = await Promise.all([
-          dashboardService.getOverview().catch(err => {
+          dashboardService.getOverview(moduleParam).catch(err => {
             console.error('Overview API failed:', err);
             return null;
           }),
-          dashboardService.getDecisionActions().catch(err => {
+          dashboardService.getDecisionActions(moduleParam).catch(err => {
             console.error('Decision Actions API failed:', err);
             return null;
           }),
-          dashboardService.getForecast().catch(err => {
+          dashboardService.getForecast(moduleParam).catch(err => {
             console.error('Forecast API failed:', err);
             return null;
           })
@@ -134,7 +137,7 @@ const LandingPage = ({ currentUser, onNavigate }) => {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [selectedModule]);
 
   // Generate filtered search suggestions
   const filteredSuggestions = useMemo(() => {
@@ -461,7 +464,7 @@ const LandingPage = ({ currentUser, onNavigate }) => {
           </div>
 
           {/* Chord Diagram */}
-          <ChordDiagram />
+          <ChordDiagram selectedModule={selectedModule} />
 
           {/* OTIF Department Grid Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
@@ -656,7 +659,7 @@ const LandingPage = ({ currentUser, onNavigate }) => {
         </div>
 
         {/* KPI Dashboard */}
-        <KPIDashboard onNavigate={onNavigate} />
+        <KPIDashboard onNavigate={onNavigate} selectedModule={selectedModule} />
 
         {/* Footer with Links */}
         <div className="bg-white border-t border-gray-200 shadow-sm mt-12">

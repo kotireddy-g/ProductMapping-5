@@ -8,11 +8,13 @@ import apiClient from './api';
 const kpiService = {
     /**
      * Get all KPI data for the dashboard
+     * @param {string} module - Optional module name (e.g., 'staff-allocation')
      * @returns {Promise} API response with all KPI metrics
      */
-    getAllKPIs: async () => {
+    getAllKPIs: async (module = null) => {
         try {
-            const response = await apiClient.get('/api/kpi/all');
+            const params = module ? { module } : {};
+            const response = await apiClient.get('/api/kpi/all', { params });
             return response.data;
         } catch (error) {
             console.error('Get KPIs error:', error);

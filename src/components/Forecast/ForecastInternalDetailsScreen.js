@@ -5,7 +5,7 @@ import ToastNotification from '../Layout/ToastNotification';
 import ForecastMedicineDetailsModal from './ForecastMedicineDetailsModal';
 import forecastService from '../../services/forecastService';
 
-const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastArea }) => {
+const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastArea, selectedModule = 'otif' }) => {
     const { t } = useTranslation();
     const [selectedPeriod, setSelectedPeriod] = useState('Next 7 Days');
     const [selectedMedicine, setSelectedMedicine] = useState('');
@@ -37,7 +37,9 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                 setError(null);
                 const areaId = selectedForecastArea.toLowerCase();
                 const timePeriod = periodToApiParam[selectedPeriod];
-                const response = await forecastService.getForecastDetails(areaId, timePeriod);
+                // Convert module ID to API format
+                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+                const response = await forecastService.getForecastDetails(areaId, timePeriod, moduleParam);
 
 
                 if (response.success && response.data) {
@@ -54,7 +56,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
         };
 
         fetchData();
-    }, [selectedForecastArea, selectedPeriod]);
+    }, [selectedForecastArea, selectedPeriod, selectedModule]);
 
     // Show toast notification
     const showToastNotification = (message) => {

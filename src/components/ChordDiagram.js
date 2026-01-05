@@ -370,7 +370,7 @@ const generateConnections = (supplyItems, demandItems, flowsData) => {
   return connections;
 };
 
-const HospitalSankeyDiagram = () => {
+const HospitalSankeyDiagram = ({ selectedModule = 'otif' }) => {
   // Drill-down state
   const [supplyLevel, setSupplyLevel] = useState(1);
   const [demandLevel, setDemandLevel] = useState(1);
@@ -394,16 +394,22 @@ const HospitalSankeyDiagram = () => {
   const demandData = apiData?.demand || hospitalDemand;
   const flowsData = apiData?.flows || []; // Empty array fallback - will use mock generation in generateConnections
 
-  // Fetch data from API on mount and when drill-down or time period changes
+  // Fetch data from API on mount and when drill-down, time period, or module changes
   useEffect(() => {
     const fetchFlowData = async () => {
       try {
         setLoading(true);
 
-        // Build query parameters for drill-down and time period
+        // Build query parameters for drill-down, time period, and module
         const params = {
           time_period: timePeriod // Add time period to API call
         };
+
+        // Add module parameter if not OTIF
+        if (selectedModule && selectedModule !== 'otif') {
+          params.module = selectedModule;
+        }
+
         if (supplyLevel > 1 && supplyPath.length > 0) {
           params.supplyLevel = supplyLevel;
           params.supplyParent = supplyPath[supplyLevel - 2];
@@ -429,7 +435,7 @@ const HospitalSankeyDiagram = () => {
     };
 
     fetchFlowData();
-  }, [supplyLevel, demandLevel, supplyPath, demandPath, timePeriod]); // Added timePeriod dependency
+  }, [supplyLevel, demandLevel, supplyPath, demandPath, timePeriod, selectedModule]); // Added selectedModule dependency
 
   // Get current items based on drill-down state
   const getCurrentSupplyItems = () => {

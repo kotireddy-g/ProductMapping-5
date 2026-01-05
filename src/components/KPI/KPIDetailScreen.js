@@ -6,7 +6,7 @@ import RootCausePanel from './RootCausePanel';
 import RelatedKPIsGrid from './RelatedKPIsGrid';
 import { kpiDetailData, relatedKPIs } from '../../data/kpiDetailData';
 
-const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI }) => {
+const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule = 'otif' }) => {
     // Get KPI data based on selected KPI ID
     const kpiData = kpiDetailData[selectedKPI?.id] || kpiDetailData.otif;
 

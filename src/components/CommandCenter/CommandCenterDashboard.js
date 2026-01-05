@@ -10,7 +10,7 @@ import DemandForecastSection from './DemandForecastSection';
 import AgentRecommendationsSection from './AgentRecommendationsSection';
 import { getTranslatedDepartmentName } from '../../utils/translationHelpers';
 
-const CommandCenterDashboard = ({ departmentId, onBack }) => {
+const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' }) => {
     const { t } = useTranslation();
     const [selectedTimePeriod, setSelectedTimePeriod] = useState('next_7_days');
     const [showMedicineModal, setShowMedicineModal] = useState(false);
@@ -24,7 +24,9 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
             try {
                 setLoading(true);
                 setError(null);
-                const response = await getCommandCenterData(departmentId, selectedTimePeriod);
+                // Convert module ID to API format
+                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+                const response = await getCommandCenterData(departmentId, selectedTimePeriod, moduleParam);
                 if (response.success) {
                     setApiData(response.data);
                 }
@@ -39,7 +41,7 @@ const CommandCenterDashboard = ({ departmentId, onBack }) => {
         };
 
         fetchData();
-    }, [departmentId, selectedTimePeriod]);
+    }, [departmentId, selectedTimePeriod, selectedModule]);
 
     // Transform API data to match the expected structure for child components
     const transformedData = apiData ? {

@@ -6,7 +6,7 @@ import VendorDetailsModal from './VendorDetailsModal';
 import { getDecisionActionsData } from '../../services/decisionActionsService';
 import { getTranslatedActionName } from '../../utils/translationHelpers';
 
-const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) => {
+const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, selectedModule = 'otif' }) => {
     const { t } = useTranslation();
     const [humanFeedback, setHumanFeedback] = useState({});
     const [tags, setTags] = useState({});
@@ -50,7 +50,9 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) =>
             try {
                 setLoading(true);
                 setError(null);
-                const response = await getDecisionActionsData(mainAction, subAction);
+                // Convert module ID to API format
+                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+                const response = await getDecisionActionsData(mainAction, subAction, moduleParam);
 
                 if (response.success && response.data) {
                     setMedicineData(response.data);
@@ -66,7 +68,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction }) =>
         };
 
         fetchData();
-    }, [mainAction, subAction]);
+    }, [mainAction, subAction, selectedModule]);
 
     // Sample data for fallback (removed, now using API)
     const sampleData = [

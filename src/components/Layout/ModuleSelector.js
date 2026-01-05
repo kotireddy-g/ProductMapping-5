@@ -13,7 +13,7 @@ import {
 
 const modules = [
     { id: 'otif', name: 'OTIF', available: true, icon: BarChart3, color: 'text-blue-600' },
-    { id: 'staff-allocation', name: 'Staff Allocation', available: false, icon: Users, color: 'text-purple-600' },
+    { id: 'staff-allocation', name: 'Staff Allocation', available: true, icon: Users, color: 'text-purple-600' },
     { id: 'customer-satisfaction', name: 'Customer Satisfaction', available: false, icon: Star, color: 'text-yellow-600' },
     { id: 'resource-utilization', name: 'Resource Utilization', available: false, icon: TrendingUp, color: 'text-green-600' },
     { id: 'order-management', name: 'Order Management', available: false, icon: Package, color: 'text-orange-600' },

@@ -12,17 +12,19 @@ import { kpiData as mockKpiData, getStatusColor } from '../data/kpiData';
 import kpiService from '../services/kpiService';
 import EnhancedKPITrendGraph from './KPI/EnhancedKPITrendGraph';
 
-const KPIDashboard = ({ onNavigate }) => {
+const KPIDashboard = ({ onNavigate, selectedModule = 'otif' }) => {
     const [kpiData, setKpiData] = useState(mockKpiData);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Fetch KPI data from API on component mount
+    // Fetch KPI data from API on component mount and when module changes
     useEffect(() => {
         const fetchKPIData = async () => {
             try {
                 setLoading(true);
-                const response = await kpiService.getAllKPIs();
+                // Convert module ID to API format
+                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+                const response = await kpiService.getAllKPIs(moduleParam);
 
                 if (response.success && response.data) {
                     setKpiData(response.data);
@@ -38,7 +40,7 @@ const KPIDashboard = ({ onNavigate }) => {
         };
 
         fetchKPIData();
-    }, []);
+    }, [selectedModule]);
 
     // Professional line chart component with axes and tooltip
     const TrendChart = ({ data, color = '#3b82f6', kpiKey }) => {

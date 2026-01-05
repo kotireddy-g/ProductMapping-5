@@ -14,7 +14,8 @@ const Header = ({
   onNotificationClick,
   onSupplierReportClick,
   onLogout,
-  showNotificationBadge
+  showNotificationBadge,
+  onModuleChange
 }) => {
   const { t } = useTranslation();
   const unreadCount = notifications?.filter(n => !n.read).length || 0;
@@ -71,7 +72,7 @@ const Header = ({
               {t('header.supplierReport')}
             </button>
 
-            <ModuleSelector />
+            <ModuleSelector onModuleChange={onModuleChange} />
 
             {/* Template Selector Button */}
             <button
