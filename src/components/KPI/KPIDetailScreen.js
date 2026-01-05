@@ -1,26 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Lightbulb } from 'lucide-react';
-import { Target, Package, AlertTriangle } from 'lucide-react';
-import KPIDetailCard from './KPIDetailCard';
+import EnhancedKPICard from './EnhancedKPICard';
 import RootCausePanel from './RootCausePanel';
 import RelatedKPIsGrid from './RelatedKPIsGrid';
 import { kpiDetailData, relatedKPIs } from '../../data/kpiDetailData';
 
 const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule = 'otif' }) => {
-    // Get KPI data based on selected KPI ID
-    const kpiData = kpiDetailData[selectedKPI?.id] || kpiDetailData.otif;
+    // Scroll to top when component mounts
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [selectedKPI?.id]);
 
-    // Icon mapping
-    const iconMap = {
-        otif: Target,
-        stockHealth: Package,
-        expiryRisk: AlertTriangle
-    };
-
-    const Icon = iconMap[kpiData.id] || Target;
+    // Merge passed KPI data (from API) with kpiDetailData (for rootCauses, recommendations)
+    // This ensures we have both the live chart data and the detail page specific fields
+    const baseDetailData = kpiDetailData[selectedKPI?.id] || kpiDetailData.otif;
+    const kpiData = selectedKPI?.data
+        ? { ...baseDetailData, ...selectedKPI.data } // Merge: detail data first, then override with API data
+        : baseDetailData;
 
     // Handle recommendation implementation
-    const [recommendations, setRecommendations] = useState(kpiData.recommendations);
+    const [recommendations, setRecommendations] = useState(kpiData.recommendations || []);
 
     const handleImplementRecommendation = (recId) => {
         setRecommendations(prev =>
@@ -96,9 +95,14 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
             <div className="max-w-[1600px] mx-auto px-6 py-6 space-y-6">
                 {/* Top Section: KPI Detail + Root Causes */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Left: KPI Detail Card */}
+                    {/* Left: Enhanced KPI Card */}
                     <div className="relative">
-                        <KPIDetailCard kpiData={kpiData} icon={Icon} />
+                        <EnhancedKPICard
+                            kpiKey={selectedKPI?.id || 'otif'}
+                            data={kpiData}
+                            isPriority={true}
+                            onClick={() => { }} // No click action on detail page
+                        />
                     </div>
 
                     {/* Right: Root Causes */}

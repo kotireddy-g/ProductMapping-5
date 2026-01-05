@@ -33,9 +33,13 @@ const KPIDashboard = ({ onNavigate, selectedModule = 'otif' }) => {
         fetchKPIData();
     }, [selectedModule]);
 
-    const handleKPIClick = (kpiKey, kpiName) => {
+    const handleKPIClick = (kpiKey, kpiName, kpiDataObj) => {
         if (onNavigate) {
-            onNavigate('kpi-detail', { id: kpiKey, name: kpiName });
+            onNavigate('kpi-detail', {
+                id: kpiKey,
+                name: kpiName,
+                data: kpiDataObj // Pass the full KPI data object
+            });
         }
     };
 
@@ -69,37 +73,37 @@ const KPIDashboard = ({ onNavigate, selectedModule = 'otif' }) => {
                         kpiKey="otif"
                         data={kpiData.otif}
                         isPriority={true}
-                        onClick={() => handleKPIClick('otif', kpiData.otif.title)}
+                        onClick={() => handleKPIClick('otif', kpiData.otif.title, kpiData.otif)}
                     />
                     <EnhancedKPICard
                         kpiKey="stockHealth"
                         data={kpiData.stockHealth}
                         isPriority={true}
-                        onClick={() => handleKPIClick('stockHealth', kpiData.stockHealth.title)}
+                        onClick={() => handleKPIClick('stockHealth', kpiData.stockHealth.title, kpiData.stockHealth)}
                     />
                     <EnhancedKPICard
                         kpiKey="expiryRisk"
                         data={kpiData.expiryRisk}
                         isPriority={true}
-                        onClick={() => handleKPIClick('expiryRisk', kpiData.expiryRisk.title)}
+                        onClick={() => handleKPIClick('expiryRisk', kpiData.expiryRisk.title, kpiData.expiryRisk)}
                     />
                     <EnhancedKPICard
                         kpiKey="forecastAccuracy"
                         data={kpiData.forecastAccuracy}
                         isPriority={false}
-                        onClick={() => handleKPIClick('forecastAccuracy', kpiData.forecastAccuracy.title)}
+                        onClick={() => handleKPIClick('forecastAccuracy', kpiData.forecastAccuracy.title, kpiData.forecastAccuracy)}
                     />
                     <EnhancedKPICard
                         kpiKey="fulfillmentTime"
                         data={kpiData.fulfillmentTime}
                         isPriority={false}
-                        onClick={() => handleKPIClick('fulfillmentTime', kpiData.fulfillmentTime.title)}
+                        onClick={() => handleKPIClick('fulfillmentTime', kpiData.fulfillmentTime.title, kpiData.fulfillmentTime)}
                     />
                     <EnhancedKPICard
                         kpiKey="revenueProtection"
                         data={kpiData.revenueProtection}
                         isPriority={false}
-                        onClick={() => handleKPIClick('revenueProtection', kpiData.revenueProtection.title)}
+                        onClick={() => handleKPIClick('revenueProtection', kpiData.revenueProtection.title, kpiData.revenueProtection)}
                     />
                 </div>
             )}

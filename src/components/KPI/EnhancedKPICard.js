@@ -55,7 +55,6 @@ const EnhancedKPICard = ({ kpiKey, data, isPriority = false, onClick }) => {
         });
 
         // Add forecast data - this will overlap with some historical dates
-        // The overlap creates the seamless transition between trend and forecast
         forecast.dates.forEach((date, idx) => {
             const existing = dataMap.get(date);
             if (existing) {
@@ -73,9 +72,66 @@ const EnhancedKPICard = ({ kpiKey, data, isPriority = false, onClick }) => {
         });
 
         // Convert map to sorted array
-        return Array.from(dataMap.values()).sort((a, b) =>
+        const sortedData = Array.from(dataMap.values()).sort((a, b) =>
             new Date(a.date) - new Date(b.date)
         );
+
+        // Fill gaps between historical and forecast data
+        const filledData = [];
+        for (let i = 0; i < sortedData.length; i++) {
+            filledData.push(sortedData[i]);
+
+            // Check if there's a gap to the next data point
+            if (i < sortedData.length - 1) {
+                const currentDate = new Date(sortedData[i].date);
+                const nextDate = new Date(sortedData[i + 1].date);
+                const daysDiff = Math.round((nextDate - currentDate) / (1000 * 60 * 60 * 24));
+
+                // If there's a gap of more than 1 day, fill it
+                if (daysDiff > 1) {
+                    const currentHasValue = sortedData[i].value !== undefined;
+                    const nextHasValue = sortedData[i + 1].value !== undefined;
+                    const currentHasForecast = sortedData[i].forecastValue !== undefined;
+                    const nextHasForecast = sortedData[i + 1].forecastValue !== undefined;
+
+                    // Interpolate missing dates
+                    for (let day = 1; day < daysDiff; day++) {
+                        const interpolatedDate = new Date(currentDate);
+                        interpolatedDate.setDate(interpolatedDate.getDate() + day);
+                        const dateStr = interpolatedDate.toISOString().split('T')[0];
+
+                        const ratio = day / daysDiff;
+                        const interpolatedPoint = {
+                            date: dateStr,
+                            type: 'interpolated'
+                        };
+
+                        // Interpolate value if both points have value
+                        if (currentHasValue && nextHasValue) {
+                            interpolatedPoint.value =
+                                sortedData[i].value + (sortedData[i + 1].value - sortedData[i].value) * ratio;
+                        }
+
+                        // Interpolate forecast if both points have forecast
+                        if (currentHasForecast && nextHasForecast) {
+                            interpolatedPoint.forecastValue =
+                                sortedData[i].forecastValue + (sortedData[i + 1].forecastValue - sortedData[i].forecastValue) * ratio;
+                        }
+
+                        // If transitioning from value to forecast, interpolate both
+                        if (currentHasValue && !nextHasValue && nextHasForecast) {
+                            interpolatedPoint.value =
+                                sortedData[i].value + (sortedData[i + 1].forecastValue - sortedData[i].value) * ratio;
+                            interpolatedPoint.forecastValue = interpolatedPoint.value;
+                        }
+
+                        filledData.push(interpolatedPoint);
+                    }
+                }
+            }
+        }
+
+        return filledData;
     }, [data]);
 
     // Calculate Y-axis domain

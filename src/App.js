@@ -145,6 +145,25 @@ function App() {
     setCurrentScreen('command-center');
   };
 
+  const handleNavigation = (screen, data = null) => {
+    setCurrentScreen(screen);
+
+    // Handle different navigation types
+    if (screen === 'product-journey') {
+      setSelectedCategory(data);
+    } else if (screen === 'rca') {
+      setRcaData(data);
+    } else if (screen === 'command-center') {
+      setSelectedDepartment(data);
+    } else if (screen === 'decision-actions') {
+      setSelectedAction(data);
+    } else if (screen === 'forecast-details') {
+      setSelectedForecastData(data);
+    } else if (screen === 'kpi-detail') {
+      setSelectedKPI(data); // data now includes { id, name, data }
+    }
+  };
+
   const handleLandingPageNavigate = (type, data) => {
     switch (type) {
       case 'otif-detail':

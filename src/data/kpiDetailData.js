@@ -5,16 +5,50 @@ export const kpiDetailData = {
     otif: {
         id: 'otif',
         name: 'Internal OTIF',
+        title: 'Internal OTIF',
+        subtitle: 'On-Time, In-Full Delivery',
         description: 'On-Time, In-Full Delivery',
+        current: 92.5,
         currentValue: 92.5,
         unit: '%',
         trend: '+2.3%',
         trendValue: 2.3,
+        change: 2.3,
         status: 'warning',
         target: 95,
         gap: 2.5,
         formula: '((Orders Delivered On Time AND In Full) ÷ Total Internal Orders) × 100',
-        trendData: [89, 90, 91, 89, 92, 93, 92, 92.5],
+        trendData: {
+            history: [
+                { date: '2025-12-29', value: 89 },
+                { date: '2025-12-30', value: 90 },
+                { date: '2025-12-31', value: 91 },
+                { date: '2026-01-01', value: 89 },
+                { date: '2026-01-02', value: 92 },
+                { date: '2026-01-03', value: 93 },
+                { date: '2026-01-04', value: 92 },
+                { date: '2026-01-05', value: 92.5 }
+            ],
+            forecast: {
+                model: 'holt',
+                dates: [
+                    '2026-01-03',
+                    '2026-01-04',
+                    '2026-01-05',
+                    '2026-01-06',
+                    '2026-01-07',
+                    '2026-01-08',
+                    '2026-01-09',
+                    '2026-01-10',
+                    '2026-01-11',
+                    '2026-01-12'
+                ],
+                values: [93, 92, 92.5, 92.8, 93.2, 93.5, 93.8, 94.1, 94.4, 94.7],
+                overlapPoints: 3,
+                futurePoints: 7,
+                confidencePct: 85
+            }
+        },
         rootCauses: [
             {
                 category: 'Demand',
@@ -121,17 +155,49 @@ export const kpiDetailData = {
     stockHealth: {
         id: 'stockHealth',
         name: 'Stock Position Health',
+        title: 'Stock Position Health',
+        subtitle: 'Inventory Balance Score',
         description: 'Inventory Balance Score',
+        current: 87.5,
         currentValue: 87.5,
         unit: '%',
         trend: '-1.2%',
         trendValue: -1.2,
+        change: -1.2,
         status: 'warning',
         target: 90,
         gap: 2.5,
         overstock: 4.0,
         formula: '1 - ((Understock SKUs + Overstock SKUs) ÷ Total Active SKUs)',
-        trendData: [88, 89, 87, 88, 87, 88, 87, 87.5],
+        trendData: {
+            history: [
+                { date: '2025-12-29', value: 88 },
+                { date: '2025-12-30', value: 89 },
+                { date: '2025-12-31', value: 87 },
+                { date: '2026-01-01', value: 88 },
+                { date: '2026-01-02', value: 87 },
+                { date: '2026-01-03', value: 88 },
+                { date: '2026-01-04', value: 87 },
+                { date: '2026-01-05', value: 87.5 }
+            ],
+            forecast: {
+                model: 'holt',
+                dates: [
+                    '2026-01-03',
+                    '2026-01-04',
+                    '2026-01-05',
+                    '2026-01-06',
+                    '2026-01-07',
+                    '2026-01-08',
+                    '2026-01-09',
+                    '2026-01-10'
+                ],
+                values: [88, 87, 87.5, 87.8, 88.2, 88.5, 88.8, 89.1],
+                overlapPoints: 3,
+                futurePoints: 5,
+                confidencePct: 82
+            }
+        },
         rootCauses: [
             {
                 category: 'Demand',
@@ -231,16 +297,48 @@ export const kpiDetailData = {
     expiryRisk: {
         id: 'expiryRisk',
         name: 'Expiry Risk Value',
+        title: 'Expiry Risk Value',
+        subtitle: 'Near-Expiry Inventory',
         description: 'Near-Expiry Inventory',
+        current: 2.45,
         currentValue: 2.45,
-        unit: 'M',
+        unit: 'RM',
         trend: '-0.35RM',
         trendValue: -0.35,
+        change: -0.35,
         status: 'warning',
         target: 1.5,
         gap: 0.95,
         formula: 'Σ (Stock Quantity × Unit Cost) for all batches expiring within X days',
-        trendData: [2.8, 2.7, 2.9, 2.6, 2.5, 2.6, 2.5, 2.45],
+        trendData: {
+            history: [
+                { date: '2025-12-29', value: 2.8 },
+                { date: '2025-12-30', value: 2.7 },
+                { date: '2025-12-31', value: 2.9 },
+                { date: '2026-01-01', value: 2.6 },
+                { date: '2026-01-02', value: 2.5 },
+                { date: '2026-01-03', value: 2.6 },
+                { date: '2026-01-04', value: 2.5 },
+                { date: '2026-01-05', value: 2.45 }
+            ],
+            forecast: {
+                model: 'holt',
+                dates: [
+                    '2026-01-03',
+                    '2026-01-04',
+                    '2026-01-05',
+                    '2026-01-06',
+                    '2026-01-07',
+                    '2026-01-08',
+                    '2026-01-09',
+                    '2026-01-10'
+                ],
+                values: [2.6, 2.5, 2.45, 2.3, 2.2, 2.1, 1.95, 1.8],
+                overlapPoints: 3,
+                futurePoints: 5,
+                confidencePct: 78
+            }
+        },
         rootCauses: [
             {
                 category: 'Demand',
