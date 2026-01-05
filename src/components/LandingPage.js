@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import {
   Search, ExternalLink, Mic, MicOff, X, ChevronRight, Info,
   Heart, Activity, Bed, Users, Truck, Stethoscope, Pill,
-  FlaskConical, Syringe, Thermometer, ClipboardList, Building2, TrendingUp
+  FlaskConical, Syringe, Thermometer, ClipboardList, Building2, TrendingUp,
+  ArrowDown, ArrowUp, AlertCircle
 } from 'lucide-react';
 import {
   overallOTIF as mockOverallOTIF,
@@ -22,6 +23,7 @@ import ChordDiagram from './ChordDiagram';
 import KPIDashboard from './KPIDashboard';
 import OTIFBreakdownDrawer from './OTIF/OTIFBreakdownDrawer';
 import HospitalPerformanceDrawer from './CommandCenter/HospitalPerformanceDrawer';
+import RootCausesModal from './Landing/RootCausesModal';
 import dashboardService from '../services/dashboardService';
 import { parseSearchQuery } from '../utils/searchParser';
 import { getTranslatedActionName } from '../utils/translationHelpers';
@@ -53,6 +55,7 @@ const LandingPage = ({ currentUser, onNavigate }) => {
   const [showSubcategoriesModal, setShowSubcategoriesModal] = useState(false);
   const [showOTIFDrawer, setShowOTIFDrawer] = useState(false);
   const [showPerformanceDrawer, setShowPerformanceDrawer] = useState(false);
+  const [showRootCauses, setShowRootCauses] = useState(null); // 'performance' or 'otif'
   const [selectedPeriod, setSelectedPeriod] = useState('daily');
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -356,13 +359,26 @@ const LandingPage = ({ currentUser, onNavigate }) => {
                       </span>
                     </button>
                   </h2>
+                  {/* Trend Indicator - Below header */}
+                  <div className="flex items-center gap-1 mt-1">
+                    <ArrowDown className="text-red-600" size={14} />
+                    <span className="text-red-600 font-semibold text-xs">DOWN: 18%</span>
+                  </div>
                   {/* If Achieved and If Missed as subheader */}
                   <p className="text-gray-600 mt-2 text-lg">
                     If Achieved: <span className="font-semibold text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifAchievedScore?.toFixed(2) || '79.32'}</span>
                     {' '}<span className="text-gray-400">|</span>{' '}
                     If Missed: <span className="font-semibold text-red-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifMissedScore?.toFixed(2) || '77.71'}</span>
                   </p>
-                  <p className="text-gray-500 mt-1 text-sm">Hospital Performance Index Score</p>
+                  {/* Root Causes Link - Inline */}
+                  <button
+                    onClick={() => setShowRootCauses('performance')}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
+                  >
+                    <AlertCircle size={14} />
+                    <span className="font-semibold">3 Root Causes</span>
+                    <ChevronRight size={14} />
+                  </button>
                 </div>
               ) : (
                 // Admin User: Show OTIF on left
@@ -407,12 +423,24 @@ const LandingPage = ({ currentUser, onNavigate }) => {
                       </span>
                     </button>
                   </h2>
+                  {/* Gap Indicator - Below header */}
+                  <div className="mt-1">
+                    <span className="text-orange-700 font-semibold text-xs">16% lower goal</span>
+                  </div>
                   <p className="text-gray-600 mt-2 text-lg">
                     {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
                     {' '}<span className="text-gray-400">|</span>{' '}
                     {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
                   </p>
-                  <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
+                  {/* Root Causes Link - Inline */}
+                  <button
+                    onClick={() => setShowRootCauses('otif')}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
+                  >
+                    <AlertCircle size={14} />
+                    <span className="font-semibold">4 Root Causes</span>
+                    <ChevronRight size={14} />
+                  </button>
                 </div>
               ) : (
                 // Admin User: Show Performance Index button on right
@@ -767,6 +795,13 @@ const LandingPage = ({ currentUser, onNavigate }) => {
             ifMissed: "If OTIF slips to 87.03%, the index will fall to 77.71 and revenue protection may drop to RM 0.00."
           }
         }}
+      />
+
+      {/* Root Causes Modal */}
+      <RootCausesModal
+        isOpen={showRootCauses !== null}
+        onClose={() => setShowRootCauses(null)}
+        metricType={showRootCauses}
       />
     </div>
   );

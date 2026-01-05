@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, TrendingUp, AlertCircle, CheckCircle, Info, BarChart3, DollarSign, Users, Activity, Sliders } from 'lucide-react';
 import HPISimulationTab from './HPISimulationTab';
+import scorMetricsData from '../../data/scorMetricsData';
 
 const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
     const [activeTab, setActiveTab] = useState('overview');
@@ -241,6 +242,59 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                 <div className="text-sm text-slate-700 font-mono leading-relaxed">
                                     {formula}
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Section 2.5: Contributors (SCOR Metrics) */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-3">
+                                <Users size={20} className="text-blue-600" />
+                                <h3 className="text-lg font-bold text-slate-800">CONTRIBUTORS</h3>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {Object.values(scorMetricsData).map((metric, index) => {
+                                    // Calculate contribution percentage (synthetic for now)
+                                    const contributions = {
+                                        'Plan': 20.24,
+                                        'Source': 40.99,
+                                        'Make': 30.9,
+                                        'Deliver': 95.20,
+                                        'Return': 68.11,
+                                        'Enable': 99.8
+                                    };
+                                    const contribution = contributions[metric.stage] || 0;
+
+                                    // Determine status color
+                                    const getStatusColor = () => {
+                                        if (metric.status === 'good') return 'text-green-600';
+                                        if (metric.status === 'warning') return 'text-yellow-600';
+                                        return 'text-red-600';
+                                    };
+
+                                    const getBgColor = () => {
+                                        if (metric.status === 'good') return 'bg-green-50 border-green-200';
+                                        if (metric.status === 'warning') return 'bg-yellow-50 border-yellow-200';
+                                        return 'bg-red-50 border-red-200';
+                                    };
+
+                                    return (
+                                        <div key={index} className={`${getBgColor()} border-2 rounded-lg p-3`}>
+                                            <div className="text-xs font-semibold text-slate-600 mb-1">{metric.stage}</div>
+                                            <div className="text-sm font-bold text-slate-800 mb-2 line-clamp-2">
+                                                {metric.name}
+                                            </div>
+                                            <div className={`text-2xl font-bold ${getStatusColor()}`}>
+                                                {contribution.toFixed(1)}%
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-1">
+                                                Current: {metric.currentValue}{metric.unit}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                Goal: {metric.target}{metric.unit}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
