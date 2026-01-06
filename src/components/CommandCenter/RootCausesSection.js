@@ -3,7 +3,7 @@ import { X, CheckCircle } from 'lucide-react';
 import { getPriorityColor } from '../../data/rcaData';
 import { getRCAList } from '../../services/rcaService';
 
-const RootCausesSection = ({ data, selectedTimePeriod = 'today' }) => {
+const RootCausesSection = ({ data, selectedTimePeriod = 'today', selectedModule = 'otif' }) => {
     const [rcaData, setRcaData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -18,7 +18,9 @@ const RootCausesSection = ({ data, selectedTimePeriod = 'today' }) => {
             try {
                 setLoading(true);
                 setError(null);
-                const response = await getRCAList();
+                // Convert module ID to API format
+                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+                const response = await getRCAList(moduleParam);
                 if (response.success) {
                     setRcaData(response.data);
                 }
@@ -31,7 +33,7 @@ const RootCausesSection = ({ data, selectedTimePeriod = 'today' }) => {
         };
 
         fetchRCAData();
-    }, []);
+    }, [selectedModule]);
 
     // Handle clicking on Preventive Recommendations
     const handlePreventiveClick = (item) => {
