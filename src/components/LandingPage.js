@@ -99,7 +99,12 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
   const overviewData = apiData?.overview;
   const overallOTIF = overviewData?.overallOTIF || mockOverallOTIF;
   const overallOT = overviewData?.overallOT || 95.0;
-  const overallIF = overviewData?.overallIF || 94.8;
+  const overallIF = overviewData?.overallIF || 95.0;
+
+  // Module-specific metrics
+  const moduleDisplayName = overviewData?.displayName || 'OTIF';
+  const moduleCurrentValue = overviewData?.currentValue || overallOTIF;
+  const isOTIFModule = selectedModule === 'otif';
 
   // Reorder departments: Lab and Radiology last
   const rawDepartments = overviewData?.departments || mockOtifDepartments;
@@ -379,66 +384,120 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
                     </button>
                   </div>
                 ) : (
-                  // Admin User: Show OTIF on left
+                  // Admin User: Show OTIF or Module-specific metric
                   <div>
-                    <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                      {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
-                      <button
-                        onClick={() => setShowOTIFDrawer(true)}
-                        className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                        title="Click for detailed breakdown"
-                      >
-                        <Info size={28} className="text-blue-600" />
-                        <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                          Click for detailed breakdown
-                        </span>
-                      </button>
-                    </h2>
-                    {/* OT and IF as subheader */}
-                    <p className="text-gray-600 mt-2 text-lg">
-                      {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
-                      {' '}<span className="text-gray-400">|</span>{' '}
-                      {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
-                    </p>
-                    <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
+                    {isOTIFModule ? (
+                      // OTIF Module: Show OTIF with OT and IF
+                      <>
+                        <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                          {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+                          <button
+                            onClick={() => setShowOTIFDrawer(true)}
+                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                            title="Click for detailed breakdown"
+                          >
+                            <Info size={28} className="text-blue-600" />
+                            <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                              Click for detailed breakdown
+                            </span>
+                          </button>
+                        </h2>
+                        {/* OT and IF as subheader */}
+                        <p className="text-gray-600 mt-2 text-lg">
+                          {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
+                          {' '}<span className="text-gray-400">|</span>{' '}
+                          {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
+                        </p>
+                        <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
+                      </>
+                    ) : (
+                      // Other Modules: Show module-specific metric
+                      <>
+                        <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                          {moduleDisplayName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}: <span className={getOTIFColorByPercentage(moduleCurrentValue).textColor}>{moduleCurrentValue}%</span>
+                          <button
+                            onClick={() => setShowOTIFDrawer(true)}
+                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                            title="Click for detailed breakdown"
+                          >
+                            <Info size={28} className="text-blue-600" />
+                            <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                              Click for detailed breakdown
+                            </span>
+                          </button>
+                        </h2>
+                        <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
+                      </>
+                    )}
                   </div>
                 )}
 
                 {/* Right Side - Conditional based on role */}
                 {userRole === USER_ROLES.MANAGEMENT ? (
-                  // Management User: Show OTIF section on right
+                  // Management User: Show OTIF or Module-specific metric on right
                   <div>
-                    <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                      {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
-                      <button
-                        onClick={() => setShowOTIFDrawer(true)}
-                        className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                        title="Click for detailed breakdown"
-                      >
-                        <Info size={28} className="text-blue-600" />
-                        <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                          Click for detailed breakdown
-                        </span>
-                      </button>
-                    </h2>
-                    {/* Gap Indicator - Below header */}
-                    <div className="mt-1">
-                      <span className="text-orange-700 font-semibold text-xs">16% lower goal</span>
-                    </div>
-                    <p className="text-gray-600 mt-2 text-lg">
-                      {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
-                      {' '}<span className="text-gray-400">|</span>{' '}
-                      {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
-                    </p>
-                    {/* Root Causes Link - Inline */}
-                    <button
-                      onClick={() => setShowRootCauses('otif')}
-                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
-                    >
-                      <AlertCircle size={14} />
-                      <span className="font-semibold">4 Root Causes</span>
-                      <ChevronRight size={14} />
-                    </button>
+                    {isOTIFModule ? (
+                      // OTIF Module: Show OTIF with OT, IF, gap and root causes
+                      <>
+                        <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                          {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
+                          <button
+                            onClick={() => setShowOTIFDrawer(true)}
+                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                            title="Click for detailed breakdown"
+                          >
+                            <Info size={28} className="text-blue-600" />
+                            <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                              Click for detailed breakdown
+                            </span>
+                          </button>
+                        </h2>
+                        {/* Gap Indicator - Below header */}
+                        <div className="mt-1">
+                          <span className="text-orange-700 font-semibold text-xs">16% lower goal</span>
+                        </div>
+                        <p className="text-gray-600 mt-2 text-lg">
+                          {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
+                          {' '}<span className="text-gray-400">|</span>{' '}
+                          {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
+                        </p>
+                        {/* Root Causes Link - Inline */}
+                        <button
+                          onClick={() => setShowRootCauses('otif')}
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
+                        >
+                          <AlertCircle size={14} />
+                          <span className="font-semibold">4 Root Causes</span>
+                          <ChevronRight size={14} />
+                        </button>
+                      </>
+                    ) : (
+                      // Other Modules: Show module-specific metric
+                      <>
+                        <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
+                          {moduleDisplayName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}: <span className={getOTIFColorByPercentage(moduleCurrentValue).textColor}>{moduleCurrentValue}%</span>
+                          <button
+                            onClick={() => setShowOTIFDrawer(true)}
+                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
+                            title="Click for detailed breakdown"
+                          >
+                            <Info size={28} className="text-blue-600" />
+                            <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
+                              Click for detailed breakdown
+                            </span>
+                          </button>
+                        </h2>
+                        {/* Root Causes Link - Inline */}
+                        <button
+                          onClick={() => setShowRootCauses(selectedModule)}
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
+                        >
+                          <AlertCircle size={14} />
+                          <span className="font-semibold">4 Root Causes</span>
+                          <ChevronRight size={14} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 ) : (
                   // Admin User: Show Performance Index button on right

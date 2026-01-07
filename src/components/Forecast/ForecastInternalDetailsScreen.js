@@ -558,6 +558,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                 departmentId={selectedDepartment?.id}
                 timePeriod={periodToApiParam[selectedPeriod]}
                 locationName={selectedDepartment?.name}
+                selectedModule={selectedModule}
             />
         </div>
     );

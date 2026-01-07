@@ -4,7 +4,7 @@ import VendorDetailsModal from '../DecisionActions/VendorDetailsModal';
 import ProductJourneyModal from '../ForecastReview/ProductJourneyModal';
 import forecastService from '../../services/forecastService';
 
-const ForecastMedicineDetailsModal = ({ isOpen, onClose, departmentId, timePeriod, locationName }) => {
+const ForecastMedicineDetailsModal = ({ isOpen, onClose, departmentId, timePeriod, locationName, selectedModule = 'otif' }) => {
     const [medicines, setMedicines] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -14,19 +14,21 @@ const ForecastMedicineDetailsModal = ({ isOpen, onClose, departmentId, timePerio
     const [selectedFlowItem, setSelectedFlowItem] = useState(null);
 
     useEffect(() => {
-        console.log('ForecastMedicineDetailsModal useEffect triggered:', { isOpen, departmentId, timePeriod });
+        console.log('ForecastMedicineDetailsModal useEffect triggered:', { isOpen, departmentId, timePeriod, selectedModule });
         if (isOpen && departmentId && timePeriod) {
             fetchMedicineDetails();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen, departmentId, timePeriod]);
+    }, [isOpen, departmentId, timePeriod, selectedModule]);
 
     const fetchMedicineDetails = async () => {
-        console.log('Fetching medicine details for:', { departmentId, timePeriod });
+        console.log('Fetching medicine details for:', { departmentId, timePeriod, selectedModule });
         try {
             setLoading(true);
             setError(null);
-            const response = await forecastService.getForecastMedicineDetails(departmentId, timePeriod);
+            // Convert module ID to API format
+            const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+            const response = await forecastService.getForecastMedicineDetails(departmentId, timePeriod, moduleParam);
             console.log('Medicine details response:', response);
             if (response.success) {
                 setMedicines(response.data.medicines || []);
