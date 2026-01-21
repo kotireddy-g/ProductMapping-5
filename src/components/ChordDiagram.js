@@ -775,7 +775,7 @@ Z
                 {supplyLevel > 1 && (
                   <button
                     onClick={goBackSupply}
-                    className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                    className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
                   >
                     <ChevronLeft size={14} />
                     Back
@@ -789,7 +789,7 @@ Z
                 {(focusedSupplyNode || focusedDemandNode) && (
                   <button
                     onClick={clearFocus}
-                    className="px-4 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm font-medium"
+                    className="px-4 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                   >
                     Clear Focus
                   </button>
@@ -808,7 +808,7 @@ Z
                 {demandLevel > 1 && (
                   <button
                     onClick={goBackDemand}
-                    className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                    className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
                   >
                     Back
                     <ChevronLeft size={14} style={{ transform: 'rotate(180deg)' }} />
@@ -1156,7 +1156,7 @@ Z
                     key={filter.value}
                     onClick={() => setTimePeriod(filter.value)}
                     className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${filter.value === timePeriod
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-gray-900 text-white'
                       : 'text-slate-600 hover:bg-slate-200'
                       }`}
                   >
@@ -1167,7 +1167,7 @@ Z
               {/* Expand Button - Icon Only */}
               <button
                 onClick={() => setIsFullScreen(true)}
-                className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="p-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                 title="Expand to fullscreen"
               >
                 <Maximize2 size={20} />
@@ -1209,7 +1209,7 @@ Z
               {supplyLevel > 1 && (
                 <button
                   onClick={goBackSupply}
-                  className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                  className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
                 >
                   <ChevronLeft size={14} />
                   Back
@@ -1242,7 +1242,7 @@ Z
               {demandLevel > 1 && (
                 <button
                   onClick={goBackDemand}
-                  className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                  className="flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
                 >
                   Back
                   <ChevronLeft size={14} style={{ transform: 'rotate(180deg)' }} />

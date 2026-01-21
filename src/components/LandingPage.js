@@ -239,9 +239,9 @@ const LandingPage = forwardRef(({
       case 'performanceOtif':
         // Performance/OTIF Section (originally at line 397-518)
         return (
-          <div key={key} className="mb-16" ref={performanceRef}>
+          <div key={key} className="mb-6" ref={performanceRef}>
             {/* Performance Metrics Cards - Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
               {/* Performance Index Card - White Background */}
               <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
                 {/* Single line with all main elements */}
