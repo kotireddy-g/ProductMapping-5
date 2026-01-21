@@ -168,6 +168,19 @@ function App() {
   };
 
   const handleLandingPageNavigate = (type, data) => {
+    // If user is on a detail page and using search, navigate to landing page first
+    if (currentScreen !== 'dashboard') {
+      setCurrentScreen('dashboard');
+      // Wait for landing page to render, then navigate
+      setTimeout(() => {
+        performNavigation(type, data);
+      }, 100);
+    } else {
+      performNavigation(type, data);
+    }
+  };
+
+  const performNavigation = (type, data) => {
     switch (type) {
       case 'otif-detail':
         // Navigate to Command Center for OTIF department drill-down
@@ -213,12 +226,28 @@ function App() {
   };
 
   const handleModuleChange = (moduleId) => {
+    // If user is on a detail page, navigate back to landing page first
+    if (currentScreen !== 'dashboard') {
+      setCurrentScreen('dashboard');
+    }
     setSelectedModule(moduleId);
   };
 
   const handleScrollToSection = (sectionId) => {
-    if (landingPageRef.current && landingPageRef.current.scrollToSection) {
-      landingPageRef.current.scrollToSection(sectionId);
+    // If user is on a detail page, navigate back to landing page first
+    if (currentScreen !== 'dashboard') {
+      setCurrentScreen('dashboard');
+      // Wait for landing page to render, then scroll
+      setTimeout(() => {
+        if (landingPageRef.current && landingPageRef.current.scrollToSection) {
+          landingPageRef.current.scrollToSection(sectionId);
+        }
+      }, 100);
+    } else {
+      // Already on landing page, just scroll
+      if (landingPageRef.current && landingPageRef.current.scrollToSection) {
+        landingPageRef.current.scrollToSection(sectionId);
+      }
     }
   };
 
@@ -292,47 +321,7 @@ function App() {
     );
   }
 
-  if (currentScreen === 'command-center') {
-    return (
-      <>
-        <CommandCenterDashboard
-          departmentId={selectedDepartment?.id}
-          onBack={handleBackToDashboard}
-          selectedModule={selectedModule}
-        />
-        <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
-      </>
-    );
-  }
 
-  if (currentScreen === 'decision-actions') {
-    return (
-      <>
-        <DecisionActionsScreen
-          actionType={selectedAction}
-          mainAction={selectedAction?.mainAction}
-          subAction={selectedAction?.subAction}
-          onBack={handleBackToDashboard}
-          selectedModule={selectedModule}
-        />
-        <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
-      </>
-    );
-  }
-
-  if (currentScreen === 'kpi-detail') {
-    return (
-      <>
-        <KPIDetailScreen
-          selectedKPI={selectedKPI}
-          onBack={handleBackToDashboard}
-          onNavigateToKPI={handleNavigateToKPIDetail}
-          selectedModule={selectedModule}
-        />
-        <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
-      </>
-    );
-  }
 
   if (currentScreen === 'forecast-internal-details') {
     return (
@@ -377,13 +366,41 @@ function App() {
         />
 
         <div className="flex-1 overflow-y-auto">
-          <LandingPage
-            ref={landingPageRef}
-            currentUser={currentUser}
-            onNavigate={handleLandingPageNavigate}
-            selectedModule={selectedModule}
-            onActionSelect={setSelectedActionForModal}
-          />
+          {/* Render different screens based on currentScreen */}
+          {currentScreen === 'dashboard' && (
+            <LandingPage
+              ref={landingPageRef}
+              currentUser={currentUser}
+              onNavigate={handleLandingPageNavigate}
+              selectedModule={selectedModule}
+              onActionSelect={setSelectedActionForModal}
+            />
+          )}
+
+          {currentScreen === 'command-center' && (
+            <CommandCenterDashboard
+              departmentId={selectedDepartment?.id}
+              onBack={handleBackToDashboard}
+              selectedModule={selectedModule}
+            />
+          )}
+
+          {currentScreen === 'kpi-detail' && (
+            <KPIDetailScreen
+              kpiId={selectedKPI?.id}
+              kpiName={selectedKPI?.name}
+              kpiData={selectedKPI?.data}
+              onBack={handleBackToDashboard}
+              selectedModule={selectedModule}
+            />
+          )}
+
+          {currentScreen === 'decision-actions' && (
+            <DecisionActionsScreen
+              selectedAction={selectedAction}
+              onBack={handleBackToDashboard}
+            />
+          )}
         </div>
       </div>
 
