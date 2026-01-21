@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './i18n'; // Initialize i18n
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
 import Header from './components/Layout/Header';
+import Sidebar from './components/Layout/Sidebar';
+import GlobalSearchBar from './components/Layout/GlobalSearchBar';
 import NotificationPanel from './components/Layout/NotificationPanel';
 import UploadModal from './components/Layout/UploadModal';
 import ToastNotification from './components/Layout/ToastNotification';
@@ -38,6 +40,8 @@ function App() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const [toasts, setToasts] = useState([]);
+  const [selectedActionForModal, setSelectedActionForModal] = useState(null);
+  const landingPageRef = useRef(null);
 
   // Check authentication on mount
   useEffect(() => {
@@ -213,6 +217,16 @@ function App() {
     setSelectedModule(moduleId);
   };
 
+  const handleScrollToSection = (sectionId) => {
+    if (landingPageRef.current && landingPageRef.current.scrollToSection) {
+      landingPageRef.current.scrollToSection(sectionId);
+    }
+  };
+
+  const handleActionSelect = (action) => {
+    setSelectedActionForModal(action);
+  };
+
   if (!isAuthenticated) {
     if (authView === 'login') {
       return (
@@ -336,23 +350,52 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Header
-        currentUser={currentUser}
-        unreadCount={notifications.filter(n => !n.read).length}
-        onUploadClick={() => setIsUploadOpen(true)}
-        onNotificationClick={() => setIsNotificationOpen(true)}
-        onSupplierReportClick={handleNavigateToSupplierReport}
-        onLogout={handleLogout}
-        onModuleChange={handleModuleChange}
+    <div className="flex h-screen bg-[#F8F9FA] overflow-hidden">
+      {/* Sidebar */}
+      <Sidebar
         selectedModule={selectedModule}
+        onModuleChange={handleModuleChange}
+        currentScreen={currentScreen}
+        onNavigate={handleNavigation}
+        onScrollToSection={handleScrollToSection}
+        onNotificationClick={() => setIsNotificationOpen(true)}
+        unreadNotificationCount={notifications.filter(n => !n.read).length}
       />
 
-      <LandingPage
-        currentUser={currentUser}
-        onNavigate={handleLandingPageNavigate}
-        selectedModule={selectedModule}
-      />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header
+          currentUser={currentUser}
+          unreadCount={notifications.filter(n => !n.read).length}
+          onUploadClick={() => setIsUploadOpen(true)}
+          onNotificationClick={() => setIsNotificationOpen(true)}
+          onSupplierReportClick={handleNavigateToSupplierReport}
+          onLogout={handleLogout}
+          onModuleChange={handleModuleChange}
+          selectedModule={selectedModule}
+        />
+
+        {/* Global Search Bar - Fixed */}
+        <GlobalSearchBar
+          onNavigate={handleLandingPageNavigate}
+          dashboardData={{
+            departments: [],
+            forecastAreas: [],
+            decisionActions: []
+          }}
+          onActionSelect={handleActionSelect}
+        />
+
+        <div className="flex-1 overflow-y-auto">
+          <LandingPage
+            ref={landingPageRef}
+            currentUser={currentUser}
+            onNavigate={handleLandingPageNavigate}
+            selectedModule={selectedModule}
+            onActionSelect={setSelectedActionForModal}
+          />
+        </div>
+      </div>
 
       <NotificationPanel
         isOpen={isNotificationOpen}

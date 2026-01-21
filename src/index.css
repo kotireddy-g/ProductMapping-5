@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* New Design Color Variables */
+:root {
+  /* Layout Colors */
+  --sidebar-bg: #1A1A1A;
+  --sidebar-active: #000000;
+  --background: #F8F9FA;
+  --card-bg: #FFFFFF;
+  --otif-card-bg: #FFF4E6;
+  
+  /* Status Colors */
+  --success: #10B981;
+  --warning: #F97316;
+  --danger: #EF4444;
+  --info: #3B82F6;
+  
+  /* Text Colors */
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-white: #FFFFFF;
+}
+
 * {
   margin: 0;
   padding: 0;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search, ExternalLink, Mic, MicOff, X, ChevronRight, Info,
@@ -48,7 +48,13 @@ const iconMap = {
   'Building2': Building2
 };
 
-const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
+const LandingPage = forwardRef(({
+  currentUser,
+  onNavigate,
+  selectedModule = 'otif',
+  onActionSelect,
+  scrollToSection
+}, ref) => {
   const { t } = useTranslation();
 
   // State for current template - reactive to changes
@@ -79,9 +85,6 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       window.removeEventListener('templateChanged', handleTemplateChange);
     };
   }, []);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
   const [showSubcategoriesModal, setShowSubcategoriesModal] = useState(false);
   const [showOTIFDrawer, setShowOTIFDrawer] = useState(false);
@@ -91,7 +94,6 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const recognitionRef = useRef(null);
   const [selectedTemplate, setSelectedTemplate] = useState(
     () => localStorage.getItem('dashboardTemplate') || 'default'
   );
@@ -187,155 +189,15 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
     fetchDashboardData();
   }, [selectedModule]);
 
-  // Generate filtered search suggestions
-  const filteredSuggestions = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-
-    const query = searchQuery.toLowerCase();
-    const allSuggestions = [
-      ...searchSuggestions.otif.map(s => ({ text: s, category: 'OTIF' })),
-      ...searchSuggestions.medicines.map(s => ({ text: s, category: 'Medicine' })),
-      ...searchSuggestions.actions.map(s => ({ text: s, category: 'Action' })),
-      ...searchSuggestions.labels.map(s => ({ text: s, category: 'Label' }))
-    ];
-
-    return allSuggestions
-      .filter(s => s.text.toLowerCase().includes(query))
-      .slice(0, 8);
-  }, [searchQuery]);
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    setShowSuggestions(true);
-  };
-
-  // Handle intelligent search
-  const handleSearch = (query) => {
-    if (!query || query.trim().length === 0) return;
-
-    // Prepare dashboard data for search parser
-    const dashboardData = {
-      departments: otifDepartments,
-      forecastAreas: forecastAreas,
-      decisionActions: decisionActions
-    };
-
-    // Parse the search query
-    const searchResult = parseSearchQuery(query, dashboardData);
-
-    // Handle navigation based on search result type
-    switch (searchResult.type) {
-      case 'department':
-        // Navigate to Command Center with department
-        if (onNavigate) {
-          onNavigate('otif-detail', searchResult.data);
-        }
-        break;
-
-      case 'forecast':
-        // Navigate to Forecast Details
-        if (onNavigate) {
-          onNavigate('forecast-detail', searchResult.data);
-        }
-        break;
-
-      case 'decision_action':
-        if (searchResult.data.type === 'main') {
-          // Show subcategory popup for main action
-          setSelectedAction(searchResult.data.mainAction);
-          setShowSubcategoriesModal(true);
-        } else if (searchResult.data.type === 'sub') {
-          // Navigate directly to Decision Actions page
-          if (onNavigate) {
-            onNavigate('action-detail', {
-              ...searchResult.data.mainAction,
-              subcategory: searchResult.data.subAction,
-              mainAction: searchResult.data.mainAction.id,
-              subAction: searchResult.data.subAction.id
-            });
-          }
-        }
-        break;
-
-      case 'no_match':
-        // Show user-friendly message
-        alert(`Sorry, we couldn't find any results for "${query}".\n\nTry searching for:\n• Department names (ICU, Ward, OPD)\n• Forecast queries (ICU forecast, OPD prediction)\n• Decision actions (Fast moving, Stockout, Usage Velocity)`);
-        break;
-
-
-      default:
-        break;
-    }
-
-    // Clear search and hide suggestions
-    setSearchQuery('');
-    setShowSuggestions(false);
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setSearchQuery(suggestion.text);
-    setShowSuggestions(false);
-
-    // Use intelligent search for suggestions too
-    handleSearch(suggestion.text);
-  };
-
-  // Handle Enter key press in search
-  const handleSearchKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch(searchQuery);
-    }
-  };
-
-  // Voice search functionality
-  useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setSearchQuery(transcript);
-        setShowSuggestions(true);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
-
-  const toggleVoiceSearch = () => {
-    if (!recognitionRef.current) {
-      alert('Voice search is not supported in your browser. Please use Chrome, Edge, or Safari.');
+  // Scroll to section handler
+  const handleScrollToSection = (sectionId) => {
+    // Handle scroll to top
+    if (sectionId === 'top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setActiveSection('performance');
       return;
     }
 
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current.start();
-      setIsListening(true);
-    }
-  };
-
-  // Scroll to section handler
-  const scrollToSection = (sectionId) => {
     const sectionRefs = {
       performance: performanceRef,
       supplyDemand: supplyDemandRef,
@@ -351,6 +213,11 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       setActiveSection(sectionId);
     }
   };
+
+  // Expose scrollToSection method to parent via ref
+  useImperativeHandle(ref, () => ({
+    scrollToSection: handleScrollToSection
+  }));
 
   // Create component mapping for template-based rendering
   const componentMapping = useMemo(() => {
@@ -373,178 +240,76 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
         // Performance/OTIF Section (originally at line 397-518)
         return (
           <div key={key} className="mb-16" ref={performanceRef}>
-            {/* OTIF/Performance Index Header */}
-            <div className="mb-8">
-              <div className="flex items-start justify-between">
-                {/* Left Side - Conditional based on role */}
-                {userRole === USER_ROLES.MANAGEMENT ? (
-                  // Management User: Show Performance Index on left
+            {/* Performance Metrics Cards - Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Performance Index Card - White Background */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Performance Index</h3>
+                <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                      Performance Index: <span className="text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}</span>
-                      <button
-                        onClick={() => setShowPerformanceDrawer(true)}
-                        className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                        title="Click for detailed breakdown"
-                      >
-                        <Info size={28} className="text-blue-600" />
-                        <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                          Click for detailed breakdown
-                        </span>
-                      </button>
-                    </h2>
-                    {/* Trend Indicator - Below header */}
-                    <div className="flex items-center gap-1 mt-1">
-                      <ArrowDown className="text-red-600" size={14} />
-                      <span className="text-red-600 font-semibold text-xs">DOWN: 18%</span>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-5xl font-bold text-[#10B981]">
+                        {overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}
+                      </span>
+                      <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">
+                        Down 18%
+                      </span>
                     </div>
-                    {/* If Achieved and If Missed as subheader */}
-                    <p className="text-gray-600 mt-2 text-lg">
-                      If Achieved: <span className="font-semibold text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifAchievedScore?.toFixed(2) || '79.32'}</span>
-                      {' '}<span className="text-gray-400">|</span>{' '}
-                      If Missed: <span className="font-semibold text-red-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.ifMissedScore?.toFixed(2) || '77.71'}</span>
+                    <p className="text-sm text-gray-600 mt-3">
+                      If Achieved: <span className="font-semibold text-gray-800">42.15</span> |
+                      If Missed: <span className="font-semibold text-gray-800">177.1</span>
                     </p>
-                    {/* Root Causes Link - Inline */}
                     <button
                       onClick={() => setShowRootCauses('performance')}
-                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
+                      className="flex items-center gap-1 text-[#3B82F6] hover:text-blue-700 text-sm mt-3 font-medium"
                     >
-                      <AlertCircle size={14} />
-                      <span className="font-semibold">3 Root Causes</span>
-                      <ChevronRight size={14} />
+                      <AlertCircle size={16} />
+                      <span>3 Root Causes</span>
+                      <ChevronRight size={16} />
                     </button>
                   </div>
-                ) : (
-                  // Admin User: Show OTIF or Module-specific metric
-                  <div>
-                    {isOTIFModule ? (
-                      // OTIF Module: Show OTIF with OT and IF
-                      <>
-                        <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                          {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
-                          <button
-                            onClick={() => setShowOTIFDrawer(true)}
-                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                            title="Click for detailed breakdown"
-                          >
-                            <Info size={28} className="text-blue-600" />
-                            <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                              Click for detailed breakdown
-                            </span>
-                          </button>
-                        </h2>
-                        {/* OT and IF as subheader */}
-                        <p className="text-gray-600 mt-2 text-lg">
-                          {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
-                          {' '}<span className="text-gray-400">|</span>{' '}
-                          {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
-                        </p>
-                        <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
-                      </>
-                    ) : (
-                      // Other Modules: Show module-specific metric
-                      <>
-                        <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                          {moduleDisplayName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}: <span className={getOTIFColorByPercentage(moduleCurrentValue).textColor}>{moduleCurrentValue}%</span>
-                          <button
-                            onClick={() => setShowOTIFDrawer(true)}
-                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                            title="Click for detailed breakdown"
-                          >
-                            <Info size={28} className="text-blue-600" />
-                            <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                              Click for detailed breakdown
-                            </span>
-                          </button>
-                        </h2>
-                        <p className="text-gray-500 mt-1 text-sm">{t('landing.departmentPerformance')}</p>
-                      </>
-                    )}
-                  </div>
-                )}
+                  <button
+                    onClick={() => setShowPerformanceDrawer(true)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Info size={24} className="text-gray-400" />
+                  </button>
+                </div>
+              </div>
 
-                {/* Right Side - Conditional based on role */}
-                {userRole === USER_ROLES.MANAGEMENT ? (
-                  // Management User: Show OTIF or Module-specific metric on right
+              {/* OTIF Card - Beige Background */}
+              <div className="bg-[#FFF4E6] rounded-xl p-6 shadow-sm border border-orange-200">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">OTIF</h3>
+                <div className="flex items-start justify-between">
                   <div>
-                    {isOTIFModule ? (
-                      // OTIF Module: Show OTIF with OT, IF, gap and root causes
-                      <>
-                        <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                          {t('landing.otif')}: <span className={getOTIFColorByPercentage(overallOTIF).textColor}>{overallOTIF}%</span>
-                          <button
-                            onClick={() => setShowOTIFDrawer(true)}
-                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                            title="Click for detailed breakdown"
-                          >
-                            <Info size={28} className="text-blue-600" />
-                            <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                              Click for detailed breakdown
-                            </span>
-                          </button>
-                        </h2>
-                        {/* Gap Indicator - Below header */}
-                        <div className="mt-1">
-                          <span className="text-orange-700 font-semibold text-xs">16% lower goal</span>
-                        </div>
-                        <p className="text-gray-600 mt-2 text-lg">
-                          {t('landing.ot')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallOT).textColor}`}>{overallOT}%</span>
-                          {' '}<span className="text-gray-400">|</span>{' '}
-                          {t('landing.if')}: <span className={`font-semibold ${getOTIFColorByPercentage(overallIF).textColor}`}>{overallIF}%</span>
-                        </p>
-                        {/* Root Causes Link - Inline */}
-                        <button
-                          onClick={() => setShowRootCauses('otif')}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
-                        >
-                          <AlertCircle size={14} />
-                          <span className="font-semibold">4 Root Causes</span>
-                          <ChevronRight size={14} />
-                        </button>
-                      </>
-                    ) : (
-                      // Other Modules: Show module-specific metric
-                      <>
-                        <h2 className="text-5xl font-bold text-gray-800 flex items-center gap-3">
-                          {moduleDisplayName.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}: <span className={getOTIFColorByPercentage(moduleCurrentValue).textColor}>{moduleCurrentValue}%</span>
-                          <button
-                            onClick={() => setShowOTIFDrawer(true)}
-                            className="p-2 hover:bg-blue-100 rounded-lg transition-colors group relative"
-                            title="Click for detailed breakdown"
-                          >
-                            <Info size={28} className="text-blue-600" />
-                            <span className="absolute hidden group-hover:block bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded whitespace-nowrap">
-                              Click for detailed breakdown
-                            </span>
-                          </button>
-                        </h2>
-                        {/* Root Causes Link - Inline */}
-                        <button
-                          onClick={() => setShowRootCauses(selectedModule)}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm mt-1"
-                        >
-                          <AlertCircle size={14} />
-                          <span className="font-semibold">4 Root Causes</span>
-                          <ChevronRight size={14} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  // Admin User: Show Performance Index button on right
-                  <div className="text-right">
-                    <button
-                      onClick={() => setShowPerformanceDrawer(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
-                    >
-                      <TrendingUp size={20} />
-                      <span className="font-semibold">Performance Index</span>
-                    </button>
-                    <div className="text-sm text-gray-600 mt-2">
-                      Current Score: <span className="font-semibold text-green-600">{overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}</span>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-5xl font-bold text-[#F97316]">
+                        {overallOTIF}%
+                      </span>
+                      <span className="bg-orange-200 text-orange-800 text-xs font-semibold px-3 py-1 rounded-full">
+                        5% lower than
+                      </span>
                     </div>
+                    <p className="text-sm text-gray-700 mt-3">
+                      OT: <span className="font-semibold text-gray-800">{overallOT}%</span> |
+                      IF: <span className="font-semibold text-gray-800">{overallIF}%</span>
+                    </p>
+                    <button
+                      onClick={() => setShowRootCauses('otif')}
+                      className="flex items-center gap-1 text-[#F97316] hover:text-orange-700 text-sm mt-3 font-medium"
+                    >
+                      <AlertCircle size={16} />
+                      <span>3 Root Causes</span>
+                      <ChevronRight size={16} />
+                    </button>
                   </div>
-                )}
+                  <button
+                    onClick={() => setShowOTIFDrawer(true)}
+                    className="p-2 hover:bg-orange-100 rounded-lg transition-colors"
+                  >
+                    <Info size={24} className="text-orange-400" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -773,166 +538,9 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-      {/* Vertical Navigation Sidebar */}
-      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-40 hidden lg:block">
-        <div className="bg-white rounded-2xl shadow-xl border-2 border-blue-200 p-3 space-y-2">
-          {/* Performance/OTIF */}
-          <button
-            onClick={() => scrollToSection('performance')}
-            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'performance'
-              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-110'
-              : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:scale-105'
-              }`}
-            title="Performance Index"
-          >
-            <TrendingUp size={24} className={activeSection === 'performance' ? 'animate-pulse' : ''} />
-            <span className="text-[9px] font-semibold mt-0.5">Index</span>
-
-            {/* Tooltip */}
-            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Performance Index
-            </span>
-          </button>
-
-          {/* Supply & Demand */}
-          <button
-            onClick={() => scrollToSection('supplyDemand')}
-            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'supplyDemand'
-              ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg scale-110'
-              : 'bg-slate-50 text-slate-600 hover:bg-purple-50 hover:text-purple-600 hover:scale-105'
-              }`}
-            title="Supply & Demand"
-          >
-            <Activity size={24} className={activeSection === 'supplyDemand' ? 'animate-pulse' : ''} />
-            <span className="text-[9px] font-semibold mt-0.5">Flow</span>
-
-            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Supply & Demand
-            </span>
-          </button>
-
-          {/* Departments */}
-          <button
-            onClick={() => scrollToSection('departments')}
-            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'departments'
-              ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg scale-110'
-              : 'bg-slate-50 text-slate-600 hover:bg-green-50 hover:text-green-600 hover:scale-105'
-              }`}
-            title="Departments"
-          >
-            <Building2 size={24} className={activeSection === 'departments' ? 'animate-pulse' : ''} />
-            <span className="text-[9px] font-semibold mt-0.5">Depts</span>
-
-            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Departments
-            </span>
-          </button>
-
-          {/* Decision Actions */}
-          <button
-            onClick={() => scrollToSection('decisions')}
-            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'decisions'
-              ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg scale-110'
-              : 'bg-slate-50 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:scale-105'
-              }`}
-            title="Decision Actions"
-          >
-            <AlertTriangle size={24} className={activeSection === 'decisions' ? 'animate-pulse' : ''} />
-            <span className="text-[9px] font-semibold mt-0.5">Actions</span>
-
-            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Decision Actions
-            </span>
-          </button>
-
-          {/* Forecast */}
-          <button
-            onClick={() => scrollToSection('forecast')}
-            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'forecast'
-              ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg scale-110'
-              : 'bg-slate-50 text-slate-600 hover:bg-orange-50 hover:text-orange-600 hover:scale-105'
-              }`}
-            title="Forecast"
-          >
-            <BarChart3 size={24} className={activeSection === 'forecast' ? 'animate-pulse' : ''} />
-            <span className="text-[9px] font-semibold mt-0.5">Forecast</span>
-
-            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              Forecast
-            </span>
-          </button>
-
-          {/* KPIs */}
-          <button
-            onClick={() => scrollToSection('kpis')}
-            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'kpis'
-              ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg scale-110'
-              : 'bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:scale-105'
-              }`}
-            title="KPIs"
-          >
-            <PieChart size={24} className={activeSection === 'kpis' ? 'animate-pulse' : ''} />
-            <span className="text-[9px] font-semibold mt-0.5">KPIs</span>
-
-            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              KPI Dashboard
-            </span>
-          </button>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-[#F8F9FA]">
       {/* Main Content Container */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-
-        {/* Prominent Search Bar */}
-        <div className="mb-12">
-          <div className="relative">
-            <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400" size={28} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onKeyPress={handleSearchKeyPress}
-              onFocus={() => setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              placeholder={t('search.placeholder')}
-              className="w-full pl-16 pr-20 py-6 text-xl border-2 border-blue-300 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 shadow-lg bg-white transition-all"
-            />
-
-            {/* Voice Search Button */}
-            <button
-              onClick={toggleVoiceSearch}
-              className={`absolute right-5 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all ${isListening
-                ? 'bg-red-500 text-white animate-pulse'
-                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                }`}
-              title={isListening ? 'Stop listening' : 'Start voice search'}
-            >
-              {isListening ? <MicOff size={24} /> : <Mic size={24} />}
-            </button>
-
-            {/* Auto-suggestions Dropdown */}
-            {showSuggestions && filteredSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-80 overflow-y-auto">
-                {filteredSuggestions.map((suggestion, index) => (
-                  <div
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="px-5 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-800 font-medium">{suggestion.text}</span>
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                        {suggestion.category}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Render components in template-specified order */}
         {templateConfig.componentOrder.map((componentKey) => renderComponent(componentKey))}
@@ -1086,6 +694,6 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       />
     </div >
   );
-};
+});
 
 export default LandingPage;
