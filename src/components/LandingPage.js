@@ -1,11 +1,12 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search, ExternalLink, Mic, MicOff, X, ChevronRight, Info,
   Heart, Activity, Bed, Users, Truck, Stethoscope, Pill,
   FlaskConical, Syringe, Thermometer, ClipboardList, Building2, TrendingUp,
-  ArrowDown, ArrowUp, AlertCircle
+  ArrowDown, ArrowUp, AlertCircle, AlertTriangle, BarChart3, PieChart
 } from 'lucide-react';
+import { dashboardTemplates } from '../config/dashboardTemplates';
 import {
   overallOTIF as mockOverallOTIF,
   otifDepartments as mockOtifDepartments,
@@ -91,6 +92,18 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const recognitionRef = useRef(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(
+    () => localStorage.getItem('dashboardTemplate') || 'default'
+  );
+  const [activeSection, setActiveSection] = useState('performance');
+
+  // Refs for sections
+  const performanceRef = useRef(null);
+  const supplyDemandRef = useRef(null);
+  const departmentsRef = useRef(null);
+  const decisionsRef = useRef(null);
+  const forecastRef = useRef(null);
+  const kpisRef = useRef(null);
 
   // Get user role
   const userRole = getUserRole(currentUser?.email);
@@ -321,6 +334,24 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
     }
   };
 
+  // Scroll to section handler
+  const scrollToSection = (sectionId) => {
+    const sectionRefs = {
+      performance: performanceRef,
+      supplyDemand: supplyDemandRef,
+      departments: departmentsRef,
+      decisions: decisionsRef,
+      forecast: forecastRef,
+      kpis: kpisRef
+    };
+
+    const ref = sectionRefs[sectionId];
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveSection(sectionId);
+    }
+  };
+
   // Create component mapping for template-based rendering
   const componentMapping = useMemo(() => {
     return {
@@ -341,7 +372,7 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       case 'performanceOtif':
         // Performance/OTIF Section (originally at line 397-518)
         return (
-          <div key={key} className="mb-16">
+          <div key={key} className="mb-16" ref={performanceRef}>
             {/* OTIF/Performance Index Header */}
             <div className="mb-8">
               <div className="flex items-start justify-between">
@@ -522,7 +553,7 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       case 'supplyDemand':
         // Supply & Demand Flow (originally at line 520)
         return (
-          <div key={key} className="mb-16">
+          <div key={key} className="mb-16" ref={supplyDemandRef}>
             <ChordDiagram selectedModule={selectedModule} />
           </div>
         );
@@ -530,7 +561,7 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       case 'departments':
         // Department Cards Section
         return (
-          <div key={key} className="mb-16">
+          <div key={key} className="mb-16" ref={departmentsRef}>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
               {otifDepartments.map((dept) => {
                 // Special grey styling for Lab and Radiology
@@ -622,7 +653,7 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       case 'decisions':
         // Decision Actions Section
         return (
-          <div key={key} className="mb-16">
+          <div key={key} className="mb-16" ref={decisionsRef}>
             {/* Action Header */}
             <div className="mb-8">
               <h2 className="text-5xl font-bold text-gray-800">
@@ -674,7 +705,7 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       case 'forecast':
         // Forecast Section
         return (
-          <div key={key} className="mb-12">
+          <div key={key} className="mb-12" ref={forecastRef}>
             {/* Forecast Header */}
             <div className="mb-8">
               <h2 className="text-5xl font-bold text-gray-800">
@@ -731,7 +762,7 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
       case 'kpis':
         // KPI Dashboard (originally at line 715)
         return (
-          <div key={key}>
+          <div key={key} ref={kpisRef}>
             <KPIDashboard onNavigate={onNavigate} selectedModule={selectedModule} />
           </div>
         );
@@ -743,6 +774,114 @@ const LandingPage = ({ currentUser, onNavigate, selectedModule = 'otif' }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+      {/* Vertical Navigation Sidebar */}
+      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-40 hidden lg:block">
+        <div className="bg-white rounded-2xl shadow-xl border-2 border-blue-200 p-3 space-y-2">
+          {/* Performance/OTIF */}
+          <button
+            onClick={() => scrollToSection('performance')}
+            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'performance'
+              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-110'
+              : 'bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:scale-105'
+              }`}
+            title="Performance Index"
+          >
+            <TrendingUp size={24} className={activeSection === 'performance' ? 'animate-pulse' : ''} />
+            <span className="text-[9px] font-semibold mt-0.5">Index</span>
+
+            {/* Tooltip */}
+            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Performance Index
+            </span>
+          </button>
+
+          {/* Supply & Demand */}
+          <button
+            onClick={() => scrollToSection('supplyDemand')}
+            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'supplyDemand'
+              ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg scale-110'
+              : 'bg-slate-50 text-slate-600 hover:bg-purple-50 hover:text-purple-600 hover:scale-105'
+              }`}
+            title="Supply & Demand"
+          >
+            <Activity size={24} className={activeSection === 'supplyDemand' ? 'animate-pulse' : ''} />
+            <span className="text-[9px] font-semibold mt-0.5">Flow</span>
+
+            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Supply & Demand
+            </span>
+          </button>
+
+          {/* Departments */}
+          <button
+            onClick={() => scrollToSection('departments')}
+            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'departments'
+              ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg scale-110'
+              : 'bg-slate-50 text-slate-600 hover:bg-green-50 hover:text-green-600 hover:scale-105'
+              }`}
+            title="Departments"
+          >
+            <Building2 size={24} className={activeSection === 'departments' ? 'animate-pulse' : ''} />
+            <span className="text-[9px] font-semibold mt-0.5">Depts</span>
+
+            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Departments
+            </span>
+          </button>
+
+          {/* Decision Actions */}
+          <button
+            onClick={() => scrollToSection('decisions')}
+            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'decisions'
+              ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg scale-110'
+              : 'bg-slate-50 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:scale-105'
+              }`}
+            title="Decision Actions"
+          >
+            <AlertTriangle size={24} className={activeSection === 'decisions' ? 'animate-pulse' : ''} />
+            <span className="text-[9px] font-semibold mt-0.5">Actions</span>
+
+            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Decision Actions
+            </span>
+          </button>
+
+          {/* Forecast */}
+          <button
+            onClick={() => scrollToSection('forecast')}
+            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'forecast'
+              ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg scale-110'
+              : 'bg-slate-50 text-slate-600 hover:bg-orange-50 hover:text-orange-600 hover:scale-105'
+              }`}
+            title="Forecast"
+          >
+            <BarChart3 size={24} className={activeSection === 'forecast' ? 'animate-pulse' : ''} />
+            <span className="text-[9px] font-semibold mt-0.5">Forecast</span>
+
+            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              Forecast
+            </span>
+          </button>
+
+          {/* KPIs */}
+          <button
+            onClick={() => scrollToSection('kpis')}
+            className={`group relative flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${activeSection === 'kpis'
+              ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-lg scale-110'
+              : 'bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:scale-105'
+              }`}
+            title="KPIs"
+          >
+            <PieChart size={24} className={activeSection === 'kpis' ? 'animate-pulse' : ''} />
+            <span className="text-[9px] font-semibold mt-0.5">KPIs</span>
+
+            <span className="absolute left-full ml-3 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              KPI Dashboard
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Main Content Container */}
       <div className="max-w-7xl mx-auto px-6 py-8">
 
