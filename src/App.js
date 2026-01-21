@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import './i18n'; // Initialize i18n
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
-import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import GlobalSearchBar from './components/Layout/GlobalSearchBar';
 import NotificationPanel from './components/Layout/NotificationPanel';
@@ -364,17 +363,6 @@ function App() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header
-          currentUser={currentUser}
-          unreadCount={notifications.filter(n => !n.read).length}
-          onUploadClick={() => setIsUploadOpen(true)}
-          onNotificationClick={() => setIsNotificationOpen(true)}
-          onSupplierReportClick={handleNavigateToSupplierReport}
-          onLogout={handleLogout}
-          onModuleChange={handleModuleChange}
-          selectedModule={selectedModule}
-        />
-
         {/* Global Search Bar - Fixed */}
         <GlobalSearchBar
           onNavigate={handleLandingPageNavigate}
@@ -384,6 +372,8 @@ function App() {
             decisionActions: []
           }}
           onActionSelect={handleActionSelect}
+          onLogout={handleLogout}
+          currentUser={currentUser}
         />
 
         <div className="flex-1 overflow-y-auto">

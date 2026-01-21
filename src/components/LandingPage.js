@@ -243,73 +243,77 @@ const LandingPage = forwardRef(({
             {/* Performance Metrics Cards - Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* Performance Index Card - White Background */}
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">Performance Index</h3>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-5xl font-bold text-[#10B981]">
-                        {overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}
-                      </span>
-                      <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">
-                        Down 18%
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-3">
-                      If Achieved: <span className="font-semibold text-gray-800">42.15</span> |
-                      If Missed: <span className="font-semibold text-gray-800">177.1</span>
-                    </p>
-                    <button
-                      onClick={() => setShowRootCauses('performance')}
-                      className="flex items-center gap-1 text-[#3B82F6] hover:text-blue-700 text-sm mt-3 font-medium"
-                    >
-                      <AlertCircle size={16} />
-                      <span>3 Root Causes</span>
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
+              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                {/* Single line with all main elements */}
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                    Performance Index
+                  </h3>
+                  <span className="text-3xl font-bold text-[#10B981]">
+                    {overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}
+                  </span>
+                  <span className="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded whitespace-nowrap">
+                    Down: 18% ↓
+                  </span>
                   <button
                     onClick={() => setShowPerformanceDrawer(true)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="ml-auto p-1 hover:bg-gray-50 rounded transition-colors"
                   >
-                    <Info size={24} className="text-gray-400" />
+                    <Info size={18} className="text-gray-400" />
                   </button>
                 </div>
+
+                {/* Secondary info */}
+                <p className="text-xs text-gray-500 mt-1.5">
+                  If Achieved: <span className="font-semibold text-gray-700">79.32</span> |
+                  If Missed: <span className="font-semibold text-gray-700">77.71</span>
+                </p>
+
+                {/* Root Causes - smaller, simpler */}
+                <button
+                  onClick={() => setShowRootCauses('performance')}
+                  className="text-[#3B82F6] hover:text-blue-700 text-xs mt-1.5 flex items-center gap-0.5"
+                >
+                  <AlertCircle size={12} />
+                  <span>3 Root Causes</span>
+                </button>
               </div>
 
               {/* OTIF Card - Beige Background */}
-              <div className="bg-[#FFF4E6] rounded-xl p-6 shadow-sm border border-orange-200">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">OTIF</h3>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-5xl font-bold text-[#F97316]">
-                        {overallOTIF}%
-                      </span>
-                      <span className="bg-orange-200 text-orange-800 text-xs font-semibold px-3 py-1 rounded-full">
-                        5% lower than
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 mt-3">
-                      OT: <span className="font-semibold text-gray-800">{overallOT}%</span> |
-                      IF: <span className="font-semibold text-gray-800">{overallIF}%</span>
-                    </p>
-                    <button
-                      onClick={() => setShowRootCauses('otif')}
-                      className="flex items-center gap-1 text-[#F97316] hover:text-orange-700 text-sm mt-3 font-medium"
-                    >
-                      <AlertCircle size={16} />
-                      <span>3 Root Causes</span>
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
+              <div className="bg-[#FFF4E6] rounded-lg p-3 shadow-sm border border-orange-100">
+                {/* Single line with all main elements */}
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                    OTIF
+                  </h3>
+                  <span className="text-3xl font-bold text-[#F97316]">
+                    {overallOTIF}%
+                  </span>
+                  <span className="bg-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded whitespace-nowrap">
+                    16% lower goal
+                  </span>
                   <button
                     onClick={() => setShowOTIFDrawer(true)}
-                    className="p-2 hover:bg-orange-100 rounded-lg transition-colors"
+                    className="ml-auto p-1 hover:bg-orange-50 rounded transition-colors"
                   >
-                    <Info size={24} className="text-orange-400" />
+                    <Info size={18} className="text-orange-400" />
                   </button>
                 </div>
+
+                {/* Secondary info */}
+                <p className="text-xs text-gray-600 mt-1.5">
+                  OT: <span className="font-semibold text-gray-700">{overallOT}%</span> |
+                  IF: <span className="font-semibold text-gray-700">{overallIF}%</span>
+                </p>
+
+                {/* Root Causes - smaller, simpler */}
+                <button
+                  onClick={() => setShowRootCauses('otif')}
+                  className="text-[#F97316] hover:text-orange-700 text-xs mt-1.5 flex items-center gap-0.5"
+                >
+                  <AlertCircle size={12} />
+                  <span>3 Root Causes</span>
+                </button>
               </div>
             </div>
           </div>

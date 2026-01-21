@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Mic, MicOff } from 'lucide-react';
+import { Search, Mic, MicOff, LogOut } from 'lucide-react';
 import { searchSuggestions } from '../../data/landingPageData';
 import { parseSearchQuery } from '../../utils/searchParser';
 
 const GlobalSearchBar = ({
     onNavigate,
     dashboardData = { departments: [], forecastAreas: [], decisionActions: [] },
-    onActionSelect
+    onActionSelect,
+    onLogout,
+    currentUser
 }) => {
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
@@ -157,8 +159,9 @@ const GlobalSearchBar = ({
 
     return (
         <div className="bg-white border-b border-gray-200 px-6 py-4">
-            <div className="max-w-7xl mx-auto">
-                <div className="relative">
+            <div className="max-w-7xl mx-auto flex items-center gap-4">
+                {/* Search Bar Container */}
+                <div className="flex-1 relative">
                     <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400" size={24} />
                     <input
                         type="text"
@@ -175,8 +178,8 @@ const GlobalSearchBar = ({
                     <button
                         onClick={toggleVoiceSearch}
                         className={`absolute right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all ${isListening
-                                ? 'bg-red-500 text-white animate-pulse'
-                                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                            ? 'bg-red-500 text-white animate-pulse'
+                            : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
                             }`}
                         title={isListening ? 'Stop listening' : 'Start voice search'}
                     >
@@ -203,6 +206,15 @@ const GlobalSearchBar = ({
                         </div>
                     )}
                 </div>
+
+                {/* Logout Button */}
+                <button
+                    onClick={onLogout}
+                    className="flex items-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                    title="Logout"
+                >
+                    <LogOut size={20} />
+                </button>
             </div>
         </div>
     );
