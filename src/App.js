@@ -41,6 +41,7 @@ function App() {
   const [toasts, setToasts] = useState([]);
   const [selectedActionForModal, setSelectedActionForModal] = useState(null);
   const landingPageRef = useRef(null);
+  const contentAreaRef = useRef(null); // Ref for scrollable content area
 
   // Check authentication on mount
   useEffect(() => {
@@ -75,6 +76,13 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [isAuthenticated]);
+
+  // Reset scroll position when navigating to different screens
+  useEffect(() => {
+    if (contentAreaRef.current) {
+      contentAreaRef.current.scrollTop = 0;
+    }
+  }, [currentScreen]);
 
   const loginToasts = [
     { id: 1, type: 'critical', title: 'Critical Stockout Alert', message: '35 products are currently stocked out', duration: 5000 },
@@ -365,7 +373,7 @@ function App() {
           currentUser={currentUser}
         />
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" ref={contentAreaRef}>
           {/* Render different screens based on currentScreen */}
           {currentScreen === 'dashboard' && (
             <LandingPage
@@ -397,7 +405,10 @@ function App() {
 
           {currentScreen === 'decision-actions' && (
             <DecisionActionsScreen
-              selectedAction={selectedAction}
+              actionType={selectedAction}
+              mainAction={selectedAction?.mainAction}
+              subAction={selectedAction?.subAction}
+              selectedModule={selectedModule}
               onBack={handleBackToDashboard}
             />
           )}
