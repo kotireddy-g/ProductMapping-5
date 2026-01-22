@@ -35,9 +35,9 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
 
   const handleFiles = (files) => {
     // Filter for Excel files
-    const excelFiles = files.filter(file => 
-      file.name.endsWith('.xlsx') || 
-      file.name.endsWith('.xls') || 
+    const excelFiles = files.filter(file =>
+      file.name.endsWith('.xlsx') ||
+      file.name.endsWith('.xls') ||
       file.name.endsWith('.csv')
     );
     setSelectedFiles(excelFiles);
@@ -49,15 +49,15 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
 
   const startUpload = () => {
     if (selectedFiles.length === 0) return;
-    
+
     setIsUploading(true);
     setUploadProgress(0);
-    
+
     // Simulate upload progress over 10 seconds
     const totalDuration = 10000; // 10 seconds in milliseconds
     const interval = 100; // Update every 100ms for smoother progress
     const increment = 100 / (totalDuration / interval);
-    
+
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
         const newProgress = prev + increment;
@@ -122,11 +122,10 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
           {!isUploading && !uploadComplete && (
             <>
               <div
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-                  isDragOver
-                    ? 'border-blue-400 bg-blue-50'
+                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${isDragOver
+                    ? 'border-gray-400 bg-gray-50'
                     : 'border-slate-300 hover:border-slate-400'
-                }`}
+                  }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -140,7 +139,7 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
                 </p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Select Files
                 </button>
@@ -185,7 +184,7 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="flex justify-end gap-3 mt-6">
                     <button
                       onClick={handleClose}
@@ -195,7 +194,7 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
                     </button>
                     <button
                       onClick={startUpload}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                     >
                       Upload Files
                     </button>
@@ -207,8 +206,8 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
 
           {isUploading && !uploadComplete && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Upload className="w-8 h-8 text-blue-600" />
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Upload className="w-8 h-8 text-gray-700" />
               </div>
               <h3 className="text-lg font-medium text-slate-700 mb-2">
                 Processing Files...
@@ -216,19 +215,19 @@ const UploadModal = ({ isOpen, onClose, onUploadComplete }) => {
               <p className="text-sm text-slate-500 mb-6">
                 Analyzing data and updating OTIF metrics
               </p>
-              
+
               <div className="w-full bg-slate-200 rounded-full h-3 mb-4">
                 <div
-                  className="bg-blue-600 h-3 rounded-full transition-all duration-1000 ease-out"
+                  className="bg-gray-900 h-3 rounded-full transition-all duration-1000 ease-out"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
-              
+
               <div className="flex justify-between text-sm text-slate-600">
                 <span>{Math.round(uploadProgress)}% complete</span>
                 <span>Est. time remaining: {getEstimatedTime()}</span>
               </div>
-              
+
               <div className="mt-6 text-xs text-slate-500">
                 <p>• Validating data integrity</p>
                 <p>• Updating inventory metrics</p>

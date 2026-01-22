@@ -148,7 +148,7 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
                                         {rec.tags.map((tag, idx) => (
                                             <span
                                                 key={idx}
-                                                className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-semibold"
+                                                className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-semibold"
                                             >
                                                 {tag}
                                             </span>
@@ -176,7 +176,7 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
                                         onClick={() => handleImplementRecommendation(rec.id)}
                                         className={`w-full px-4 py-2 rounded-lg font-semibold transition-colors ${rec.implemented
                                             ? 'bg-green-600 text-white hover:bg-green-700'
-                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            : 'bg-gray-900 text-white hover:bg-gray-800'
                                             }`}
                                     >
                                         {rec.implemented ? '✓ Implemented' : 'Implement Recommendation'}

@@ -83,7 +83,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' 
                     {error && <p className="text-red-600 text-sm mb-4">Error: {error}</p>}
                     <button
                         onClick={onBack}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
                     >
                         Back to Dashboard
                     </button>
@@ -128,7 +128,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' 
                             </div>
 
                             {/* OT Metric */}
-                            <div className="bg-blue-50 border-2 border-blue-300 rounded-lg px-6 py-3">
+                            <div className="bg-gray-50 border-2 border-gray-300 rounded-lg px-6 py-3">
                                 <div className="text-sm text-slate-600 mb-1">OT (On-Time)</div>
                                 <div className="text-3xl font-bold text-blue-700">
                                     {overview?.on_time || overview?.onTime || 0}%
@@ -152,7 +152,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' 
                                     key={period.id}
                                     onClick={() => setSelectedTimePeriod(period.value)}
                                     className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${selectedTimePeriod === period.value
-                                        ? 'bg-blue-600 text-white shadow-md'
+                                        ? 'bg-gray-900 text-white shadow-md'
                                         : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50'
                                         }`}
                                 >

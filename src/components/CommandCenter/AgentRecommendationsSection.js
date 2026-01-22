@@ -81,7 +81,7 @@ const AgentRecommendationsSection = ({ data }) => {
                                 {rec.affected_categories.map((cat, idx) => (
                                     <span
                                         key={idx}
-                                        className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
+                                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full font-medium"
                                     >
                                         {cat}
                                     </span>
@@ -97,7 +97,7 @@ const AgentRecommendationsSection = ({ data }) => {
                                 </div>
                                 <div className="text-xs text-slate-600">Improvement</div>
                             </div>
-                            <div className="bg-blue-50 p-2 rounded text-center">
+                            <div className="bg-gray-50 p-2 rounded text-center">
                                 <div className="font-bold text-blue-700 text-sm">
                                     {rec.implementation_time}
                                 </div>
@@ -114,7 +114,7 @@ const AgentRecommendationsSection = ({ data }) => {
                         {/* Action Button */}
                         <button
                             onClick={() => showToastNotification(rec.title)}
-                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                            className="w-full px-4 py-2 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors shadow-sm"
                         >
                             Implement Recommendation
                         </button>

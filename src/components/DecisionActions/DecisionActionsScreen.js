@@ -301,9 +301,9 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <div className="bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                            <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
                                 <span className="text-sm text-slate-600">Total Items:</span>
-                                <span className="ml-2 text-xl font-bold text-blue-700">{medicineData.length}</span>
+                                <span className="ml-2 text-xl font-bold text-gray-700">{medicineData.length}</span>
                             </div>
                         </div>
                     </div>
@@ -410,7 +410,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                                         <span className="font-mono bg-slate-100 px-2 py-0.5 rounded">Batch: {medicine.batchCode}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2 mt-2">
-                                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                                                        <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold">
                                                             {medicine.velocity}
                                                         </span>
                                                         <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
@@ -446,7 +446,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                             <td className="px-4 py-4">
                                                 <button
                                                     onClick={() => handleViewFlow(medicine)}
-                                                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold text-xs hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
+                                                    className="px-4 py-2 bg-gray-900 text-white rounded-lg font-semibold text-xs hover:bg-gray-800 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
                                                 >
                                                     <Eye size={14} />
                                                     View Flow
@@ -512,7 +512,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                                         setSelectedMedicineVendors({ medicine, vendors: medicine.vendors || [] });
                                                         setShowVendorModal(true);
                                                     }}
-                                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-colors cursor-pointer shadow-md hover:shadow-lg"
+                                                    className="px-3 py-1.5 bg-gray-900 text-white rounded-full font-bold text-sm hover:bg-gray-800 transition-colors cursor-pointer shadow-md hover:shadow-lg"
                                                 >
                                                     {medicine.vendorCount || 0}
                                                 </button>

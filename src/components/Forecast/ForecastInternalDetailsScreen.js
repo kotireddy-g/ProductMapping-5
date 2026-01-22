@@ -216,8 +216,8 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                     key={period}
                                     onClick={() => setSelectedPeriod(period)}
                                     className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${selectedPeriod === period
-                                        ? 'bg-blue-600 text-white shadow-md'
-                                        : 'bg-white text-slate-700 border border-slate-300 hover:border-blue-500'
+                                        ? 'bg-gray-900 text-white shadow-md'
+                                        : 'bg-white text-slate-700 border border-slate-300 hover:border-gray-500'
                                         }`}
                                 >
                                     {period}
@@ -319,7 +319,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                                         setSelectedDepartment(dept);
                                                         setShowMedicineModal(true);
                                                     }}
-                                                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-1.5 mx-auto"
+                                                    className="px-3 py-1.5 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-1.5 mx-auto"
                                                 >
                                                     <Eye size={16} />
                                                     View
@@ -329,7 +329,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => showToastNotification(`✓ Order placed for ${dept.name}`)}
-                                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+                                                        className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
                                                     >
                                                         Order
                                                     </button>

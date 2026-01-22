@@ -331,19 +331,7 @@ function App() {
 
 
 
-  if (currentScreen === 'forecast-internal-details') {
-    return (
-      <>
-        <ForecastInternalDetailsScreen
-          forecastData={selectedForecastData}
-          selectedForecastArea={selectedForecastData?.areaName || 'ICU'}
-          onBack={handleBackToDashboard}
-          selectedModule={selectedModule}
-        />
-        <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
-      </>
-    );
-  }
+
 
   return (
     <div className="flex h-screen bg-[#F8F9FA] overflow-hidden">
@@ -410,6 +398,15 @@ function App() {
               subAction={selectedAction?.subAction}
               selectedModule={selectedModule}
               onBack={handleBackToDashboard}
+            />
+          )}
+
+          {currentScreen === 'forecast-internal-details' && (
+            <ForecastInternalDetailsScreen
+              forecastData={selectedForecastData}
+              selectedForecastArea={selectedForecastData?.areaName || 'ICU'}
+              onBack={handleBackToDashboard}
+              selectedModule={selectedModule}
             />
           )}
         </div>
