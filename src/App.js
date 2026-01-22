@@ -7,6 +7,7 @@ import GlobalSearchBar from './components/Layout/GlobalSearchBar';
 import NotificationPanel from './components/Layout/NotificationPanel';
 import UploadModal from './components/Layout/UploadModal';
 import ToastNotification from './components/Layout/ToastNotification';
+import TemplateSelectorModal from './components/TemplateSelector/TemplateSelectorModal';
 import LandingPage from './components/LandingPage';
 import ProductJourneyScreen from './components/Dashboard/ProductJourneyScreen';
 import RCARecommendationsPage from './components/RCA/RCARecommendationsPage';
@@ -37,6 +38,10 @@ function App() {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [currentTemplate, setCurrentTemplate] = useState(
+    localStorage.getItem('dashboardTemplate') || 'executive'
+  );
 
   const [toasts, setToasts] = useState([]);
   const [selectedActionForModal, setSelectedActionForModal] = useState(null);
@@ -275,6 +280,13 @@ function App() {
     }
   };
 
+  const handleTemplateChange = (templateId) => {
+    setCurrentTemplate(templateId);
+    localStorage.setItem('dashboardTemplate', templateId);
+    // Dispatch custom event for same-tab updates
+    window.dispatchEvent(new CustomEvent('templateChange', { detail: { template: templateId } }));
+  };
+
   const handleActionSelect = (action) => {
     setSelectedActionForModal(action);
   };
@@ -359,6 +371,7 @@ function App() {
         onNavigate={handleNavigation}
         onScrollToSection={handleScrollToSection}
         onNotificationClick={() => setIsNotificationOpen(true)}
+        onTemplateClick={() => setShowTemplateSelector(true)}
         unreadNotificationCount={notifications.filter(n => !n.read).length}
         activeSection={activeSection}
       />
@@ -446,6 +459,13 @@ function App() {
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onUploadComplete={handleUploadComplete}
+      />
+
+      <TemplateSelectorModal
+        isOpen={showTemplateSelector}
+        onClose={() => setShowTemplateSelector(false)}
+        currentTemplate={currentTemplate}
+        onTemplateChange={handleTemplateChange}
       />
 
       <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />

@@ -27,6 +27,7 @@ const Sidebar = ({
     onNavigate,
     onScrollToSection,
     onNotificationClick,
+    onTemplateClick,
     unreadNotificationCount = 0,
     activeSection = 'top' // Track which section is active
 }) => {
@@ -239,7 +240,10 @@ const Sidebar = ({
                 </button>
 
                 {/* Template */}
-                <button className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-left">
+                <button
+                    onClick={() => onTemplateClick && onTemplateClick()}
+                    className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                >
                     <FileText size={18} />
                     <span className="text-sm font-medium">Template</span>
                 </button>

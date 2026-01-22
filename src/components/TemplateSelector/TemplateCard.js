@@ -7,11 +7,11 @@ const TemplateCard = ({ template, isActive, onApply }) => {
             className={`
         border-2 rounded-xl overflow-hidden transition-all
         hover:shadow-2xl hover:-translate-y-1 duration-200
-        ${isActive ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}
+        ${isActive ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-300'}
       `}
         >
             {/* Card Header */}
-            <div className={`px-6 py-4 ${isActive ? 'bg-blue-100' : 'bg-gray-50'}`}>
+            <div className={`px-6 py-4 ${isActive ? 'bg-gray-100' : 'bg-gray-50'}`}>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <span className="text-3xl">{template.icon}</span>
@@ -21,7 +21,7 @@ const TemplateCard = ({ template, isActive, onApply }) => {
                         </div>
                     </div>
                     {isActive && (
-                        <span className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
+                        <span className="px-3 py-1 bg-black text-white text-xs font-bold rounded-full">
                             ACTIVE
                         </span>
                     )}
@@ -42,7 +42,7 @@ const TemplateCard = ({ template, isActive, onApply }) => {
             w-full py-3 rounded-lg font-semibold transition-colors
             ${isActive
                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-gray-900 text-white hover:bg-gray-800'
                         }
           `}
                 >

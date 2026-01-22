@@ -27,20 +27,20 @@ const TemplateSelectorModal = ({ isOpen, onClose, currentTemplate, onTemplateCha
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
-                <div className="px-8 py-6 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 flex-shrink-0">
+                <div className="px-8 py-6 bg-gradient-to-r from-gray-900 to-black border-b border-gray-800 flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-3xl font-bold text-white flex items-center gap-3">
                                 <Layout size={32} />
                                 Choose Your Dashboard Layout
                             </h2>
-                            <p className="text-blue-100 mt-2">
+                            <p className="text-gray-200 mt-2">
                                 Select a template that best fits your workflow and preferences
                             </p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 hover:bg-blue-800 rounded-lg transition-colors"
+                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
                         >
                             <X size={28} className="text-white" />
                         </button>

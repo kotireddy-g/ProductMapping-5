@@ -12,10 +12,10 @@ const TemplatePreview = ({ layout }) => {
                 return widgets.map(widget => (
                     <div
                         key={`${rowKey}-${widget}`}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200"
+                        className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200"
                     >
                         {/* Number Badge */}
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm">
                             {index + 1}
                         </div>
 

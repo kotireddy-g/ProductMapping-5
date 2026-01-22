@@ -116,8 +116,25 @@ const LandingPage = forwardRef(({
   const overallOT = overviewData?.overallOT || 95.0;
   const overallIF = overviewData?.overallIF || 95.0;
 
+  // Module mapping - same as Sidebar.js
+  const moduleMap = {
+    'otif': 'OTIF',
+    'staff-allocation': 'Staff Allocation',
+    'customer-satisfaction': 'Customer Satisfaction',
+    'resource-utilization': 'Resource Utilization',
+    'order-management': 'Order Management',
+    'bed-management': 'Bed Management'
+  };
+
+  // Function to get display name from module ID
+  const getModuleDisplayName = (moduleId) => {
+    return moduleMap[moduleId] || 'OTIF';
+  };
+
   // Module-specific metrics
-  const moduleDisplayName = overviewData?.displayName || 'OTIF';
+  // If API returns module ID in displayName, map it to proper display name
+  const apiDisplayName = overviewData?.displayName || 'OTIF';
+  const moduleDisplayName = getModuleDisplayName(apiDisplayName.toLowerCase());
   const moduleCurrentValue = overviewData?.currentValue || overallOTIF;
   const isOTIFModule = selectedModule === 'otif';
 
@@ -279,15 +296,15 @@ const LandingPage = forwardRef(({
                 </button>
               </div>
 
-              {/* OTIF Card - Beige Background */}
+              {/* Module Card - Beige Background (Dynamic based on selected module) */}
               <div className="bg-[#FFF4E6] rounded-lg p-3 shadow-sm border border-orange-100">
                 {/* Single line with all main elements */}
                 <div className="flex items-center gap-3">
                   <h3 className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-                    OTIF
+                    {moduleDisplayName}
                   </h3>
                   <span className="text-3xl font-bold text-[#F97316]">
-                    {overallOTIF}%
+                    {moduleCurrentValue}%
                   </span>
                   <span className="bg-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded whitespace-nowrap">
                     16% lower goal
@@ -300,20 +317,24 @@ const LandingPage = forwardRef(({
                   </button>
                 </div>
 
-                {/* Secondary info */}
-                <p className="text-xs text-gray-600 mt-1.5">
-                  OT: <span className="font-semibold text-gray-700">{overallOT}%</span> |
-                  IF: <span className="font-semibold text-gray-700">{overallIF}%</span>
-                </p>
+                {/* Secondary info - Only show for OTIF module */}
+                {isOTIFModule && (
+                  <p className="text-xs text-gray-600 mt-1.5">
+                    OT: <span className="font-semibold text-gray-700">{overallOT}%</span> |
+                    IF: <span className="font-semibold text-gray-700">{overallIF}%</span>
+                  </p>
+                )}
 
-                {/* Root Causes - smaller, simpler */}
-                <button
-                  onClick={() => setShowRootCauses('otif')}
-                  className="text-[#F97316] hover:text-orange-700 text-xs mt-1.5 flex items-center gap-0.5"
-                >
-                  <AlertCircle size={12} />
-                  <span>3 Root Causes</span>
-                </button>
+                {/* Root Causes - Only show for OTIF module */}
+                {isOTIFModule && (
+                  <button
+                    onClick={() => setShowRootCauses('otif')}
+                    className="text-[#F97316] hover:text-orange-700 text-xs mt-1.5 flex items-center gap-0.5"
+                  >
+                    <AlertCircle size={12} />
+                    <span>3 Root Causes</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
