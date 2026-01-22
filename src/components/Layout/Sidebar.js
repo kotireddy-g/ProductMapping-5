@@ -27,7 +27,8 @@ const Sidebar = ({
     onNavigate,
     onScrollToSection,
     onNotificationClick,
-    unreadNotificationCount = 0
+    unreadNotificationCount = 0,
+    activeSection = 'top' // Track which section is active
 }) => {
     const [expandedSections, setExpandedSections] = useState({
         currentStatus: true,
@@ -83,56 +84,74 @@ const Sidebar = ({
                                 onScrollToSection('top');
                             }
                         }}
-                        className="w-full bg-black text-white rounded-lg px-4 py-2.5 flex items-center justify-between hover:bg-gray-800 transition-colors"
+                        className={`w-full rounded-lg px-4 py-2.5 flex items-center justify-between transition-colors ${activeSection === 'top'
+                            ? 'bg-black text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
                     >
                         <div className="flex items-center gap-2">
                             <LayoutDashboard size={18} />
                             <span className="text-sm font-medium">Current Status</span>
                         </div>
-                        <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded font-semibold">
+                        <span className="bg-orange-500 text-white text-[10px] px-2 py-1 rounded font-semibold whitespace-nowrap">
                             {getModuleDisplayName()}
                         </span>
                     </button>
                 </div>
 
                 {/* New Actions */}
-                <button
-                    onClick={() => {
-                        if (onScrollToSection) {
-                            onScrollToSection('decisions');
-                        }
-                    }}
-                    className="w-full px-4 py-2.5 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-left"
-                >
-                    <Zap size={18} />
-                    <span className="text-sm font-medium">New Actions</span>
-                </button>
+                <div className="px-4 mb-2">
+                    <button
+                        onClick={() => {
+                            if (onScrollToSection) {
+                                onScrollToSection('decisions');
+                            }
+                        }}
+                        className={`w-full px-4 py-2.5 flex items-center gap-2 transition-colors text-left rounded-lg ${activeSection === 'decisions'
+                            ? 'bg-black text-white'
+                            : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                    >
+                        <Zap size={18} />
+                        <span className="text-sm font-medium">New Actions</span>
+                    </button>
+                </div>
 
                 {/* Forecast */}
-                <button
-                    onClick={() => {
-                        if (onScrollToSection) {
-                            onScrollToSection('forecast');
-                        }
-                    }}
-                    className="w-full px-4 py-2.5 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-left"
-                >
-                    <TrendingUp size={18} />
-                    <span className="text-sm font-medium">Forecast</span>
-                </button>
+                <div className="px-4 mb-2">
+                    <button
+                        onClick={() => {
+                            if (onScrollToSection) {
+                                onScrollToSection('forecast');
+                            }
+                        }}
+                        className={`w-full px-4 py-2.5 flex items-center gap-2 transition-colors text-left rounded-lg ${activeSection === 'forecast'
+                            ? 'bg-black text-white'
+                            : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                    >
+                        <TrendingUp size={18} />
+                        <span className="text-sm font-medium">Forecast</span>
+                    </button>
+                </div>
 
                 {/* Objectives */}
-                <button
-                    onClick={() => {
-                        if (onScrollToSection) {
-                            onScrollToSection('kpis');
-                        }
-                    }}
-                    className="w-full px-4 py-2.5 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-left"
-                >
-                    <Target size={18} />
-                    <span className="text-sm font-medium">Objectives</span>
-                </button>
+                <div className="px-4 mb-2">
+                    <button
+                        onClick={() => {
+                            if (onScrollToSection) {
+                                onScrollToSection('kpis');
+                            }
+                        }}
+                        className={`w-full px-4 py-2.5 flex items-center gap-2 transition-colors text-left rounded-lg ${activeSection === 'kpis'
+                            ? 'bg-black text-white'
+                            : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                    >
+                        <Target size={18} />
+                        <span className="text-sm font-medium">Objectives</span>
+                    </button>
+                </div>
 
                 {/* Divider */}
                 <div className="my-4 border-t border-gray-200"></div>
@@ -166,8 +185,8 @@ const Sidebar = ({
                                         key={module.id}
                                         onClick={() => onModuleChange && onModuleChange(module.id)}
                                         className={`w-full px-3 py-2 flex items-center gap-2 transition-colors rounded-lg text-sm ${isActive
-                                                ? 'bg-black text-white font-medium'
-                                                : 'text-gray-700 hover:bg-gray-100'
+                                            ? 'bg-black text-white font-medium'
+                                            : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                     >
                                         <Icon size={16} />

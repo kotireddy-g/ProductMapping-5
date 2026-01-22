@@ -42,6 +42,7 @@ function App() {
   const [selectedActionForModal, setSelectedActionForModal] = useState(null);
   const landingPageRef = useRef(null);
   const contentAreaRef = useRef(null); // Ref for scrollable content area
+  const [activeSection, setActiveSection] = useState('top'); // Track active sidebar section
 
   // Check authentication on mount
   useEffect(() => {
@@ -242,7 +243,22 @@ function App() {
   };
 
   const handleScrollToSection = (sectionId) => {
-    // If user is on a detail page, navigate back to landing page first
+    // Update active section
+    setActiveSection(sectionId);
+
+    // If scrolling to top, scroll the content area to the very top
+    if (sectionId === 'top') {
+      if (contentAreaRef.current) {
+        contentAreaRef.current.scrollTop = 0;
+      }
+      // If on a detail page, also navigate back to landing page
+      if (currentScreen !== 'dashboard') {
+        setCurrentScreen('dashboard');
+      }
+      return;
+    }
+
+    // For other sections, navigate to landing page if needed, then scroll
     if (currentScreen !== 'dashboard') {
       setCurrentScreen('dashboard');
       // Wait for landing page to render, then scroll
@@ -344,6 +360,7 @@ function App() {
         onScrollToSection={handleScrollToSection}
         onNotificationClick={() => setIsNotificationOpen(true)}
         unreadNotificationCount={notifications.filter(n => !n.read).length}
+        activeSection={activeSection}
       />
 
       {/* Main Content Area */}
