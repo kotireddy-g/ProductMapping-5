@@ -179,7 +179,7 @@ const GlobalSearchBar = ({
                         onClick={toggleVoiceSearch}
                         className={`absolute right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all ${isListening
                             ? 'bg-red-500 text-white animate-pulse'
-                            : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                            : 'bg-black text-white hover:bg-gray-800'
                             }`}
                         title={isListening ? 'Stop listening' : 'Start voice search'}
                     >
