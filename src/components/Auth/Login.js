@@ -106,7 +106,7 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0eb698] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
@@ -134,8 +134,8 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your email"
                 />
@@ -160,8 +160,8 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your password"
                 />
@@ -182,7 +182,7 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
             </div>
 
             <div className="flex items-center justify-end">
-              <button type="button" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              <button type="button" className="text-sm text-gray-900 hover:text-black font-medium">
                 Forgot Password?
               </button>
             </div>
@@ -190,7 +190,7 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -213,7 +213,7 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
               Don't have an account?{' '}
               <button
                 onClick={onSwitchToSignup}
-                className="text-blue-600 hover:text-blue-700 font-semibold"
+                className="text-gray-900 hover:text-black font-semibold"
               >
                 Sign up
               </button>

@@ -126,7 +126,7 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0eb698] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
@@ -164,8 +164,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.name}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.name
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your full name"
                 />
@@ -190,8 +190,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your email"
                 />
@@ -216,8 +216,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.department}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.department
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your department (e.g., ICU, Pharmacy)"
                 />
@@ -242,8 +242,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Create a password"
                 />
@@ -275,8 +275,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.confirmPassword
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-slate-200 focus:ring-blue-200 focus:border-blue-500'
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Confirm your password"
                 />
@@ -299,7 +299,7 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed mt-6"
+              className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed mt-6"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -320,7 +320,7 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
               Already have an account?{' '}
               <button
                 onClick={onSwitchToLogin}
-                className="text-blue-600 hover:text-blue-700 font-semibold"
+                className="text-gray-900 hover:text-black font-semibold"
               >
                 Sign in
               </button>
