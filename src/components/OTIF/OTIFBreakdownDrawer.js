@@ -68,7 +68,10 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b-2 border-slate-200 z-10">
                     <div className="px-6 py-4 flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-slate-800">Understanding OTIF Metrics</h2>
+                        <div className="flex items-center gap-3">
+                            <TrendingUp className="w-6 h-6 text-teal-600" />
+                            <h2 className="text-xl font-bold text-slate-800">Understanding OTIF Metrics</h2>
+                        </div>
                         <button
                             onClick={onClose}
                             className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -82,7 +85,7 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                         <button
                             onClick={() => setActiveTab('breakdown')}
                             className={`px-4 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'breakdown'
-                                ? 'border-blue-600 text-blue-600'
+                                ? 'border-teal-600 text-teal-600'
                                 : 'border-transparent text-slate-600 hover:text-slate-800'
                                 }`}
                         >
@@ -91,7 +94,7 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                         <button
                             onClick={() => setActiveTab('rca')}
                             className={`px-4 py-3 font-semibold text-sm transition-colors border-b-2 ${activeTab === 'rca'
-                                ? 'border-blue-600 text-blue-600'
+                                ? 'border-teal-600 text-teal-600'
                                 : 'border-transparent text-slate-600 hover:text-slate-800'
                                 }`}
                         >
@@ -112,20 +115,20 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                             {/* Section 1: Overall Performance */}
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <Package size={20} className="text-blue-600" />
-                                    <h3 className="text-lg font-bold text-slate-800">OVERALL PERFORMANCE</h3>
+                                    <Package size={20} className="text-teal-600" />
+                                    <h3 className="text-lg font-bold text-gray-900">Overall Performance</h3>
                                 </div>
-                                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-2">
+                                <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-slate-700">OTIF:</span>
-                                        <span className="text-2xl font-bold text-amber-600">{otifPct.toFixed(2)}%</span>
+                                        <span className="text-sm font-semibold text-gray-700">OTIF:</span>
+                                        <span className="text-2xl font-bold text-orange-500">{otifPct.toFixed(2)}%</span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-slate-700">On-Time (OT):</span>
+                                        <span className="text-sm font-semibold text-gray-700">On-Time (OT):</span>
                                         <span className="text-xl font-bold text-green-600">{otPct.toFixed(2)}%</span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-slate-700">In-Full (IF):</span>
+                                        <span className="text-sm font-semibold text-gray-700">In-Full (IF):</span>
                                         <span className="text-xl font-bold text-green-600">{ifPct.toFixed(2)}%</span>
                                     </div>
                                 </div>
@@ -134,52 +137,79 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                             {/* Section 2: Breakdown */}
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <TrendingUp size={20} className="text-blue-600" />
-                                    <h3 className="text-lg font-bold text-slate-800">
-                                        BREAKDOWN <span className="text-sm text-slate-600">(Total: {totalOrders.toLocaleString()} Orders)</span>
+                                    <TrendingUp size={20} className="text-teal-600" />
+                                    <h3 className="text-lg font-bold text-gray-900">
+                                        Breakdown <span className="text-sm text-gray-600">(Total: {totalOrders.toLocaleString()} Orders)</span>
                                     </h3>
                                 </div>
                                 <div className="space-y-4">
                                     {/* Perfect Orders (OTIF) */}
-                                    <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+                                    <div className="bg-white border border-gray-200 rounded-xl p-4">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <CheckCircle size={18} className="text-green-600" />
-                                            <span className="font-bold text-slate-800">Perfect Orders (OTIF)</span>
+                                            <CheckCircle size={18} className="text-teal-600" />
+                                            <span className="font-bold text-gray-900">Perfect Orders (OTIF)</span>
                                         </div>
-                                        <ProgressBar
-                                            value={otifPct}
-                                            count={otifOrders}
-                                            label="both on-time AND in-full"
-                                            variant="success"
-                                        />
+                                        <div className="text-xs text-gray-600 mb-2">
+                                            both on-time AND in-full
+                                        </div>
+                                        <div className="text-xs text-gray-600 mb-2">
+                                            {otifOrders.toLocaleString()} orders
+                                        </div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-2xl font-bold text-teal-600">{otifPct.toFixed(1)}%</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-teal-500 rounded-full transition-all duration-500 ease-out"
+                                                style={{ width: `${Math.min(otifPct, 100)}%` }}
+                                            />
+                                        </div>
                                     </div>
 
                                     {/* On-Time Orders */}
-                                    <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                                    <div className="bg-white border border-gray-200 rounded-xl p-4">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <Clock size={18} className="text-blue-600" />
-                                            <span className="font-bold text-slate-800">On-Time Orders</span>
+                                            <Clock size={18} className="text-teal-600" />
+                                            <span className="font-bold text-gray-900">On-Time Orders</span>
                                         </div>
-                                        <ProgressBar
-                                            value={otPct}
-                                            count={onTimeOrders}
-                                            label="delivered by promised date"
-                                            variant="info"
-                                        />
+                                        <div className="text-xs text-gray-600 mb-2">
+                                            delivered by promised date
+                                        </div>
+                                        <div className="text-xs text-gray-600 mb-2">
+                                            {onTimeOrders.toLocaleString()} orders
+                                        </div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-2xl font-bold text-teal-600">{otPct.toFixed(1)}%</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-teal-500 rounded-full transition-all duration-500 ease-out"
+                                                style={{ width: `${Math.min(otPct, 100)}%` }}
+                                            />
+                                        </div>
                                     </div>
 
                                     {/* In-Full Orders */}
-                                    <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-4">
+                                    <div className="bg-white border border-gray-200 rounded-xl p-4">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <Package size={18} className="text-purple-600" />
-                                            <span className="font-bold text-slate-800">In-Full Orders</span>
+                                            <Clock size={18} className="text-teal-600" />
+                                            <span className="font-bold text-gray-900">In-Full Orders</span>
                                         </div>
-                                        <ProgressBar
-                                            value={ifPct}
-                                            count={inFullOrders}
-                                            label="complete quantity delivered"
-                                            variant="secondary"
-                                        />
+                                        <div className="text-xs text-gray-600 mb-2">
+                                            complete quantity delivered
+                                        </div>
+                                        <div className="text-xs text-gray-600 mb-2">
+                                            {inFullOrders.toLocaleString()} orders
+                                        </div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-2xl font-bold text-teal-600">{ifPct.toFixed(1)}%</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-teal-500 rounded-full transition-all duration-500 ease-out"
+                                                style={{ width: `${Math.min(ifPct, 100)}%` }}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -187,10 +217,10 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                             {/* Section 3: Visual Overlap */}
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <Info size={20} className="text-blue-600" />
-                                    <h3 className="text-lg font-bold text-slate-800">VISUAL OVERLAP</h3>
+                                    <Info size={20} className="text-teal-600" />
+                                    <h3 className="text-lg font-bold text-gray-900">Visual Overlap</h3>
                                 </div>
-                                <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-6">
+                                <div className="bg-white border border-gray-200 rounded-xl p-6">
                                     <VennDiagram
                                         totalOrders={totalOrders}
                                         onTimeOrders={onTimeOrders}
@@ -203,32 +233,32 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                             {/* Section 4: Gap Analysis */}
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <AlertTriangle size={20} className="text-amber-600" />
-                                    <h3 className="text-lg font-bold text-slate-800">GAP ANALYSIS</h3>
+                                    <TrendingUp size={20} className="text-teal-600" />
+                                    <h3 className="text-lg font-bold text-gray-900">Gap Analysis</h3>
                                 </div>
                                 <div className="space-y-3">
-                                    <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
+                                    <div className="bg-white border border-gray-200 rounded-xl p-4">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm font-semibold text-slate-700">On-Time but NOT In-Full</span>
-                                            <span className="text-lg font-bold text-amber-700">{onTimeButNotInFull}</span>
+                                            <span className="text-sm font-semibold text-gray-900">On-Time but NOT In-Full</span>
+                                            <span className="text-2xl font-bold text-orange-600">{onTimeButNotInFull}</span>
                                         </div>
-                                        <p className="text-xs text-slate-600">Delivered on time but quantity was short</p>
+                                        <p className="text-xs text-gray-600">Delivered on time but quantity was short</p>
                                     </div>
 
-                                    <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
+                                    <div className="bg-white border border-gray-200 rounded-xl p-4">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm font-semibold text-slate-700">In-Full but NOT On-Time</span>
-                                            <span className="text-lg font-bold text-amber-700">{inFullButNotOnTime}</span>
+                                            <span className="text-sm font-semibold text-gray-900">In-Full but NOT On-Time</span>
+                                            <span className="text-2xl font-bold text-orange-600">{inFullButNotOnTime}</span>
                                         </div>
-                                        <p className="text-xs text-slate-600">Complete quantity but delivered late</p>
+                                        <p className="text-xs text-gray-600">Complete quantity but delivered late</p>
                                     </div>
 
-                                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                                    <div className="bg-white border border-gray-200 rounded-xl p-4">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm font-semibold text-slate-700">Neither On-Time NOR In-Full</span>
-                                            <span className="text-lg font-bold text-red-700">{neitherOnTimeNorInFull}</span>
+                                            <span className="text-sm font-semibold text-gray-900">Neither On-Time NOR In-Full</span>
+                                            <span className="text-2xl font-bold text-orange-600">{neitherOnTimeNorInFull}</span>
                                         </div>
-                                        <p className="text-xs text-slate-600">Both late and incomplete delivery</p>
+                                        <p className="text-xs text-gray-600">Both late and incomplete delivery</p>
                                     </div>
                                 </div>
                             </div>
@@ -236,36 +266,36 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                             {/* Section 5: Detailed Breakdown Analysis */}
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <TrendingUp size={20} className="text-blue-600" />
-                                    <h3 className="text-lg font-bold text-slate-800">DETAILED BREAKDOWN ANALYSIS</h3>
+                                    <TrendingUp size={20} className="text-teal-600" />
+                                    <h3 className="text-lg font-bold text-gray-900">Detailed Breakdown Analysis</h3>
                                 </div>
                                 <div className="space-y-4">
                                     {/* Within On-Time */}
-                                    <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                                        <h4 className="font-bold text-slate-800 mb-3">Within On-Time Orders ({onTimeOrders})</h4>
+                                    <div className="bg-gray-100 border border-gray-200 rounded-xl p-4">
+                                        <h4 className="font-bold text-gray-900 mb-3">Within On-Time Orders ({onTimeOrders})</h4>
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-700">✓ Also In-Full (OTIF)</span>
+                                                <span className="text-gray-700">✓ Also In-Full (OTIF)</span>
                                                 <span className="font-bold text-green-600">{otifWithinOTOrders} ({otifWithinOTPct.toFixed(2)}%)</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-700">✗ Not In-Full</span>
-                                                <span className="font-bold text-amber-600">{notInFullWithinOT} ({(100 - otifWithinOTPct).toFixed(2)}%)</span>
+                                                <span className="text-gray-700">✗ Not In-Full</span>
+                                                <span className="font-bold text-orange-600">{notInFullWithinOT} ({(100 - otifWithinOTPct).toFixed(2)}%)</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Within In-Full */}
-                                    <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-4">
-                                        <h4 className="font-bold text-slate-800 mb-3">Within In-Full Orders ({inFullOrders})</h4>
+                                    <div className="bg-gray-100 border border-gray-200 rounded-xl p-4">
+                                        <h4 className="font-bold text-gray-900 mb-3">Within In-Full Orders ({inFullOrders})</h4>
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-700">✓ Also On-Time (OTIF)</span>
+                                                <span className="text-gray-700">✓ Also On-Time (OTIF)</span>
                                                 <span className="font-bold text-green-600">{otifWithinIFOrders} ({otifWithinIFPct.toFixed(2)}%)</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-700">✗ Not On-Time</span>
-                                                <span className="font-bold text-amber-600">{notOnTimeWithinIF} ({(100 - otifWithinIFPct).toFixed(2)}%)</span>
+                                                <span className="text-gray-700">✗ Not On-Time</span>
+                                                <span className="font-bold text-orange-600">{notOnTimeWithinIF} ({(100 - otifWithinIFPct).toFixed(2)}%)</span>
                                             </div>
                                         </div>
                                     </div>

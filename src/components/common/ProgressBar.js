@@ -15,6 +15,12 @@ const ProgressBar = ({ value = 0, label, count, color = 'blue', showPercentage =
                     lightBg: 'bg-blue-100',
                     text: 'text-blue-700'
                 };
+            case 'teal':
+                return {
+                    bg: 'bg-teal-500',
+                    lightBg: 'bg-teal-100',
+                    text: 'text-teal-700'
+                };
             case 'purple':
                 return {
                     bg: 'bg-purple-500',
