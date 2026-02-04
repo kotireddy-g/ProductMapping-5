@@ -40,56 +40,34 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
     setErrors({});
 
     try {
-      // Call real login API
-      const response = await authService.login(formData.email, formData.password);
+      // Static login validation - TODO: Replace with API integration later
+      const ALLOWED_EMAIL = 'management@experienceflow.ai';
+      const ALLOWED_PASSWORD = 'xFlow@321';
 
-      if (response.success && response.data) {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      if (formData.email === ALLOWED_EMAIL && formData.password === ALLOWED_PASSWORD) {
         // Login successful
-        onLogin(response.data.user);
+        const mockUser = {
+          email: ALLOWED_EMAIL,
+          name: 'Management User',
+          role: 'admin'
+        };
+        onLogin(mockUser);
       } else {
+        // Invalid credentials
         setErrors({
-          email: 'Login failed. Please try again.',
-          password: 'Login failed. Please try again.'
+          email: 'Invalid email or password',
+          password: 'Invalid email or password'
         });
       }
     } catch (error) {
       console.error('Login error:', error);
-
-      // Handle different error types
-      if (error.response) {
-        // Server responded with error
-        const status = error.response.status;
-        const message = error.response.data?.message || 'Login failed';
-
-        if (status === 401) {
-          setErrors({
-            email: 'Invalid email or password',
-            password: 'Invalid email or password'
-          });
-        } else if (status === 400) {
-          setErrors({
-            email: message,
-            password: message
-          });
-        } else {
-          setErrors({
-            email: 'Server error. Please try again later.',
-            password: 'Server error. Please try again later.'
-          });
-        }
-      } else if (error.request) {
-        // Request made but no response
-        setErrors({
-          email: 'Network error. Please check your connection.',
-          password: 'Network error. Please check your connection.'
-        });
-      } else {
-        // Something else happened
-        setErrors({
-          email: 'An unexpected error occurred.',
-          password: 'An unexpected error occurred.'
-        });
-      }
+      setErrors({
+        email: 'An unexpected error occurred.',
+        password: 'An unexpected error occurred.'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -134,8 +112,8 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
+                    ? 'border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your email"
                 />
@@ -160,8 +138,8 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
+                    ? 'border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your password"
                 />
