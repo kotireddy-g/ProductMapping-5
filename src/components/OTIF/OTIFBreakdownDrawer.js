@@ -310,28 +310,26 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                                     {/* Summary */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-3">
-                                            <FileText size={20} className="text-blue-600" />
-                                            <h3 className="text-lg font-bold text-slate-800">GAP SUMMARY</h3>
+                                            <FileText size={20} className="text-teal-600" />
+                                            <h3 className="text-lg font-bold text-gray-900">Gap Summary</h3>
                                         </div>
-                                        <div className="bg-gradient-to-r from-red-50 to-amber-50 border-2 border-red-200 rounded-xl p-5">
+                                        <div className="bg-white border border-gray-200 rounded-xl p-5">
                                             <div className="grid grid-cols-3 gap-4 mb-4">
                                                 <div className="text-center">
                                                     <div className="text-3xl font-bold text-green-600">{otifGapRca.otifPct}%</div>
-                                                    <div className="text-xs text-slate-600 mt-1">OTIF Achieved</div>
+                                                    <div className="text-xs text-gray-600 mt-1">OTIF Achieved</div>
                                                 </div>
                                                 <div className="text-center">
                                                     <div className="text-3xl font-bold text-red-600">{otifGapRca.gapPct}%</div>
-                                                    <div className="text-xs text-slate-600 mt-1">Gap</div>
+                                                    <div className="text-xs text-gray-600 mt-1">Gap</div>
                                                 </div>
                                                 <div className="text-center">
-                                                    <div className="text-3xl font-bold text-amber-600">{otifGapRca.gapOrders}</div>
-                                                    <div className="text-xs text-slate-600 mt-1">Orders Missed</div>
+                                                    <div className="text-3xl font-bold text-orange-500">{otifGapRca.gapOrders}</div>
+                                                    <div className="text-xs text-gray-600 mt-1">Orders Missed</div>
                                                 </div>
                                             </div>
-                                            <div className="bg-white rounded-lg p-3 border border-amber-200">
-                                                <p className="text-sm text-slate-700 leading-relaxed">
-                                                    <span className="font-semibold text-amber-700">📊 {otifGapRca.narrative}</span>
-                                                </p>
+                                            <div className="text-sm text-gray-700 leading-relaxed">
+                                                {otifGapRca.narrative}
                                             </div>
                                         </div>
                                     </div>
@@ -339,89 +337,89 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                                     {/* Segments Breakdown */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-3">
-                                            <TrendingUp size={20} className="text-blue-600" />
-                                            <h3 className="text-lg font-bold text-slate-800">FAILURE SEGMENTS</h3>
+                                            <TrendingUp size={20} className="text-teal-600" />
+                                            <h3 className="text-lg font-bold text-gray-900">Failure Segment</h3>
                                         </div>
                                         <div className="space-y-3">
                                             {/* On-Time but short supplied */}
-                                            <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-4">
+                                            <div className="bg-white border border-gray-200 rounded-xl p-4">
                                                 <div className="flex items-start justify-between mb-2">
                                                     <div className="flex-1">
-                                                        <div className="font-bold text-slate-800 mb-1">
+                                                        <div className="font-bold text-gray-900 mb-1">
                                                             {otifGapRca.segments.onTimeNotInFull.label}
                                                         </div>
-                                                        <div className="text-xs text-slate-600 mb-3">
+                                                        <div className="text-xs text-gray-600 mb-3">
                                                             {otifGapRca.segments.onTimeNotInFull.primaryCause}
                                                         </div>
                                                     </div>
                                                     <div className="text-right ml-4">
-                                                        <div className="text-2xl font-bold text-yellow-700">
+                                                        <div className="text-2xl font-bold text-orange-600">
                                                             {otifGapRca.segments.onTimeNotInFull.count}
                                                         </div>
-                                                        <div className="text-xs text-slate-600">orders</div>
+                                                        <div className="text-xs text-gray-600">Orders</div>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-xs">
-                                                    <span className="px-2 py-1 bg-yellow-200 text-yellow-800 rounded font-semibold">
+                                                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded font-semibold">
                                                         {otifGapRca.segments.onTimeNotInFull.percentageOfGap}% of gap
                                                     </span>
-                                                    <span className="px-2 py-1 bg-white text-slate-700 rounded border border-yellow-300">
+                                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded border border-gray-300">
                                                         {otifGapRca.segments.onTimeNotInFull.shareOfTotalOrders}% of total
                                                     </span>
                                                 </div>
                                             </div>
 
                                             {/* In-Full but delayed */}
-                                            <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-4">
+                                            <div className="bg-white border border-gray-200 rounded-xl p-4">
                                                 <div className="flex items-start justify-between mb-2">
                                                     <div className="flex-1">
-                                                        <div className="font-bold text-slate-800 mb-1">
+                                                        <div className="font-bold text-gray-900 mb-1">
                                                             {otifGapRca.segments.inFullNotOnTime.label}
                                                         </div>
-                                                        <div className="text-xs text-slate-600 mb-3">
+                                                        <div className="text-xs text-gray-600 mb-3">
                                                             {otifGapRca.segments.inFullNotOnTime.primaryCause}
                                                         </div>
                                                     </div>
                                                     <div className="text-right ml-4">
-                                                        <div className="text-2xl font-bold text-orange-700">
+                                                        <div className="text-2xl font-bold text-orange-600">
                                                             {otifGapRca.segments.inFullNotOnTime.count}
                                                         </div>
-                                                        <div className="text-xs text-slate-600">orders</div>
+                                                        <div className="text-xs text-gray-600">Orders</div>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-xs">
-                                                    <span className="px-2 py-1 bg-orange-200 text-orange-800 rounded font-semibold">
+                                                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded font-semibold">
                                                         {otifGapRca.segments.inFullNotOnTime.percentageOfGap}% of gap
                                                     </span>
-                                                    <span className="px-2 py-1 bg-white text-slate-700 rounded border border-orange-300">
+                                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded border border-gray-300">
                                                         {otifGapRca.segments.inFullNotOnTime.shareOfTotalOrders}% of total
                                                     </span>
                                                 </div>
                                             </div>
 
                                             {/* Delayed & short supply */}
-                                            <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4">
+                                            <div className="bg-white border border-gray-200 rounded-xl p-4">
                                                 <div className="flex items-start justify-between mb-2">
                                                     <div className="flex-1">
-                                                        <div className="font-bold text-slate-800 mb-1">
+                                                        <div className="font-bold text-gray-900 mb-1">
                                                             {otifGapRca.segments.delayedAndShort.label}
                                                         </div>
-                                                        <div className="text-xs text-slate-600 mb-3">
+                                                        <div className="text-xs text-gray-600 mb-3">
                                                             {otifGapRca.segments.delayedAndShort.primaryCause}
                                                         </div>
                                                     </div>
                                                     <div className="text-right ml-4">
-                                                        <div className="text-2xl font-bold text-red-700">
+                                                        <div className="text-2xl font-bold text-orange-600">
                                                             {otifGapRca.segments.delayedAndShort.count}
                                                         </div>
-                                                        <div className="text-xs text-slate-600">orders</div>
+                                                        <div className="text-xs text-gray-600">Orders</div>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-xs">
-                                                    <span className="px-2 py-1 bg-red-200 text-red-800 rounded font-semibold">
+                                                    <span className="px-2 py-1 bg-pink-100 text-pink-800 rounded font-semibold">
                                                         {otifGapRca.segments.delayedAndShort.percentageOfGap}% of gap
                                                     </span>
-                                                    <span className="px-2 py-1 bg-white text-slate-700 rounded border border-red-300">
+                                                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded border border-gray-300">
                                                         {otifGapRca.segments.delayedAndShort.shareOfTotalOrders}% of total
                                                     </span>
                                                 </div>
@@ -432,34 +430,31 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                                     {/* Root Causes */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-3">
-                                            <AlertTriangle size={20} className="text-red-600" />
-                                            <h3 className="text-lg font-bold text-slate-800">ROOT CAUSES & ACTIONS</h3>
+                                            <AlertTriangle size={20} className="text-teal-600" />
+                                            <h3 className="text-lg font-bold text-gray-900">Root Causes & Actions</h3>
                                         </div>
                                         <div className="space-y-3">
                                             {otifGapRca.reasonCategories.map((reason, index) => (
-                                                <div
-                                                    key={reason.id}
-                                                    className={`border-2 rounded-xl p-4 ${getSeverityColor(reason.severity)}`}
-                                                >
+                                                <div key={reason.id} className="bg-white border border-gray-200 rounded-xl p-4">
                                                     <div className="flex items-start gap-3 mb-3">
                                                         <div className="flex-shrink-0 mt-0.5">
-                                                            {getSeverityIcon(reason.severity)}
+                                                            <AlertCircle className="w-5 h-5 text-red-600" />
                                                         </div>
                                                         <div className="flex-1">
                                                             <div className="flex items-start justify-between mb-2">
                                                                 <div className="flex-1">
-                                                                    <div className="font-bold text-slate-900 mb-1">
+                                                                    <div className="font-bold text-gray-900 mb-1">
                                                                         {index + 1}. {reason.label}
                                                                     </div>
-                                                                    <div className="text-xs text-slate-600 mb-2">
+                                                                    <div className="text-xs text-gray-600 mb-2">
                                                                         Segment: {reason.segmentLabel}
                                                                     </div>
                                                                 </div>
                                                                 <div className="text-right ml-4">
-                                                                    <div className="text-xl font-bold text-slate-900">
+                                                                    <div className="text-xl font-bold text-gray-900">
                                                                         {reason.count}
                                                                     </div>
-                                                                    <div className="text-xs text-slate-600">
+                                                                    <div className="text-xs text-gray-600">
                                                                         {reason.percentageOfGap}%
                                                                     </div>
                                                                 </div>
@@ -468,23 +463,23 @@ const OTIFBreakdownDrawer = ({ isOpen, onClose, breakdownData }) => {
                                                                 {reason.tags.map((tag) => (
                                                                     <span
                                                                         key={tag}
-                                                                        className="px-2 py-0.5 bg-white bg-opacity-60 text-slate-700 rounded text-xs font-medium border border-slate-300"
+                                                                        className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-medium border border-gray-300"
                                                                     >
                                                                         {tag}
                                                                     </span>
                                                                 ))}
                                                                 <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${reason.severity === 'high'
-                                                                    ? 'bg-red-200 text-red-900'
-                                                                    : 'bg-yellow-200 text-yellow-900'
+                                                                        ? 'bg-red-100 text-red-800'
+                                                                        : 'bg-yellow-100 text-yellow-800'
                                                                     }`}>
                                                                     {reason.severity}
                                                                 </span>
                                                             </div>
-                                                            <div className="bg-white bg-opacity-70 rounded-lg p-3 border border-slate-300">
-                                                                <div className="text-xs font-semibold text-slate-700 mb-1">
-                                                                    💡 Recommended Action:
+                                                            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                                                <div className="text-xs font-semibold text-gray-900 mb-1">
+                                                                    Recommended Action:
                                                                 </div>
-                                                                <div className="text-xs text-slate-800 leading-relaxed">
+                                                                <div className="text-xs text-gray-800 leading-relaxed">
                                                                     {reason.comment}
                                                                 </div>
                                                             </div>
