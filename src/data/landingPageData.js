@@ -443,14 +443,16 @@ export const getActionColorClass = (severity) => {
       bg: 'bg-red-50',
       border: 'border-red-400',
       text: 'text-red-900',
-      badge: 'bg-red-600 text-white'
+      badge: 'bg-red-600 text-white',
+      radialBg: 'bg-red-100'
     };
   } else {
     return {
       bg: 'bg-orange-50',
       border: 'border-orange-300',
       text: 'text-orange-900',
-      badge: 'bg-orange-500 text-white'
+      badge: 'bg-orange-500 text-white',
+      radialBg: 'bg-orange-100'
     };
   }
 };

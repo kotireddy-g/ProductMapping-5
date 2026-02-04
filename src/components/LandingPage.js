@@ -472,20 +472,25 @@ const LandingPage = forwardRef(({
                       setSelectedAction(action);
                       setShowSubcategoriesModal(true);
                     }}
-                    className={`${colors.bg} ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left relative`}
+                    className="bg-white border border-gray-200 rounded-lg p-4 transition-all hover:shadow-lg hover:scale-105 text-left flex items-center gap-3 shadow-sm"
                   >
-                    {/* Pending Count Badge */}
-                    <div className="absolute top-2 right-2">
-                      <div className={`${colors.badge} px-2 py-1 rounded-full text-sm font-bold`}>
-                        {action.pendingCount}
+                    {/* Left Side - Circular Badge with Radial Background */}
+                    <div className="flex-shrink-0">
+                      {/* Outer Radial Circle (Light Background) */}
+                      <div className={`${colors.radialBg} w-16 h-16 rounded-full flex items-center justify-center`}>
+                        {/* Inner Badge Circle */}
+                        <div className={`${colors.badge} w-12 h-12 rounded-full flex items-center justify-center text-base font-bold`}>
+                          {action.pendingCount}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="pr-12">
-                      <h3 className={`text-sm font-bold ${colors.text} mb-1`}>
+                    {/* Right Side - Text Content */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-bold text-gray-900 mb-1">
                         {getTranslatedActionName(action.name, t)}
                       </h3>
-                      <p className="text-xs text-gray-700">{action.description}</p>
+                      <p className="text-xs text-gray-600 line-clamp-2">{action.description}</p>
                     </div>
                   </button>
                 );
