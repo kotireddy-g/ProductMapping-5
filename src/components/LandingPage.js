@@ -300,10 +300,10 @@ const LandingPage = forwardRef(({
                 </div>
               </div>
 
-              {/* Module Card - Beige Background (Dynamic based on selected module) */}
+              {/* Module Card - White Background (Dynamic based on selected module) */}
               <div
                 onClick={() => setShowOTIFDrawer(true)}
-                className="bg-[#FFF4E6] rounded-lg p-4 shadow-sm border border-orange-100 cursor-pointer hover:shadow-md transition-all"
+                className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-all"
               >
                 <div className="flex items-start justify-between">
                   {/* Left Side - Content */}
