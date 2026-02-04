@@ -141,7 +141,7 @@ const SupplierForecastReport = ({ onBack }) => {
               <Filter className="w-4 h-4" />
               Filter
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+            <button className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-lg text-sm font-medium transition-colors">
               <Download className="w-4 h-4" />
               Export
             </button>
@@ -150,20 +150,20 @@ const SupplierForecastReport = ({ onBack }) => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200 px-6">
+      <div className="bg-gray-50 border-b border-gray-200 px-6">
         <div className="flex space-x-8">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-black text-black'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
             >
               {tab.label}
               {summary && (
-                <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
+                <span className="ml-2 px-2 py-0.5 bg-white text-gray-600 rounded-full text-xs border border-gray-200">
                   {tab.id === 'all' && summary.totalItems}
                   {tab.id === 'critical' && summary.criticalCount}
                   {tab.id === 'surging' && summary.surgingCount}
@@ -266,7 +266,7 @@ const SupplierForecastReport = ({ onBack }) => {
                         {item.vendorCount > 0 ? (
                           <button
                             onClick={() => handleVendorClick(item)}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-medium transition-colors"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-black hover:bg-gray-800 text-white rounded-lg text-sm font-medium transition-colors"
                           >
                             <Users className="w-4 h-4" />
                             <span>{item.vendorCount} Vendors</span>
@@ -293,7 +293,7 @@ const SupplierForecastReport = ({ onBack }) => {
                           <div className="text-sm text-gray-900 mr-2">{Number(item.agentConfidence).toFixed(2)}%</div>
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div
-                              className="bg-blue-600 h-2 rounded-full"
+                              className="bg-black h-2 rounded-full"
                               style={{ width: `${item.agentConfidence}%` }}
                             ></div>
                           </div>
@@ -303,7 +303,7 @@ const SupplierForecastReport = ({ onBack }) => {
                         <button
                           disabled={!item.raisePR?.enabled}
                           className={`px-3 py-1 rounded text-xs font-medium ${item.raisePR?.enabled
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            ? 'bg-black text-white hover:bg-gray-800'
                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             }`}
                           title={item.raisePR?.reason}
@@ -394,7 +394,7 @@ const SupplierForecastReport = ({ onBack }) => {
                           key={i}
                           onClick={() => handlePageChange(i)}
                           className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${i === currentPage
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-black text-white'
                             : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >
