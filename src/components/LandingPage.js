@@ -260,81 +260,89 @@ const LandingPage = forwardRef(({
             {/* Performance Metrics Cards - Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
               {/* Performance Index Card - White Background */}
-              <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
-                {/* Single line with all main elements */}
-                <div className="flex items-center gap-3">
-                  <h3 className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-                    Performance Index
-                  </h3>
-                  <span className="text-3xl font-bold text-[#10B981]">
-                    {overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}
-                  </span>
-                  <span className="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded whitespace-nowrap">
-                    Down: 18% ↓
-                  </span>
-                  <button
-                    onClick={() => setShowPerformanceDrawer(true)}
-                    className="ml-auto p-1 hover:bg-gray-50 rounded transition-colors"
-                  >
-                    <Info size={18} className="text-gray-400" />
-                  </button>
+              <div
+                onClick={() => setShowPerformanceDrawer(true)}
+                className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  {/* Left Side - Content */}
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-lg font-bold text-gray-900">
+                      Performance Index
+                    </h3>
+                    <p className="text-xs text-green-600">
+                      If Achieved: <span className="font-semibold">79.32</span> | If Missed: <span className="font-semibold">77.71</span>
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowRootCauses('performance');
+                      }}
+                      className="text-[#3B82F6] hover:text-blue-700 text-xs mt-1 flex items-center gap-1 w-fit"
+                    >
+                      <AlertCircle size={12} />
+                      <span>3 Root Causes</span>
+                    </button>
+                  </div>
+
+                  {/* Right Side - Score and Badge */}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-start gap-2">
+                      <span className="text-4xl font-bold text-[#10B981]">
+                        {overviewData?.forecastInsights?.hospitalPerformanceIndex?.currentScore?.toFixed(2) || '77.71'}
+                      </span>
+                      <Info size={18} className="text-gray-400 mt-1" />
+                    </div>
+                    <span className="bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded whitespace-nowrap">
+                      Down: 18% ↓
+                    </span>
+                  </div>
                 </div>
-
-                {/* Secondary info */}
-                <p className="text-xs text-gray-500 mt-1.5">
-                  If Achieved: <span className="font-semibold text-gray-700">79.32</span> |
-                  If Missed: <span className="font-semibold text-gray-700">77.71</span>
-                </p>
-
-                {/* Root Causes - smaller, simpler */}
-                <button
-                  onClick={() => setShowRootCauses('performance')}
-                  className="text-[#3B82F6] hover:text-blue-700 text-xs mt-1.5 flex items-center gap-0.5"
-                >
-                  <AlertCircle size={12} />
-                  <span>3 Root Causes</span>
-                </button>
               </div>
 
               {/* Module Card - Beige Background (Dynamic based on selected module) */}
-              <div className="bg-[#FFF4E6] rounded-lg p-3 shadow-sm border border-orange-100">
-                {/* Single line with all main elements */}
-                <div className="flex items-center gap-3">
-                  <h3 className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-                    {moduleDisplayName}
-                  </h3>
-                  <span className="text-3xl font-bold text-[#F97316]">
-                    {moduleCurrentValue}%
-                  </span>
-                  <span className="bg-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded whitespace-nowrap">
-                    16% lower goal
-                  </span>
-                  <button
-                    onClick={() => setShowOTIFDrawer(true)}
-                    className="ml-auto p-1 hover:bg-orange-50 rounded transition-colors"
-                  >
-                    <Info size={18} className="text-orange-400" />
-                  </button>
+              <div
+                onClick={() => setShowOTIFDrawer(true)}
+                className="bg-[#FFF4E6] rounded-lg p-4 shadow-sm border border-orange-100 cursor-pointer hover:shadow-md transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  {/* Left Side - Content */}
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {moduleDisplayName}
+                    </h3>
+                    {isOTIFModule && (
+                      <p className="text-xs text-green-600">
+                        OT: <span className="font-semibold">{overallOT}%</span> | IF: <span className="font-semibold">{overallIF}%</span>
+                      </p>
+                    )}
+                    {isOTIFModule && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowRootCauses('otif');
+                        }}
+                        className="text-[#F97316] hover:text-orange-700 text-xs mt-1 flex items-center gap-1 w-fit"
+                      >
+                        <AlertCircle size={12} />
+                        <span>3 Root Causes</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Right Side - Score and Badge */}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-start gap-2">
+                      <span className="text-4xl font-bold text-[#F97316]">
+                        {moduleCurrentValue}%
+                      </span>
+                      <Info size={18} className="text-orange-400 mt-1" />
+                    </div>
+                    <span className="bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded whitespace-nowrap">
+                      16% lower goal
+                    </span>
+                  </div>
                 </div>
-
-                {/* Secondary info - Only show for OTIF module */}
-                {isOTIFModule && (
-                  <p className="text-xs text-gray-600 mt-1.5">
-                    OT: <span className="font-semibold text-gray-700">{overallOT}%</span> |
-                    IF: <span className="font-semibold text-gray-700">{overallIF}%</span>
-                  </p>
-                )}
-
-                {/* Root Causes - Only show for OTIF module */}
-                {isOTIFModule && (
-                  <button
-                    onClick={() => setShowRootCauses('otif')}
-                    className="text-[#F97316] hover:text-orange-700 text-xs mt-1.5 flex items-center gap-0.5"
-                  >
-                    <AlertCircle size={12} />
-                    <span>3 Root Causes</span>
-                  </button>
-                )}
               </div>
             </div>
           </div>
