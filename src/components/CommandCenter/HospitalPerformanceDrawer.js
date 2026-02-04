@@ -71,7 +71,7 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                 <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 z-10">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                            <BarChart3 className="w-6 h-6 text-blue-600" />
+                            <BarChart3 className="w-6 h-6 text-teal-600" />
                             <h2 className="text-xl font-bold text-slate-800">Hospital Performance Index</h2>
                         </div>
                         <button
@@ -123,21 +123,21 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                     }} />
                 ) : (
                     <div className="p-6 space-y-6">
-                        {/* Section 1: Score Overview */}
+                        {/* Section 1: Performance Score */}
                         <div>
                             <div className="flex items-center gap-2 mb-4">
-                                <TrendingUp size={20} className="text-blue-600" />
-                                <h3 className="text-lg font-bold text-slate-800">PERFORMANCE SCORES</h3>
+                                <TrendingUp size={20} className="text-teal-600" />
+                                <h3 className="text-lg font-bold text-gray-900">Performance Score</h3>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
                                 {/* Current Score */}
-                                <div className={`border-2 rounded-xl p-4 ${getScoreBgColor(currentScore)}`}>
-                                    <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
                                         Current
                                         {explanation?.current && (
                                             <div className="group relative">
-                                                <Info className="w-3 h-3 text-slate-400 cursor-help" />
+                                                <Info className="w-3 h-3 text-gray-400 cursor-help" />
                                                 <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
                                                     {explanation.current}
                                                     <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
@@ -145,20 +145,19 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                             </div>
                                         )}
                                     </div>
-                                    <div className={`text-3xl font-bold ${getScoreColor(currentScore)}`}>
+                                    <div className="text-3xl font-bold text-orange-500">
                                         {currentScore.toFixed(2)}
                                     </div>
-                                    <div className="text-xs text-slate-500 mt-1">Active Score</div>
-
+                                    <div className="text-xs text-gray-500 mt-1">Active Score</div>
                                 </div>
 
                                 {/* If Achieved */}
-                                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
-                                    <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
                                         If Achieved
                                         {explanation?.ifAchieved && (
                                             <div className="group relative">
-                                                <Info className="w-3 h-3 text-slate-400 cursor-help" />
+                                                <Info className="w-3 h-3 text-gray-400 cursor-help" />
                                                 <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
                                                     {explanation.ifAchieved}
                                                     <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
@@ -173,16 +172,15 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                         <TrendingUp className="w-3 h-3" />
                                         +{(ifAchievedScore - currentScore).toFixed(2)}%
                                     </div>
-
                                 </div>
 
                                 {/* If Missed */}
-                                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                                    <div className="text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1">
                                         If Missed
                                         {explanation?.ifMissed && (
                                             <div className="group relative">
-                                                <Info className="w-3 h-3 text-slate-400 cursor-help" />
+                                                <Info className="w-3 h-3 text-gray-400 cursor-help" />
                                                 <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-10">
                                                     {explanation.ifMissed}
                                                     <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
@@ -197,17 +195,16 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                         <TrendingUp className="w-3 h-3 rotate-180" />
                                         {(ifMissedScore - currentScore).toFixed(2)}%
                                     </div>
-
                                 </div>
                             </div>
 
-                            {/* Score Comparison Bar */}
-                            <div className="mt-4 bg-slate-100 rounded-lg p-4">
+                            {/* Score Range */}
+                            <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-semibold text-slate-600">Score Range</span>
-                                    <span className="text-xs text-slate-500">0 - 100</span>
+                                    <span className="text-sm font-semibold text-gray-900">Score Range</span>
+                                    <span className="text-xs text-gray-500">0 - 100</span>
                                 </div>
-                                <div className="relative h-8 bg-slate-200 rounded-full overflow-hidden">
+                                <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
                                     {/* Missed marker */}
                                     <div
                                         className="absolute top-0 h-full w-1 bg-red-500"
@@ -215,7 +212,7 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                     />
                                     {/* Current marker */}
                                     <div
-                                        className="absolute top-0 h-full w-2 bg-blue-600"
+                                        className="absolute top-0 h-full w-2 bg-gray-800"
                                         style={{ left: `${currentScore}%` }}
                                     />
                                     {/* Achieved marker */}
@@ -226,120 +223,97 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                                 </div>
                                 <div className="flex items-center justify-between mt-2 text-xs">
                                     <span className="text-red-600">Missed: {ifMissedScore.toFixed(1)}</span>
-                                    <span className="text-blue-600 font-bold">Current: {currentScore.toFixed(1)}</span>
+                                    <span className="text-gray-900 font-bold">Current: {currentScore.toFixed(1)}</span>
                                     <span className="text-green-600">Achieved: {ifAchievedScore.toFixed(1)}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Section 2: Formula */}
+                        {/* Section 2: Calculation Formula */}
                         <div>
                             <div className="flex items-center gap-2 mb-3">
-                                <Info size={20} className="text-blue-600" />
-                                <h3 className="text-lg font-bold text-slate-800">CALCULATION FORMULA</h3>
+                                <Info size={20} className="text-teal-600" />
+                                <h3 className="text-lg font-bold text-gray-900">Calculation Formula</h3>
                             </div>
-                            <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-4">
-                                <div className="text-sm text-slate-700 font-mono leading-relaxed">
+                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                <div className="text-sm text-gray-700 font-mono leading-relaxed">
                                     {formula}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Section 2.5: Contributors (SCOR Metrics) */}
+                        {/* Section 3: Contributors (SCOR Metrics) */}
                         <div>
                             <div className="flex items-center gap-2 mb-3">
-                                <Users size={20} className="text-blue-600" />
-                                <h3 className="text-lg font-bold text-slate-800">CONTRIBUTORS</h3>
+                                <Users size={20} className="text-teal-600" />
+                                <h3 className="text-lg font-bold text-gray-900">Contributors</h3>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {Object.values(scorMetricsData).map((metric, index) => {
-                                    // Calculate contribution percentage (synthetic for now)
-                                    const contributions = {
-                                        'Plan': 20.24,
-                                        'Source': 40.99,
-                                        'Make': 30.9,
-                                        'Deliver': 95.20,
-                                        'Return': 68.11,
-                                        'Enable': 99.8
-                                    };
-                                    const contribution = contributions[metric.stage] || 0;
+                            <div className="grid grid-cols-3 gap-3">
+                                {/* Plan - Forecast Quality (WAPE) */}
+                                <div className="bg-white border border-orange-200 rounded-lg p-3">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1">Plan</div>
+                                    <div className="text-sm font-bold text-gray-900 mb-2">
+                                        Forecast Quality (WAPE)
+                                    </div>
+                                    <div className="text-2xl font-bold text-orange-500">20.2%</div>
+                                    <div className="text-xs text-gray-500 mt-1">Current: 12.5%</div>
+                                    <div className="text-xs text-gray-500">Goal: 10%</div>
+                                </div>
 
-                                    // Determine status color
-                                    const getStatusColor = () => {
-                                        if (metric.status === 'good') return 'text-green-600';
-                                        if (metric.status === 'warning') return 'text-yellow-600';
-                                        return 'text-red-600';
-                                    };
+                                {/* Source - Inbound Supplier OTIF */}
+                                <div className="bg-white border border-orange-200 rounded-lg p-3">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1">Source</div>
+                                    <div className="text-sm font-bold text-gray-900 mb-2">
+                                        Inbound Supplier OTIF
+                                    </div>
+                                    <div className="text-2xl font-bold text-orange-500">41.0%</div>
+                                    <div className="text-xs text-gray-500 mt-1">Current: 96.8%</div>
+                                    <div className="text-xs text-gray-500">Goal: 98%</div>
+                                </div>
 
-                                    const getBgColor = () => {
-                                        if (metric.status === 'good') return 'bg-green-50 border-green-200';
-                                        if (metric.status === 'warning') return 'bg-yellow-50 border-yellow-200';
-                                        return 'bg-red-50 border-red-200';
-                                    };
+                                {/* Make - First Pass Yield (FPY) */}
+                                <div className="bg-white border border-orange-200 rounded-lg p-3">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1">Make</div>
+                                    <div className="text-sm font-bold text-gray-900 mb-2">
+                                        First Pass Yield (FPY)
+                                    </div>
+                                    <div className="text-2xl font-bold text-orange-500">30.9%</div>
+                                    <div className="text-xs text-gray-500 mt-1">Current: 94.2%</div>
+                                    <div className="text-xs text-gray-500">Goal: 96%</div>
+                                </div>
 
-                                    return (
-                                        <div key={index} className={`${getBgColor()} border-2 rounded-lg p-3`}>
-                                            <div className="text-xs font-semibold text-slate-600 mb-1">{metric.stage}</div>
-                                            <div className="text-sm font-bold text-slate-800 mb-2 line-clamp-2">
-                                                {metric.name}
-                                            </div>
-                                            <div className={`text-2xl font-bold ${getStatusColor()}`}>
-                                                {contribution.toFixed(1)}%
-                                            </div>
-                                            <div className="text-xs text-slate-500 mt-1">
-                                                Current: {metric.currentValue}{metric.unit}
-                                            </div>
-                                            <div className="text-xs text-slate-500">
-                                                Goal: {metric.target}{metric.unit}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                                {/* Deliver - Customer OTIF */}
+                                <div className="bg-white border border-orange-200 rounded-lg p-3">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1">Deliver</div>
+                                    <div className="text-sm font-bold text-gray-900 mb-2">
+                                        Customer OTIF
+                                    </div>
+                                    <div className="text-2xl font-bold text-orange-500">95.2%</div>
+                                    <div className="text-xs text-gray-500 mt-1">Current: 97.5%</div>
+                                    <div className="text-xs text-gray-500">Goal: 99%</div>
+                                </div>
 
-                        {/* Section 3: Component Breakdown */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <BarChart3 size={20} className="text-blue-600" />
-                                <h3 className="text-lg font-bold text-slate-800">COMPONENT BREAKDOWN</h3>
-                            </div>
+                                {/* Return - Return Resolution Lead Time */}
+                                <div className="bg-white border border-red-200 rounded-lg p-3">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1">Return</div>
+                                    <div className="text-sm font-bold text-gray-900 mb-2">
+                                        Return Resolution Lead Time
+                                    </div>
+                                    <div className="text-2xl font-bold text-red-600">68.1%</div>
+                                    <div className="text-xs text-gray-500 mt-1">Current: 3.5days</div>
+                                    <div className="text-xs text-gray-500">Goal: 2days</div>
+                                </div>
 
-                            <div className="space-y-3">
-                                {componentWeights.map((comp) => {
-                                    const value = components[comp.key] || 0;
-                                    const weightedValue = (value * comp.weight) / 100;
-                                    const colors = getComponentColor(comp.color);
-                                    const Icon = comp.icon;
-
-                                    return (
-                                        <div key={comp.key} className={`${colors.light} border-2 border-${comp.color}-200 rounded-xl p-4`}>
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Icon className={`w-5 h-5 ${colors.text}`} />
-                                                    <div>
-                                                        <div className="font-bold text-slate-800">{comp.name}</div>
-                                                        <div className="text-xs text-slate-600">Weight: {comp.weight}%</div>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className={`text-2xl font-bold ${colors.text}`}>
-                                                        {value.toFixed(2)}%
-                                                    </div>
-                                                    <div className="text-xs text-slate-600">
-                                                        Contributes: {weightedValue.toFixed(2)}%
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="w-full bg-slate-200 rounded-full h-2">
-                                                <div
-                                                    className={`${colors.bg} h-2 rounded-full transition-all duration-500`}
-                                                    style={{ width: `${value}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {/* Enable - Exception-to-Recovery Time */}
+                                <div className="bg-white border border-red-200 rounded-lg p-3">
+                                    <div className="text-xs font-semibold text-gray-600 mb-1">Enable</div>
+                                    <div className="text-sm font-bold text-gray-900 mb-2">
+                                        Exception-to-Recovery Time
+                                    </div>
+                                    <div className="text-2xl font-bold text-red-600">99.8%</div>
+                                    <div className="text-xs text-gray-500 mt-1">Current: 4.2hours</div>
+                                    <div className="text-xs text-gray-500">Goal: 2hours</div>
+                                </div>
                             </div>
                         </div>
 
@@ -347,36 +321,27 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                         {medicineImpact && (
                             <div>
                                 <div className="flex items-center gap-2 mb-4">
-                                    <AlertCircle size={20} className="text-blue-600" />
-                                    <h3 className="text-lg font-bold text-slate-800">MEDICINE IMPACT</h3>
+                                    <Info size={20} className="text-teal-600" />
+                                    <h3 className="text-lg font-bold text-gray-900">Medicine Impact</h3>
                                 </div>
 
-                                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-5">
+                                <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
                                     <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div className="bg-white rounded-lg p-3 border border-blue-200">
-                                            <div className="text-xs font-semibold text-slate-600 mb-1">OTIF Delta</div>
-                                            <div className="text-2xl font-bold text-blue-600">
+                                        <div className="bg-white rounded-lg p-3 border border-gray-200">
+                                            <div className="text-xs font-semibold text-gray-600 mb-1">OTIF Delta</div>
+                                            <div className="text-2xl font-bold text-green-600">
                                                 +{medicineImpact.deltaOtifPct.toFixed(2)}%
                                             </div>
                                         </div>
-                                        <div className="bg-white rounded-lg p-3 border border-green-200">
-                                            <div className="text-xs font-semibold text-slate-600 mb-1">Protected Units</div>
+                                        <div className="bg-white rounded-lg p-3 border border-gray-200">
+                                            <div className="text-xs font-semibold text-gray-600 mb-1">Protected Units</div>
                                             <div className="text-2xl font-bold text-green-600">
                                                 {medicineImpact.protectedUnitsIfAchieved.toFixed(0)}
                                             </div>
                                         </div>
                                     </div>
 
-                                    {medicineImpact.riskUnitsIfMissed > 0 && (
-                                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                            <div className="text-xs font-semibold text-red-700 mb-1">Risk Units if Missed</div>
-                                            <div className="text-xl font-bold text-red-600">
-                                                {medicineImpact.riskUnitsIfMissed.toFixed(0)} units
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="mt-4 text-sm text-slate-700 bg-white rounded-lg p-3 border border-slate-200">
+                                    <div className="text-sm text-gray-700 bg-white rounded-lg p-3 border border-gray-200">
                                         <span className="font-semibold">Impact Summary:</span> Achieving the forecast OTIF
                                         will improve overall performance by {medicineImpact.deltaOtifPct.toFixed(2)}% and
                                         protect {medicineImpact.protectedUnitsIfAchieved.toFixed(0)} units from stockouts.
@@ -389,27 +354,27 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
                         {inputs && (
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <Info size={20} className="text-blue-600" />
-                                    <h3 className="text-lg font-bold text-slate-800">KEY INPUTS</h3>
+                                    <Info size={20} className="text-teal-600" />
+                                    <h3 className="text-lg font-bold text-gray-900">Key Inputs</h3>
                                 </div>
 
-                                <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-4">
-                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                    <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-slate-600">Current OTIF:</span>
-                                            <span className="font-bold">{inputs.currentOtifPct?.toFixed(2)}%</span>
+                                            <span className="text-gray-700">Current OTIF:</span>
+                                            <span className="font-bold text-gray-900">{inputs.currentOtifPct?.toFixed(2)}%</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-slate-600">Forecast Vendor OTIF:</span>
-                                            <span className="font-bold">{inputs.forecastVendorOtifPct?.toFixed(2)}%</span>
+                                            <span className="text-gray-700">Vendor Coverage:</span>
+                                            <span className="font-bold text-gray-900">{inputs.vendorCoveragePct?.toFixed(0)}%</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-slate-600">Vendor Coverage:</span>
-                                            <span className="font-bold">{inputs.vendorCoveragePct?.toFixed(0)}%</span>
+                                            <span className="text-gray-700">Forecast Vendor OTIF:</span>
+                                            <span className="font-bold text-gray-900">{inputs.forecastVendorOtifPct?.toFixed(2)}%</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-slate-600">Total Forecast Qty:</span>
-                                            <span className="font-bold">{inputs.totalForecastQty?.toLocaleString()}</span>
+                                            <span className="text-gray-700">Total Forecast Qty:</span>
+                                            <span className="font-bold text-gray-900">{inputs.totalForecastQty?.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
