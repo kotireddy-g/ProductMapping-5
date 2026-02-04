@@ -93,9 +93,10 @@ const HPISimulationTab = ({ baselineData }) => {
     // Get scenario results
     const scenario = results?.scenarios?.[0];
     const linkedImpacts = scenario?.linkedImpacts || {};
+    const kpiSummary = scenario?.kpiSummary || {};
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-4 space-y-4">
             {/* Header */}
             <div>
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
@@ -109,7 +110,7 @@ const HPISimulationTab = ({ baselineData }) => {
 
 
             {/* Sliders Section */}
-            <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+            <div className="bg-white border-2 border-gray-200 rounded-xl p-4">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Adjust Metrics</h3>
                 <div className="space-y-6">
                     {sliderConfigs.map(config => {
@@ -168,13 +169,13 @@ const HPISimulationTab = ({ baselineData }) => {
             </div>
 
             {/* HPI Score Comparison */}
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border-2 border-blue-100">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-100">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">HPI Score Comparison</h3>
                 <div className="flex items-center justify-center gap-8">
                     {/* Baseline */}
                     <div className="text-center">
                         <div className="text-sm text-gray-600 mb-2">Baseline</div>
-                        <div className="text-5xl font-bold text-gray-800">
+                        <div className="text-4xl font-bold text-gray-800">
                             {baseline.hpi.toFixed(2)}
                         </div>
                     </div>
@@ -190,7 +191,7 @@ const HPISimulationTab = ({ baselineData }) => {
                                 <Loader className="w-12 h-12 animate-spin" />
                             </div>
                         ) : (
-                            <div className={`text-5xl font-bold ${scenario?.hpi > baseline.hpi ? 'text-green-600' : scenario?.hpi < baseline.hpi ? 'text-red-600' : 'text-gray-800'}`}>
+                            <div className={`text-4xl font-bold ${scenario?.hpi > baseline.hpi ? 'text-green-600' : scenario?.hpi < baseline.hpi ? 'text-red-600' : 'text-gray-800'}`}>
                                 {scenario?.hpi?.toFixed(2) || baseline.hpi.toFixed(2)}
                             </div>
                         )}
@@ -216,6 +217,47 @@ const HPISimulationTab = ({ baselineData }) => {
                     </div>
                 )}
             </div>
+
+            {/* KPI Impact Summary */}
+            {scenario && !loading && kpiSummary && Object.keys(kpiSummary).length > 0 && (
+                <div className="bg-white border-2 border-gray-200 rounded-xl p-4">
+                    <h3 className="text-base font-semibold text-gray-800 mb-3">KPI Impact Summary</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                        {Object.entries(kpiSummary).map(([key, kpi]) => {
+                            const isNegative = kpi.delta < 0;
+                            const isPositive = kpi.delta > 0;
+                            const deltaColor = isNegative ? 'text-red-600' : isPositive ? 'text-green-600' : 'text-gray-600';
+
+                            return (
+                                <div key={key} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                    {/* KPI Name */}
+                                    <div className="text-xs font-semibold text-gray-700 mb-2 truncate" title={kpi.name}>
+                                        {kpi.name}
+                                    </div>
+
+                                    {/* Baseline → Scenario */}
+                                    <div className="flex items-center gap-1 mb-1">
+                                        <span className="text-xs text-gray-600">
+                                            {kpi.baseline.toFixed(kpi.unit === 'hours' ? 1 : kpi.unit === 'RM (Million)' ? 2 : 0)}
+                                        </span>
+                                        <span className="text-xs text-gray-400">→</span>
+                                        <span className="text-xs font-semibold text-gray-900">
+                                            {kpi.scenario.toFixed(kpi.unit === 'hours' ? 1 : kpi.unit === 'RM (Million)' ? 2 : 0)}
+                                        </span>
+                                        <span className="text-xs text-gray-500 truncate">{kpi.unit}</span>
+                                    </div>
+
+                                    {/* Delta */}
+                                    <div className={`text-xs font-bold ${deltaColor}`}>
+                                        {isPositive ? '+' : ''}{kpi.delta.toFixed(kpi.unit === 'hours' ? 1 : kpi.unit === 'RM (Million)' ? 2 : 0)}
+                                        ({isPositive ? '+' : ''}{kpi.deltaPct.toFixed(1)}%)
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
         </div>
     );
