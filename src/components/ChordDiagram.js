@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { ChevronLeft, Maximize2, X } from 'lucide-react';
+import { ChevronLeft, Maximize2, X, Clock, TrendingUp, BarChart3 } from 'lucide-react';
 import supplyDemandService from '../services/supplyDemandService';
 
 // Mock data structures (fallback)
@@ -1107,28 +1107,37 @@ Z
                 {
                   label: 'Current Pending Supply',
                   value: apiData?.metrics?.currentPendingSupply?.toLocaleString() || '0',
-                  color: '#f59e0b'
+                  color: '#f59e0b',
+                  icon: Clock
                 },
                 {
                   label: 'Forecast Next Hour',
                   value: apiData?.metrics?.forecastNextHour?.toLocaleString() || '0',
-                  color: '#10b981'
+                  color: '#10b981',
+                  icon: TrendingUp
                 },
                 {
                   label: 'Today Demand',
                   value: apiData?.metrics?.todayDemand?.toLocaleString() || '0',
-                  color: '#3b82f6'
+                  color: '#3b82f6',
+                  icon: BarChart3
                 }
-              ].map((stat, i) => (
-                <div key={i} className="bg-slate-50 rounded-lg p-4 border-l-4" style={{ borderLeftColor: stat.color }}>
-                  <div className="text-sm text-gray-600 mb-1 font-medium">
-                    {stat.label}
+              ].map((stat, i) => {
+                const IconComponent = stat.icon;
+                return (
+                  <div key={i} className="bg-gray-50 rounded-lg p-4 border border-gray-200 flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-600 mb-1 font-medium">
+                        {stat.label}
+                      </div>
+                      <div className="text-3xl font-bold" style={{ color: stat.color }}>
+                        {stat.value}
+                      </div>
+                    </div>
+                    <IconComponent size={40} className="text-gray-400" />
                   </div>
-                  <div className="text-3xl font-bold" style={{ color: stat.color }}>
-                    {stat.value}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -1545,36 +1554,43 @@ Z
           </div >
 
           {/* Bottom Stats Cards */}
-          < div className="grid grid-cols-3 gap-4 mt-6" >
-            {
-              [
-                {
-                  label: 'Current Pending Supply',
-                  value: apiData?.metrics?.currentPendingSupply?.toLocaleString() || '0',
-                  color: '#f59e0b'
-                },
-                {
-                  label: 'Forecast Next Hour',
-                  value: apiData?.metrics?.forecastNextHour?.toLocaleString() || '0',
-                  color: '#10b981'
-                },
-                {
-                  label: 'Today Demand',
-                  value: apiData?.metrics?.todayDemand?.toLocaleString() || '0',
-                  color: '#3b82f6'
-                }
-              ].map((stat, i) => (
-                <div key={i} className="bg-slate-50 rounded-lg p-4 border-l-4" style={{ borderLeftColor: stat.color }}>
-                  <div className="text-sm text-gray-600 mb-1 font-medium">
-                    {stat.label}
+          <div className="grid grid-cols-3 gap-4 mt-6">
+            {[
+              {
+                label: 'Current Pending Supply',
+                value: apiData?.metrics?.currentPendingSupply?.toLocaleString() || '0',
+                color: '#f59e0b',
+                icon: Clock
+              },
+              {
+                label: 'Forecast Next Hour',
+                value: apiData?.metrics?.forecastNextHour?.toLocaleString() || '0',
+                color: '#10b981',
+                icon: TrendingUp
+              },
+              {
+                label: 'Today Demand',
+                value: apiData?.metrics?.todayDemand?.toLocaleString() || '0',
+                color: '#3b82f6',
+                icon: BarChart3
+              }
+            ].map((stat, i) => {
+              const IconComponent = stat.icon;
+              return (
+                <div key={i} className="bg-gray-50 rounded-lg p-4 border border-gray-200 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1 font-medium">
+                      {stat.label}
+                    </div>
+                    <div className="text-3xl font-bold" style={{ color: stat.color }}>
+                      {stat.value}
+                    </div>
                   </div>
-                  <div className="text-3xl font-bold" style={{ color: stat.color }}>
-                    {stat.value}
-                  </div>
+                  <IconComponent size={40} className="text-gray-400" />
                 </div>
-              ))
-            }
-          </div >
+              );
+            })}
+          </div>
         </div >
       )}
     </>
