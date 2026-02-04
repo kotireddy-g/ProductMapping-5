@@ -54,17 +54,17 @@ const RootCausesModal = ({ isOpen, onClose, metricType }) => {
                 <div className="flex min-h-full items-center justify-center p-4">
                     <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden">
                         {/* Header */}
-                        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 z-10">
+                        <div className="sticky top-0 bg-black px-6 py-5 z-10">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h2 className="text-2xl font-bold text-white">{getTitle()}</h2>
-                                    <p className="text-blue-100 text-sm mt-1">
+                                    <p className="text-gray-400 text-sm mt-1">
                                         End-to-end supply chain metrics that impact overall performance
                                     </p>
                                 </div>
                                 <button
                                     onClick={onClose}
-                                    className="p-2 hover:bg-blue-500 rounded-lg transition-colors"
+                                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
                                 >
                                     <X size={24} className="text-white" />
                                 </button>
@@ -80,11 +80,11 @@ const RootCausesModal = ({ isOpen, onClose, metricType }) => {
                             </div>
 
                             {/* Footer Info */}
-                            <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+                            <div className="mt-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
                                 <h3 className="text-lg font-bold text-gray-900 mb-3">How These Metrics Roll Up End-to-End</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <div className="text-sm font-semibold text-blue-700 mb-1">Growth</div>
+                                        <div className="text-sm font-semibold text-green-600 mb-1">Growth</div>
                                         <div className="text-xs text-gray-600">
                                             Throughput / revenue per unit time
                                             <br />
@@ -92,7 +92,7 @@ const RootCausesModal = ({ isOpen, onClose, metricType }) => {
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="text-sm font-semibold text-green-700 mb-1">Performance</div>
+                                        <div className="text-sm font-semibold text-blue-600 mb-1">Performance</div>
                                         <div className="text-xs text-gray-600">
                                             Customer OTIF
                                             <br />
@@ -100,7 +100,7 @@ const RootCausesModal = ({ isOpen, onClose, metricType }) => {
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="text-sm font-semibold text-orange-700 mb-1">Efficiency</div>
+                                        <div className="text-sm font-semibold text-red-600 mb-1">Efficiency</div>
                                         <div className="text-xs text-gray-600">
                                             Lead times, rework, recovery speed
                                             <br />

@@ -9,15 +9,15 @@ const SCORMetricCard = ({ metric }) => {
         : metric.currentValue >= metric.target;
 
     return (
-        <div className={`${colors.bg} ${colors.border} border-2 rounded-xl p-5 hover:shadow-lg transition-all`}>
+        <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all">
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+                        <span className="px-3 py-1 bg-black text-white rounded-full text-xs font-bold">
                             {metric.stage}
                         </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${colors.badge} capitalize`}>
+                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold capitalize">
                             {metric.status}
                         </span>
                     </div>
@@ -29,7 +29,7 @@ const SCORMetricCard = ({ metric }) => {
             {/* Current Value */}
             <div className="mb-4">
                 <div className="flex items-baseline gap-2">
-                    <span className={`text-3xl font-bold ${colors.text}`}>
+                    <span className="text-2xl font-bold text-gray-900">
                         {metric.currentValue}{metric.unit}
                     </span>
                     <div className="flex items-center gap-1">
@@ -40,14 +40,14 @@ const SCORMetricCard = ({ metric }) => {
                     </div>
                 </div>
                 <div className="mt-1">
-                    <span className={`text-xs font-semibold ${isAboveTarget ? 'text-green-600' : 'text-red-600'}`}>
-                        {isAboveTarget ? '✓ On Track' : '✗ Below Target'}
+                    <span className="text-xs font-semibold text-red-600">
+                        ✗ Below Target
                     </span>
                 </div>
             </div>
 
             {/* Formula */}
-            <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200">
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="text-xs font-semibold text-gray-700 mb-1">Formula</div>
                 <div className="text-xs text-gray-600 font-mono mb-1">{metric.formula}</div>
                 <div className="text-xs text-gray-500 italic">{metric.formulaExplanation}</div>
