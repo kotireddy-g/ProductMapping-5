@@ -233,6 +233,15 @@ const Sidebar = ({
                     )}
                 </button>
 
+                {/* Supplier Forecast Report */}
+                <button
+                    onClick={() => onNavigate && onNavigate('supplier-report')}
+                    className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                >
+                    <FileText size={18} />
+                    <span className="text-sm font-medium">Supplier Forecast Report</span>
+                </button>
+
                 {/* Language */}
                 <button className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-left">
                     <Globe size={18} />

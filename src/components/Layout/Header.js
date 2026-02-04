@@ -11,7 +11,6 @@ const Header = ({
   currentUser,
   onUploadClick,
   onNotificationClick,
-  onSupplierReportClick,
   onLogout,
   unreadCount = 0,
   onModuleChange,
@@ -61,14 +60,6 @@ const Header = ({
             >
               <Upload className="w-4 h-4" />
               {t('header.uploadForecast')}
-            </button>
-
-            <button
-              onClick={onSupplierReportClick}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-all shadow-sm"
-            >
-              <FileText className="w-4 h-4" />
-              {t('header.supplierReport')}
             </button>
 
             {/* Module Selector */}
