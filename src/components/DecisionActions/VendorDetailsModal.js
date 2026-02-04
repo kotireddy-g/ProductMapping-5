@@ -27,18 +27,18 @@ const VendorDetailsModal = ({ isOpen, onClose, medicine, vendors, onRecommend, s
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Modal Header */}
-                <div className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 flex items-center justify-between">
+                <div className="px-6 py-4 bg-white border-b border-gray-200 flex items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold text-white">Vendor Details</h2>
-                        <p className="text-blue-100 text-sm mt-1">
+                        <h2 className="text-2xl font-bold text-gray-900">Vendor Details</h2>
+                        <p className="text-gray-500 text-sm mt-1">
                             {medicine?.medicineName || 'Medicine'} - {vendors.length} Vendor{vendors.length > 1 ? 's' : ''}
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-blue-800 rounded-lg transition-colors"
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                        <X size={24} className="text-white" />
+                        <X size={24} className="text-gray-600" />
                     </button>
                 </div>
 
@@ -92,7 +92,7 @@ const VendorDetailsModal = ({ isOpen, onClose, medicine, vendors, onRecommend, s
                                                 {showRecommendButton && (
                                                     <button
                                                         onClick={() => onRecommend(vendor, medicine)}
-                                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md hover:shadow-lg"
+                                                        className="px-4 py-2 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2 shadow-md hover:shadow-lg"
                                                     >
                                                         <ThumbsUp size={16} />
                                                         Recommend
