@@ -365,48 +365,17 @@ const LandingPage = forwardRef(({
                 // Special grey styling for Lab and Radiology
                 const isGreyCard = dept.id === 'lab' || dept.id === 'radiology';
 
-                // Get colors based on API status field
-                const getColorsByStatus = (status) => {
-                  switch (status) {
-                    case 'green':
-                      return {
-                        bg: 'bg-green-50',
-                        border: 'border-green-400',
-                        iconBg: 'bg-green-100',
-                        text: 'text-green-700'
-                      };
-                    case 'amber':
-                      return {
-                        bg: 'bg-amber-50',
-                        border: 'border-amber-400',
-                        iconBg: 'bg-amber-100',
-                        text: 'text-amber-700'
-                      };
-                    case 'red':
-                      return {
-                        bg: 'bg-red-50',
-                        border: 'border-red-400',
-                        iconBg: 'bg-red-100',
-                        text: 'text-red-700'
-                      };
-                    default:
-                      return getOTIFColorByPercentage(dept.otifPercentage);
-                  }
+                // Helper function to get percentage color based on performance
+                const getPercentageColor = (percentage) => {
+                  if (percentage >= 94) return 'text-green-600';
+                  if (percentage >= 85) return 'text-orange-500';
+                  return 'text-gray-600';
                 };
-
-                const colors = isGreyCard
-                  ? {
-                    bg: 'bg-gray-100',
-                    border: 'border-gray-300',
-                    iconBg: 'bg-gray-200',
-                    text: 'text-gray-700'
-                  }
-                  : getColorsByStatus(dept.status);
 
                 // Get icon component from string name (API) or use directly if already a component (mock)
                 const IconComponent = typeof dept.icon === 'string' ? iconMap[dept.icon] || Heart : dept.icon;
                 const changeSign = dept.changePercentage >= 0 ? '+' : '';
-                const trendColor = dept.changePercentage >= 0 ? 'text-green-700' : 'text-red-700';
+                const trendColor = dept.changePercentage >= 0 ? 'text-green-600' : 'text-red-600';
                 const trendArrow = dept.changePercentage >= 0 ? '↑' : '↓';
 
                 return (
@@ -419,24 +388,24 @@ const LandingPage = forwardRef(({
                         onNavigate && onNavigate('otif-detail', dept);
                       }
                     }}
-                    className={`${colors.bg} ${colors.border} border-2 rounded-lg p-3 transition-all hover:shadow-lg hover:scale-105 text-left`}
+                    className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm transition-all hover:shadow-lg hover:scale-105 text-left"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <div className={`${colors.iconBg} p-2 rounded-md`}>
-                        <IconComponent className={colors.text} size={18} />
+                      <div>
+                        <IconComponent className="text-gray-400" size={20} />
                       </div>
-                      <div className={`text-2xl font-bold ${colors.text}`}>
+                      <div className={`text-2xl font-bold ${getPercentageColor(dept.otifPercentage)}`}>
                         {Number(dept.otifPercentage).toFixed(2)}%
                       </div>
                     </div>
-                    <h3 className={`text-sm font-semibold ${colors.text}`}>
+                    <h3 className="text-sm font-bold text-gray-900">
                       {dept.name}
                     </h3>
                     <p className="text-xs text-gray-600 mt-1">{dept.description}</p>
 
                     {/* Percentage Change Indicator */}
                     <div className="flex items-center justify-between mt-2 text-xs">
-                      <span className="text-gray-600">vs Prev:</span>
+                      <span className="text-gray-600">vs prev:</span>
                       <span className={`font-semibold ${trendColor} flex items-center gap-0.5`}>
                         {changeSign}{Math.abs(dept.changePercentage).toFixed(2)}% {trendArrow}
                       </span>
