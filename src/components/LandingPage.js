@@ -302,8 +302,9 @@ const LandingPage = forwardRef(({
 
               {/* Module Card - White Background (Dynamic based on selected module) */}
               <div
-                onClick={() => setShowOTIFDrawer(true)}
-                className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-all"
+                onClick={isOTIFModule ? () => setShowOTIFDrawer(true) : undefined}
+                className={`bg-white rounded-lg p-4 shadow-sm border border-gray-200 ${isOTIFModule ? 'cursor-pointer hover:shadow-md' : 'cursor-default'
+                  } transition-all`}
               >
                 <div className="flex items-start justify-between">
                   {/* Left Side - Content */}
@@ -336,7 +337,7 @@ const LandingPage = forwardRef(({
                       <span className="text-4xl font-bold text-[#F97316]">
                         {moduleCurrentValue}%
                       </span>
-                      <Info size={18} className="text-orange-400 mt-1" />
+                      {isOTIFModule && <Info size={18} className="text-orange-400 mt-1" />}
                     </div>
                     <span className="bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded whitespace-nowrap">
                       16% lower goal
