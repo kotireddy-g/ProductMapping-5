@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
-import authService from '../../services/authService';
 
 const Login = ({ onLogin, onSwitchToSignup }) => {
   const [formData, setFormData] = useState({
