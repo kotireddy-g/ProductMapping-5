@@ -1,25 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Lightbulb, Loader2, AlertCircle } from 'lucide-react';
 import EnhancedKPICard from './EnhancedKPICard';
 import RootCausePanel from './RootCausePanel';
 import RelatedKPIsGrid from './RelatedKPIsGrid';
-import { kpiDetailData, relatedKPIs } from '../../data/kpiDetailData';
+import { kpiDetailData, relatedKPIs as fallbackRelatedKPIs } from '../../data/kpiDetailData';
+import kpiService from '../../services/kpiService';
 
 const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule = 'otif' }) => {
-    // Scroll to top when component mounts
+    const [kpiData, setKpiData] = useState(null);
+    const [relatedKPIs, setRelatedKPIs] = useState(fallbackRelatedKPIs);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [timePeriod, setTimePeriod] = useState('daily');
+    const [recommendations, setRecommendations] = useState([]);
+
+    // Scroll to top when component mounts or KPI changes
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [selectedKPI?.id]);
 
-    // Merge passed KPI data (from API) with kpiDetailData (for rootCauses, recommendations)
-    // This ensures we have both the live chart data and the detail page specific fields
-    const baseDetailData = kpiDetailData[selectedKPI?.id] || kpiDetailData.otif;
-    const kpiData = selectedKPI?.data
-        ? { ...baseDetailData, ...selectedKPI.data } // Merge: detail data first, then override with API data
-        : baseDetailData;
+    // Fetch KPI detail from API whenever kpiId, module or timePeriod changes
+    useEffect(() => {
+        const kpiId = selectedKPI?.id || 'otif';
 
-    // Handle recommendation implementation
-    const [recommendations, setRecommendations] = useState(kpiData.recommendations || []);
+        const fetchDetail = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await kpiService.getKPIDetail(kpiId, selectedModule, timePeriod);
+                if (response?.success && response?.data) {
+                    const apiData = response.data;
+                    setKpiData(apiData);
+                    setRecommendations(apiData.recommendations || []);
+                    if (apiData.relatedKPIs?.length) {
+                        setRelatedKPIs(apiData.relatedKPIs);
+                    }
+                } else {
+                    throw new Error('Invalid API response');
+                }
+            } catch (err) {
+                console.error('KPI detail fetch failed, using mock data:', err);
+                // Graceful fallback to mock data
+                const fallback = kpiDetailData[kpiId] || kpiDetailData.otif;
+                const merged = selectedKPI?.data
+                    ? { ...fallback, ...selectedKPI.data }
+                    : fallback;
+                setKpiData(merged);
+                setRecommendations(merged.recommendations || []);
+                setError('Live data unavailable – showing cached data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDetail();
+    }, [selectedKPI?.id, selectedModule, timePeriod]);
 
     const handleImplementRecommendation = (recId) => {
         setRecommendations(prev =>
@@ -71,6 +106,20 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
         }
     };
 
+    // Loading state
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4 text-slate-600">
+                    <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+                    <p className="text-lg font-semibold">Loading KPI Details…</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!kpiData) return null;
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
             {/* Header */}
@@ -88,6 +137,14 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
                         {kpiData.name} - Detailed Analysis
                     </h1>
                     <p className="text-gray-600 mt-2">{kpiData.description}</p>
+
+                    {/* Error banner (non-blocking) */}
+                    {error && (
+                        <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 w-fit">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            {error}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -102,6 +159,8 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
                             data={kpiData}
                             isPriority={true}
                             onClick={() => { }} // No click action on detail page
+                            selectedTimePeriod={timePeriod}
+                            onTimePeriodChange={setTimePeriod}
                         />
                     </div>
 
@@ -191,7 +250,6 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
                 <RelatedKPIsGrid
                     relatedKPIs={relatedKPIs}
                     onKPIClick={(kpi) => {
-                        // Navigate to the related KPI's detail screen
                         if (onNavigateToKPI) {
                             onNavigateToKPI({ id: kpi.id, name: kpi.name });
                         }

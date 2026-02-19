@@ -427,9 +427,7 @@ function App() {
 
           {currentScreen === 'kpi-detail' && (
             <KPIDetailScreen
-              kpiId={selectedKPI?.id}
-              kpiName={selectedKPI?.name}
-              kpiData={selectedKPI?.data}
+              selectedKPI={selectedKPI}
               onBack={handleBackToDashboard}
               selectedModule={selectedModule}
             />

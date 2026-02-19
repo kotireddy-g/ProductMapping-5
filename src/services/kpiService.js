@@ -36,6 +36,25 @@ const kpiService = {
             throw error;
         }
     },
+
+    /**
+     * Get KPI detail page data
+     * @param {string} kpiId - KPI identifier (e.g., 'otif', 'stockHealth')
+     * @param {string} module - Module context (e.g., 'otif')
+     * @param {string} timePeriod - Time period (e.g., 'daily', 'monthly', 'yearly')
+     * @returns {Promise} API response with full KPI detail data
+     */
+    getKPIDetail: async (kpiId, module = 'otif', timePeriod = 'daily') => {
+        try {
+            const response = await apiClient.get('/api/kpi/detail', {
+                params: { kpiId, module, timePeriod },
+            });
+            return response.data;
+        } catch (error) {
+            console.error(`Get KPI detail error for ${kpiId}:`, error);
+            throw error;
+        }
+    },
 };
 
 export default kpiService;
