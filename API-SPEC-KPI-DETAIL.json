@@ -1,0 +1,420 @@
+{
+    "_comment": "API Contract for KPI Detail Page — share with backend team.",
+    "_uiComponents": [
+        "KPIDetailScreen",
+        "EnhancedKPICard  (title, subtitle, status, metrics row, trend chart with history + forecast)",
+        "RootCausePanel   (categorised causes with severity + impact %)",
+        "Agent Recommendations grid (priority, impact, tags, improvement, timeline, cost, implemented)",
+        "RelatedKPIsGrid  (SCOR-stage linked KPIs at the bottom)"
+    ],
+    "endpoint": {
+        "method": "GET",
+        "path": "/api/kpi/detail",
+        "description": "Returns all data required to render the KPI Detail page for a given KPI and module.",
+        "authRequired": true
+    },
+    "request": {
+        "queryParams": {
+            "kpiId": {
+                "type": "string",
+                "required": true,
+                "description": "Snake-case KPI identifier, e.g. 'otif', 'stockHealth', 'expiryRisk'. Same ID used in /api/kpi/all.",
+                "example": "otif"
+            },
+            "module": {
+                "type": "string",
+                "required": false,
+                "default": "otif",
+                "description": "Active module context. Filters content (root causes, recommendations, related KPIs) to be relevant for the chosen module.",
+                "allowedValues": [
+                    "otif",
+                    "staff-allocation",
+                    "customer-satisfaction",
+                    "resource-utilization",
+                    "order-management",
+                    "bed-management"
+                ],
+                "example": "staff-allocation"
+            },
+            "timePeriod": {
+                "type": "string",
+                "required": false,
+                "default": "daily",
+                "description": "Granularity of trendData.history and trendData.forecast returned. UI has Daily / Monthly / Yearly tabs.",
+                "allowedValues": [
+                    "daily",
+                    "monthly",
+                    "yearly"
+                ]
+            }
+        },
+        "exampleUrl": "/api/kpi/detail?kpiId=otif&module=otif&timePeriod=daily"
+    },
+    "response": {
+        "success_200": {
+            "success": true,
+            "data": {
+                "_sectionComment_header": "─── SECTION 1: Page header (KPIDetailScreen title + subtitle) ───",
+                "id": "otif",
+                "name": "Internal OTIF",
+                "title": "Internal OTIF",
+                "subtitle": "On-Time, In-Full Delivery",
+                "description": "On-Time, In-Full Delivery",
+                "module": "otif",
+                "timePeriod": "daily",
+                "_sectionComment_metrics": "─── SECTION 2: Metrics row in EnhancedKPICard (GOAL | YTD | BASELINE | L QTR | CURRENT) ───",
+                "unit": "%",
+                "status": "warning",
+                "target": 95,
+                "current": 92.5,
+                "ytd": 92.5,
+                "baseline": 89,
+                "lastQuarter": 95,
+                "trend": "+2.3%",
+                "trendValue": 2.3,
+                "gap": 2.5,
+                "overstock": null,
+                "formula": "((Orders Delivered On Time AND In Full) ÷ Total Internal Orders) × 100",
+                "_sectionComment_chart": "─── SECTION 3: Trend chart in EnhancedKPICard (history + AI forecast overlay) ───",
+                "trendData": {
+                    "history": [
+                        {
+                            "date": "2025-12-29",
+                            "value": 89
+                        },
+                        {
+                            "date": "2025-12-30",
+                            "value": 90
+                        },
+                        {
+                            "date": "2025-12-31",
+                            "value": 91
+                        },
+                        {
+                            "date": "2026-01-01",
+                            "value": 89
+                        },
+                        {
+                            "date": "2026-01-02",
+                            "value": 92
+                        },
+                        {
+                            "date": "2026-01-03",
+                            "value": 93
+                        },
+                        {
+                            "date": "2026-01-04",
+                            "value": 92
+                        },
+                        {
+                            "date": "2026-01-05",
+                            "value": 92.5
+                        }
+                    ],
+                    "forecast": {
+                        "model": "holt",
+                        "dates": [
+                            "2026-01-03",
+                            "2026-01-04",
+                            "2026-01-05",
+                            "2026-01-06",
+                            "2026-01-07",
+                            "2026-01-08",
+                            "2026-01-09",
+                            "2026-01-10",
+                            "2026-01-11",
+                            "2026-01-12"
+                        ],
+                        "values": [
+                            93,
+                            92,
+                            92.5,
+                            92.8,
+                            93.2,
+                            93.5,
+                            93.8,
+                            94.1,
+                            94.4,
+                            94.7
+                        ],
+                        "overlapPoints": 3,
+                        "futurePoints": 7,
+                        "confidencePct": 85
+                    }
+                },
+                "_sectionComment_rootCauses": "─── SECTION 4: Root Cause Analysis panel (RootCausePanel). Groups causes by category. severity: high|medium|low, impact is % contribution. ───",
+                "rootCauses": [
+                    {
+                        "category": "Demand",
+                        "causes": [
+                            {
+                                "id": 1,
+                                "name": "Forecast Inaccuracy",
+                                "severity": "high",
+                                "impact": 35,
+                                "description": "WAPE >15% for critical SKUs causing demand misalignment"
+                            },
+                            {
+                                "id": 2,
+                                "name": "Sudden Demand Spikes",
+                                "severity": "medium",
+                                "impact": 20,
+                                "description": "Unexpected increases in specific departments"
+                            }
+                        ]
+                    },
+                    {
+                        "category": "Supply",
+                        "causes": [
+                            {
+                                "id": 3,
+                                "name": "Supplier Delays",
+                                "severity": "high",
+                                "impact": 30,
+                                "description": "Inbound OTIF at 89% vs target 98%"
+                            },
+                            {
+                                "id": 4,
+                                "name": "Lead Time Variability",
+                                "severity": "medium",
+                                "impact": 15,
+                                "description": "High variance in supplier delivery times"
+                            }
+                        ]
+                    },
+                    {
+                        "category": "Products",
+                        "causes": [
+                            {
+                                "id": 5,
+                                "name": "SKU Complexity",
+                                "severity": "low",
+                                "impact": 10,
+                                "description": "High number of low-volume SKUs"
+                            }
+                        ]
+                    }
+                ],
+                "_sectionComment_recommendations": "─── SECTION 5: Agent Recommendations grid. priority: CRITICAL|HIGH|MEDIUM|LOW, impact: high|medium|low, implemented defaults false. ───",
+                "recommendations": [
+                    {
+                        "id": 1,
+                        "priority": "CRITICAL",
+                        "impact": "high",
+                        "title": "Increase Safety Stock for Life-saving Medicines",
+                        "description": "Prioritize safety stock buffers for ICU/critical-use items in OT to reduce stockout-driven delays.",
+                        "tags": [
+                            "Life-saving",
+                            "Critical"
+                        ],
+                        "improvement": "+5.2% OTIF",
+                        "timeline": "2-3 days",
+                        "cost": "Medium",
+                        "implemented": false
+                    },
+                    {
+                        "id": 2,
+                        "priority": "HIGH",
+                        "impact": "medium",
+                        "title": "Optimize Reorder Points for Fast-moving Items",
+                        "description": "Recalibrate reorder points using recent consumption and lead times to prevent frequent replenishment gaps.",
+                        "tags": [
+                            "Fast-moving"
+                        ],
+                        "improvement": "+3.1% OTIF",
+                        "timeline": "1-2 days",
+                        "cost": "Low",
+                        "implemented": false
+                    },
+                    {
+                        "id": 3,
+                        "priority": "MEDIUM",
+                        "impact": "medium",
+                        "title": "Review Restricted Medicine Access Controls",
+                        "description": "Reduce approval bottlenecks by streamlining access control workflows for restricted items while maintaining compliance.",
+                        "tags": [
+                            "Restricted"
+                        ],
+                        "improvement": "+2.8% OTIF",
+                        "timeline": "1 week",
+                        "cost": "Low",
+                        "implemented": false
+                    },
+                    {
+                        "id": 4,
+                        "priority": "HIGH",
+                        "impact": "high",
+                        "title": "Implement FEFO for Expiry Management",
+                        "description": "Apply First-Expired-First-Out (FEFO) picking and redistribution to minimize expiry-related waste and fulfillment disruptions.",
+                        "tags": [
+                            "General",
+                            "Surgical"
+                        ],
+                        "improvement": "+4.5% OTIF",
+                        "timeline": "3-5 days",
+                        "cost": "Medium",
+                        "implemented": false
+                    }
+                ],
+                "_sectionComment_relatedKPIs": "─── SECTION 6: Related KPIs grid (RelatedKPIsGrid) at the bottom. stage maps to SCOR stages: Plan|Source|Make|Deliver|Return|Enable. icon is lucide-react icon name. ───",
+                "relatedKPIs": [
+                    {
+                        "id": "wape",
+                        "stage": "Plan",
+                        "name": "Forecast Quality (WAPE)",
+                        "description": "Weighted Absolute Percentage Error",
+                        "value": 12.5,
+                        "unit": "%",
+                        "target": 10,
+                        "status": "warning",
+                        "formula": "WAPE = Σ|Actual - Forecast| / ΣActual × 100",
+                        "icon": "Target",
+                        "color": "#f59e0b"
+                    },
+                    {
+                        "id": "inbound_otif",
+                        "stage": "Source",
+                        "name": "Inbound Supplier OTIF",
+                        "description": "Supplier Delivery Performance",
+                        "value": 96.8,
+                        "unit": "%",
+                        "target": 98,
+                        "status": "warning",
+                        "formula": "Inbound OTIF = (POs On-Time AND In-Full) / Total POs × 100",
+                        "icon": "Truck",
+                        "color": "#f59e0b"
+                    },
+                    {
+                        "id": "fpy",
+                        "stage": "Make",
+                        "name": "First Pass Yield (FPY)",
+                        "description": "First-Time-Right Rate",
+                        "value": 94.2,
+                        "unit": "%",
+                        "target": 96,
+                        "status": "warning",
+                        "formula": "FPY = (Units accepted with no rework) / Units started × 100",
+                        "icon": "CheckCircle",
+                        "color": "#f59e0b"
+                    },
+                    {
+                        "id": "customer_otif",
+                        "stage": "Deliver",
+                        "name": "Customer OTIF",
+                        "description": "Perfect Delivery Rate",
+                        "value": 97.5,
+                        "unit": "%",
+                        "target": 99,
+                        "status": "warning",
+                        "formula": "Customer OTIF = (Orders On-Time AND In-Full) / Total Orders × 100",
+                        "icon": "Package",
+                        "color": "#f59e0b"
+                    },
+                    {
+                        "id": "return_resolution",
+                        "stage": "Return",
+                        "name": "Return Resolution Lead Time",
+                        "description": "Median Return Processing Time",
+                        "value": 3.5,
+                        "unit": "days",
+                        "target": 2,
+                        "status": "critical",
+                        "formula": "RLT = Median(Return Closed Date - Return Initiated Date)",
+                        "icon": "RotateCcw",
+                        "color": "#ef4444"
+                    },
+                    {
+                        "id": "e2r",
+                        "stage": "Enable",
+                        "name": "Exception-to-Recovery Time",
+                        "description": "System Recovery Speed",
+                        "value": 4.2,
+                        "unit": "hours",
+                        "target": 2,
+                        "status": "critical",
+                        "formula": "E2R = Median(Recovery Time - Exception Detected Time)",
+                        "icon": "Zap",
+                        "color": "#ef4444"
+                    }
+                ]
+            }
+        },
+        "error_404": {
+            "success": false,
+            "error": {
+                "code": "KPI_NOT_FOUND",
+                "message": "KPI 'xyz' not found for module 'otif'."
+            }
+        },
+        "error_400": {
+            "success": false,
+            "error": {
+                "code": "INVALID_PARAMS",
+                "message": "kpiId is required."
+            }
+        }
+    },
+    "fieldReference": {
+        "_comment": "Complete field-by-field description of every key in data{}.",
+        "id": "string — unique KPI identifier, matches the key in /api/kpi/all",
+        "name": "string — display name shown in the page header",
+        "title": "string — card heading inside EnhancedKPICard (usually same as name)",
+        "subtitle": "string — one-line descriptor shown below the title",
+        "description": "string — short text shown under the page H1 title",
+        "module": "string — echoes back the requested module",
+        "timePeriod": "string — echoes back the requested timePeriod (daily|monthly|yearly)",
+        "unit": "string — '%', 'RM', 'days', 'hours', etc. Applied throughout the UI",
+        "status": "string — 'healthy' | 'warning' | 'critical'. Controls card border colour and status badge.",
+        "target": "number — Goal / target value. Shown in GOAL and L QTR columns and as the dashed reference line on the chart.",
+        "current": "number — Latest actual value. Shown in CURRENT and YTD columns.",
+        "ytd": "number — Year-to-date value (can equal current if not separately tracked).",
+        "baseline": "number — Starting-of-period reference value, shown in BASELINE column. If null, UI uses trendData.history[0].value.",
+        "lastQuarter": "number — Previous quarter value. Shown in L QTR column. If null, UI falls back to target.",
+        "trend": "string — Human-readable change string, e.g. '+2.3%', '-1.2%'. Shown next to the current value.",
+        "trendValue": "number — Numeric change. Positive = TrendingUp arrow, negative = TrendingDown arrow.",
+        "gap": "number — Difference between target and current (absolute). Shown in KPIDetailCard gap box.",
+        "overstock": "number | null — Overstock percentage shown only for stockHealth KPI. Send null for all others.",
+        "formula": "string — Calculation formula shown in the expandable formula tooltip.",
+        "trendData": {
+            "history": "array<{date:string, value:number}> — Historical data points. Dates as YYYY-MM-DD. Volume depends on timePeriod: ~8 daily, ~12 monthly, ~5 yearly.",
+            "forecast": {
+                "model": "string — Model name for informational purposes ('holt', 'arima', etc.).",
+                "dates": "array<string> — ISO date strings for forecast points. First 'overlapPoints' dates must overlap with the last dates of history.",
+                "values": "array<number> — Forecast values, same order as dates.",
+                "overlapPoints": "integer — How many of the forecast dates also appear in history (used for chart rendering).",
+                "futurePoints": "integer — Number of purely future forecast points.",
+                "confidencePct": "integer — Forecast confidence percentage (informational)."
+            }
+        },
+        "rootCauses": "array<category> — Each category has a string 'category' label and 'causes' array. Each cause: {id, name, severity, impact (0-100 %), description}.",
+        "recommendations": "array — Each item: {id, priority (CRITICAL|HIGH|MEDIUM|LOW), impact (high|medium|low), title, description, tags[], improvement (string), timeline (string), cost (string), implemented (boolean)}.",
+        "relatedKPIs": "array — SCOR-stage related KPIs shown at the bottom. Each: {id, stage (Plan|Source|Make|Deliver|Return|Enable), name, description, value, unit, target, status, formula, icon (lucide-react name), color (hex)}."
+    },
+    "moduleAdaptation": {
+        "_comment": "The same endpoint must serve all modules. The backend should filter/replace rootCauses, recommendations, and relatedKPIs arrays based on the 'module' query param. The core KPI metrics (current, target, trendData, etc.) are always KPI-specific. Example: for module=staff-allocation, the rootCauses should reference staffing gaps not supplier delays. The relatedKPIs should surface staffing-related SCOR-equivalent KPIs relevant to that module.",
+        "moduleSpecificFields": [
+            "rootCauses",
+            "recommendations",
+            "relatedKPIs"
+        ],
+        "moduleNeutralFields": [
+            "id",
+            "name",
+            "title",
+            "subtitle",
+            "description",
+            "unit",
+            "status",
+            "target",
+            "current",
+            "ytd",
+            "baseline",
+            "lastQuarter",
+            "trend",
+            "trendValue",
+            "gap",
+            "formula",
+            "trendData"
+        ]
+    }
+}
