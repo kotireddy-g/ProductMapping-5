@@ -33,7 +33,7 @@ scp product-mapping.zip exflow@192.168.1.111:/tmp/
 # Deploy on server
 echo "🚀 Deploying on server..."
 ssh exflow@192.168.1.111 << 'ENDSSH'
-cd /var/www
+cd /var/www/pantai
 sudo rm -rf product-mapping/*
 sudo unzip -o /tmp/product-mapping.zip -d product-mapping
 sudo chown -R www-data:www-data product-mapping
