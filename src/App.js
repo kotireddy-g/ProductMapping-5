@@ -17,7 +17,7 @@ import CommandCenterDashboard from './components/CommandCenter/CommandCenterDash
 import DecisionActionsScreen from './components/DecisionActions/DecisionActionsScreen';
 import ForecastInternalDetailsScreen from './components/Forecast/ForecastInternalDetailsScreen';
 import KPIDetailScreen from './components/KPI/KPIDetailScreen';
-import { notifications as initialNotifications } from './data/unifiedPharmaData';
+
 import notificationsService from './services/notificationsService';
 import authService from './services/authService';
 
@@ -35,7 +35,7 @@ function App() {
   const [selectedKPI, setSelectedKPI] = useState(null);
   const [selectedModule, setSelectedModule] = useState('otif'); // Module state
 
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
@@ -60,28 +60,50 @@ function App() {
     }
   }, []);
 
-  // Fetch notifications when authenticated
+  // Fetch notifications on login (isAuthenticated → true) or module switch (selectedModule changes).
+  // The effect itself is the trigger — toasts shown on every genuine context change.
+  // Background 30-second refresh runs inside the interval with showToasts=false.
   useEffect(() => {
-    if (isAuthenticated) {
-      const fetchNotifications = async () => {
-        try {
-          const response = await notificationsService.getNotifications();
-          if (response.success && response.data) {
-            setNotifications(response.data.notifications);
+    if (!isAuthenticated) return;
+
+    const fetchNotifications = async (showToasts) => {
+      try {
+        const response = await notificationsService.getNotifications(selectedModule);
+        if (response && response.success && response.data) {
+          const normalized = Array.isArray(response.data.notifications)
+            ? response.data.notifications
+            : [];
+          setNotifications(normalized);
+
+          if (showToasts && normalized.length > 0) {
+            // Clear existing toasts then stagger unread ones into view
+            setToasts([]);
+            const unread = normalized.filter(n => !n.read).slice(0, 5);
+            unread.forEach((notification, index) => {
+              setTimeout(() => {
+                setToasts(prev => [...prev, {
+                  id: `${selectedModule}-${Date.now()}-${index}`,
+                  type: notification.type || notification.severity || 'info',
+                  title: notification.title,
+                  message: notification.message,
+                  duration: 5000 + (index * 1000)
+                }]);
+              }, index * 800);
+            });
           }
-        } catch (error) {
-          console.error('Failed to fetch notifications:', error);
-          // Keep using mock notifications as fallback
         }
-      };
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      }
+    };
 
-      fetchNotifications();
+    // Fetch with toasts when this effect fires (login or module switch)
+    fetchNotifications(true);
 
-      // Optional: Refresh notifications every 30 seconds
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [isAuthenticated]);
+    // Background refresh every 30 seconds — silent, no toasts
+    const interval = setInterval(() => fetchNotifications(false), 30000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, selectedModule]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset scroll position when navigating to different screens
   useEffect(() => {
@@ -90,28 +112,16 @@ function App() {
     }
   }, [currentScreen]);
 
-  const loginToasts = [
-    { id: 1, type: 'critical', title: 'Critical Stockout Alert', message: '35 products are currently stocked out', duration: 5000 },
-    { id: 2, type: 'warning', title: 'Low Stock Warning', message: '48 products below reorder point', duration: 6000 },
-    { id: 3, type: 'warning', title: 'Expiry Alert', message: '12 products expiring within 30 days', duration: 7000 },
-    { id: 4, type: 'info', title: 'OTIF Update', message: 'OTIF score improved to 92.4%', duration: 8000 },
-    { id: 5, type: 'success', title: 'Forecast Synced', message: 'Latest forecast data synchronized', duration: 9000 }
-  ];
-
   const handleLogin = (user) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
-
-    loginToasts.forEach((toast, index) => {
-      setTimeout(() => {
-        setToasts(prev => [...prev, { ...toast, id: Date.now() + index }]);
-      }, index * 800);
-    });
+    // isAuthenticated changing to true triggers the notification useEffect above
   };
 
   const handleSignup = (user) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
+    // isAuthenticated changing to true triggers the notification useEffect above
   };
 
   const handleLogout = () => {
@@ -240,11 +250,15 @@ function App() {
   };
 
   const handleModuleChange = (moduleId) => {
-    // If user is on a detail page, navigate back to landing page first
+    if (moduleId === selectedModule) return; // no-op if same module tapped
+    // Clear stale data immediately so old module notifications don't flash
+    setNotifications([]);
+    setToasts([]);
     if (currentScreen !== 'dashboard') {
       setCurrentScreen('dashboard');
     }
     setSelectedModule(moduleId);
+    // selectedModule changing triggers the notification useEffect above
   };
 
   const handleScrollToSection = (sectionId) => {
@@ -372,7 +386,7 @@ function App() {
         onScrollToSection={handleScrollToSection}
         onNotificationClick={() => setIsNotificationOpen(true)}
         onTemplateClick={() => setShowTemplateSelector(true)}
-        unreadNotificationCount={notifications.filter(n => !n.read).length}
+        unreadNotificationCount={Array.isArray(notifications) ? notifications.filter(n => !n.read).length : 0}
         activeSection={activeSection}
       />
 

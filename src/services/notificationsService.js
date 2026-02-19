@@ -11,18 +11,34 @@ const notificationsService = {
      * @param {string} module - Optional module name (e.g., 'staff-allocation')
      * @returns {Promise} API response with notifications list and unread count
      */
-    getNotifications: async (module = null) => {
+    getNotifications: async (module) => {
         try {
-            const params = {};
-            if (module) {
-                params.module = module;
-            }
+            // Always forward the module param so the API knows the active context
+            const params = module ? { module } : {};
             const response = await apiClient.get('/api/notifications', { params });
-            // API returns { success: true, data: [...notifications] }
-            // Return in expected format: { data: { notifications: [...] } }
+
+            // API returns: { success: true, data: { unreadCount: N, notifications: [...] } }
+            // response.data.data  => { unreadCount, notifications: [...] }  (object, NOT array)
+            // response.data.data.notifications => the actual array we need
+            const payload = response.data?.data;
+            let notifications;
+            if (payload && Array.isArray(payload.notifications)) {
+                // Standard shape: { data: { notifications: [...] } }
+                notifications = payload.notifications;
+            } else if (Array.isArray(payload)) {
+                // Alternate shape: { data: [...] }
+                notifications = payload;
+            } else if (Array.isArray(response.data?.notifications)) {
+                // Flat shape: { notifications: [...] }
+                notifications = response.data.notifications;
+            } else {
+                notifications = [];
+            }
+
             return {
+                success: true,
                 data: {
-                    notifications: response.data.data || response.data.notifications || []
+                    notifications
                 }
             };
         } catch (error) {
