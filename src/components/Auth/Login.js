@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
+import authService from '../../services/authService';
 
 const Login = ({ onLogin, onSwitchToSignup }) => {
   const [formData, setFormData] = useState({
@@ -47,15 +48,18 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       if (formData.email === ALLOWED_EMAIL && formData.password === ALLOWED_PASSWORD) {
-        // Login successful
         const mockUser = {
           email: ALLOWED_EMAIL,
           name: 'Management User',
           role: 'admin'
         };
+
+        // Persist session to localStorage so refresh doesn't log the user out
+        authService.setToken('dummy-session-token');
+        authService.setUser(mockUser);
+
         onLogin(mockUser);
       } else {
-        // Invalid credentials
         setErrors({
           email: 'Invalid email or password',
           password: 'Invalid email or password'
