@@ -14,7 +14,7 @@ const hpiSimulationService = {
      * @param {number} params.costPerBedDay - Cost per bed per day
      * @returns {Promise<Object>} Simulation results
      */
-    runSimulation: async (params) => {
+    runSimulation: async (params, selectedModule = 'otif') => {
         try {
             const response = await axios.post(`${API_BASE_URL}/hpi/simulation`, {
                 baseline: {
@@ -34,7 +34,8 @@ const hpiSimulationService = {
                 beds: params.beds || 500,
                 occupancy_rate: params.occupancyRate || 0.85,
                 revenue_per_bed_day: params.revenuePerBedDay || 4000,
-                cost_per_bed_day: params.costPerBedDay || 3200
+                cost_per_bed_day: params.costPerBedDay || 3200,
+                module: selectedModule
             });
 
             if (response.data && response.data.success) {

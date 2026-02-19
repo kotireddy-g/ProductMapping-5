@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { TrendingUp, RotateCcw, Loader } from 'lucide-react';
 import hpiSimulationService from '../../services/hpiSimulationService';
 
-const HPISimulationTab = ({ baselineData }) => {
+const HPISimulationTab = ({ baselineData, selectedModule = 'otif' }) => {
     // Slider configuration - OTIF only (values are already percentages)
     const sliderConfigs = [
         {
@@ -54,7 +54,7 @@ const HPISimulationTab = ({ baselineData }) => {
                 occupancyRate: 0.85,
                 revenuePerBedDay: 4000,
                 costPerBedDay: 3200
-            });
+            }, selectedModule);
 
             if (result.success) {
                 console.log('HPI Simulation Result:', result.data);

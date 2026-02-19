@@ -660,6 +660,7 @@ const LandingPage = forwardRef(({
       <HospitalPerformanceDrawer
         isOpen={showPerformanceDrawer}
         onClose={() => setShowPerformanceDrawer(false)}
+        selectedModule={selectedModule}
         performanceData={overviewData?.forecastInsights?.hospitalPerformanceIndex || {
           currentScore: 77.71,
           ifAchievedScore: 79.32,

@@ -3,7 +3,7 @@ import { X, TrendingUp, AlertCircle, CheckCircle, Info, BarChart3, DollarSign, U
 import HPISimulationTab from './HPISimulationTab';
 import scorMetricsData from '../../data/scorMetricsData';
 
-const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
+const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedModule = 'otif' }) => {
     const [activeTab, setActiveTab] = useState('overview');
     if (!isOpen || !performanceData) return null;
 
@@ -114,13 +114,16 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData }) => {
 
                 {/* Tab Content */}
                 {activeTab === 'simulation' ? (
-                    <HPISimulationTab baselineData={{
-                        otifPct: inputs?.components?.OTIF_norm || 0.92,
-                        revenueNorm: inputs?.components?.Revenue_norm || 1.0,
-                        costEfficiencyNorm: inputs?.components?.Cost_efficiency_norm || 1.0,
-                        patientSatisfaction: inputs?.components?.Patient_Sat_norm || 0.82,
-                        hpi: currentScore
-                    }} />
+                    <HPISimulationTab
+                        baselineData={{
+                            otifPct: inputs?.components?.OTIF_norm || 0.92,
+                            revenueNorm: inputs?.components?.Revenue_norm || 1.0,
+                            costEfficiencyNorm: inputs?.components?.Cost_efficiency_norm || 1.0,
+                            patientSatisfaction: inputs?.components?.Patient_Sat_norm || 0.82,
+                            hpi: currentScore
+                        }}
+                        selectedModule={selectedModule}
+                    />
                 ) : (
                     <div className="p-6 space-y-6">
                         {/* Section 1: Performance Score */}
