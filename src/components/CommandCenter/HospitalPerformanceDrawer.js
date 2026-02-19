@@ -1,10 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, TrendingUp, AlertCircle, CheckCircle, Info, BarChart3, DollarSign, Users, Activity, Sliders } from 'lucide-react';
 import HPISimulationTab from './HPISimulationTab';
 import scorMetricsData from '../../data/scorMetricsData';
+import kpiService from '../../services/kpiService';
 
 const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedModule = 'otif' }) => {
     const [activeTab, setActiveTab] = useState('overview');
+    const [moduleKPIs, setModuleKPIs] = useState([]);
+    const [kpiLoading, setKpiLoading] = useState(false);
+
+    const isOtif = selectedModule === 'otif';
+
+    // Fetch KPIs for non-OTIF modules whenever the drawer opens or module changes
+    useEffect(() => {
+        if (!isOpen || isOtif) {
+            setModuleKPIs([]);
+            return;
+        }
+        const fetchKPIs = async () => {
+            setKpiLoading(true);
+            try {
+                const response = await kpiService.getAllKPIs(selectedModule);
+                if (response?.success && response?.data) {
+                    // API returns a flat object — convert to array for rendering
+                    const kpiArray = Object.entries(response.data)
+                        .filter(([, v]) => v && typeof v === 'object' && v.title)
+                        .map(([key, kpi]) => ({
+                            key,
+                            name: kpi.title || key,
+                            current: kpi.current,
+                            target: kpi.target,
+                            unit: kpi.unit || '',
+                            change: kpi.change,
+                            status: kpi.status || 'neutral',
+                        }));
+                    setModuleKPIs(kpiArray);
+                }
+            } catch (err) {
+                console.error('Failed to fetch KPIs for contributors:', err);
+            } finally {
+                setKpiLoading(false);
+            }
+        };
+        fetchKPIs();
+    }, [isOpen, selectedModule, isOtif]);
+
     if (!isOpen || !performanceData) return null;
 
     const {
@@ -245,89 +285,108 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedM
                             </div>
                         </div>
 
-                        {/* Section 3: Contributors (SCOR Metrics) */}
+                        {/* Section 3: Contributors */}
                         <div>
                             <div className="flex items-center gap-2 mb-3">
                                 <Users size={20} className="text-teal-600" />
                                 <h3 className="text-lg font-bold text-gray-900">Contributors</h3>
                             </div>
-                            <div className="grid grid-cols-3 gap-3">
-                                {/* Plan - Forecast Quality (WAPE) */}
-                                <div className="bg-white border border-orange-200 rounded-lg p-3">
-                                    <div className="text-xs font-semibold text-gray-600 mb-1">Plan</div>
-                                    <div className="text-sm font-bold text-gray-900 mb-2">
-                                        Forecast Quality (WAPE)
-                                    </div>
-                                    <div className="text-2xl font-bold text-orange-500">20.2%</div>
-                                    <div className="text-xs text-gray-500 mt-1">Current: 12.5%</div>
-                                    <div className="text-xs text-gray-500">Goal: 10%</div>
-                                </div>
 
-                                {/* Source - Inbound Supplier OTIF */}
-                                <div className="bg-white border border-orange-200 rounded-lg p-3">
-                                    <div className="text-xs font-semibold text-gray-600 mb-1">Source</div>
-                                    <div className="text-sm font-bold text-gray-900 mb-2">
-                                        Inbound Supplier OTIF
+                            {isOtif ? (
+                                /* ── OTIF: hardcoded SCOR metrics ── */
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="bg-white border border-orange-200 rounded-lg p-3">
+                                        <div className="text-xs font-semibold text-gray-600 mb-1">Plan</div>
+                                        <div className="text-sm font-bold text-gray-900 mb-2">Forecast Quality (WAPE)</div>
+                                        <div className="text-2xl font-bold text-orange-500">20.2%</div>
+                                        <div className="text-xs text-gray-500 mt-1">Current: 12.5%</div>
+                                        <div className="text-xs text-gray-500">Goal: 10%</div>
                                     </div>
-                                    <div className="text-2xl font-bold text-orange-500">41.0%</div>
-                                    <div className="text-xs text-gray-500 mt-1">Current: 96.8%</div>
-                                    <div className="text-xs text-gray-500">Goal: 98%</div>
-                                </div>
-
-                                {/* Make - First Pass Yield (FPY) */}
-                                <div className="bg-white border border-orange-200 rounded-lg p-3">
-                                    <div className="text-xs font-semibold text-gray-600 mb-1">Make</div>
-                                    <div className="text-sm font-bold text-gray-900 mb-2">
-                                        First Pass Yield (FPY)
+                                    <div className="bg-white border border-orange-200 rounded-lg p-3">
+                                        <div className="text-xs font-semibold text-gray-600 mb-1">Source</div>
+                                        <div className="text-sm font-bold text-gray-900 mb-2">Inbound Supplier OTIF</div>
+                                        <div className="text-2xl font-bold text-orange-500">41.0%</div>
+                                        <div className="text-xs text-gray-500 mt-1">Current: 96.8%</div>
+                                        <div className="text-xs text-gray-500">Goal: 98%</div>
                                     </div>
-                                    <div className="text-2xl font-bold text-orange-500">30.9%</div>
-                                    <div className="text-xs text-gray-500 mt-1">Current: 94.2%</div>
-                                    <div className="text-xs text-gray-500">Goal: 96%</div>
-                                </div>
-
-                                {/* Deliver - Customer OTIF */}
-                                <div className="bg-white border border-orange-200 rounded-lg p-3">
-                                    <div className="text-xs font-semibold text-gray-600 mb-1">Deliver</div>
-                                    <div className="text-sm font-bold text-gray-900 mb-2">
-                                        Customer OTIF
+                                    <div className="bg-white border border-orange-200 rounded-lg p-3">
+                                        <div className="text-xs font-semibold text-gray-600 mb-1">Make</div>
+                                        <div className="text-sm font-bold text-gray-900 mb-2">First Pass Yield (FPY)</div>
+                                        <div className="text-2xl font-bold text-orange-500">30.9%</div>
+                                        <div className="text-xs text-gray-500 mt-1">Current: 94.2%</div>
+                                        <div className="text-xs text-gray-500">Goal: 96%</div>
                                     </div>
-                                    <div className="text-2xl font-bold text-orange-500">95.2%</div>
-                                    <div className="text-xs text-gray-500 mt-1">Current: 97.5%</div>
-                                    <div className="text-xs text-gray-500">Goal: 99%</div>
-                                </div>
-
-                                {/* Return - Return Resolution Lead Time */}
-                                <div className="bg-white border border-red-200 rounded-lg p-3">
-                                    <div className="text-xs font-semibold text-gray-600 mb-1">Return</div>
-                                    <div className="text-sm font-bold text-gray-900 mb-2">
-                                        Return Resolution Lead Time
+                                    <div className="bg-white border border-orange-200 rounded-lg p-3">
+                                        <div className="text-xs font-semibold text-gray-600 mb-1">Deliver</div>
+                                        <div className="text-sm font-bold text-gray-900 mb-2">Customer OTIF</div>
+                                        <div className="text-2xl font-bold text-orange-500">95.2%</div>
+                                        <div className="text-xs text-gray-500 mt-1">Current: 97.5%</div>
+                                        <div className="text-xs text-gray-500">Goal: 99%</div>
                                     </div>
-                                    <div className="text-2xl font-bold text-red-600">68.1%</div>
-                                    <div className="text-xs text-gray-500 mt-1">Current: 3.5days</div>
-                                    <div className="text-xs text-gray-500">Goal: 2days</div>
-                                </div>
-
-                                {/* Enable - Exception-to-Recovery Time */}
-                                <div className="bg-white border border-red-200 rounded-lg p-3">
-                                    <div className="text-xs font-semibold text-gray-600 mb-1">Enable</div>
-                                    <div className="text-sm font-bold text-gray-900 mb-2">
-                                        Exception-to-Recovery Time
+                                    <div className="bg-white border border-red-200 rounded-lg p-3">
+                                        <div className="text-xs font-semibold text-gray-600 mb-1">Return</div>
+                                        <div className="text-sm font-bold text-gray-900 mb-2">Return Resolution Lead Time</div>
+                                        <div className="text-2xl font-bold text-red-600">68.1%</div>
+                                        <div className="text-xs text-gray-500 mt-1">Current: 3.5days</div>
+                                        <div className="text-xs text-gray-500">Goal: 2days</div>
                                     </div>
-                                    <div className="text-2xl font-bold text-red-600">99.8%</div>
-                                    <div className="text-xs text-gray-500 mt-1">Current: 4.2hours</div>
-                                    <div className="text-xs text-gray-500">Goal: 2hours</div>
+                                    <div className="bg-white border border-red-200 rounded-lg p-3">
+                                        <div className="text-xs font-semibold text-gray-600 mb-1">Enable</div>
+                                        <div className="text-sm font-bold text-gray-900 mb-2">Exception-to-Recovery Time</div>
+                                        <div className="text-2xl font-bold text-red-600">99.8%</div>
+                                        <div className="text-xs text-gray-500 mt-1">Current: 4.2hours</div>
+                                        <div className="text-xs text-gray-500">Goal: 2hours</div>
+                                    </div>
                                 </div>
-                            </div>
+                            ) : kpiLoading ? (
+                                /* ── Other modules: loading state ── */
+                                <div className="flex items-center justify-center py-8 text-gray-400 text-sm gap-2">
+                                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    Loading contributors…
+                                </div>
+                            ) : moduleKPIs.length > 0 ? (
+                                /* ── Other modules: dynamic KPI cards ── */
+                                <div className="grid grid-cols-3 gap-3">
+                                    {moduleKPIs.map((kpi) => {
+                                        const isWarning = kpi.status === 'warning' || kpi.status === 'at_risk';
+                                        const isCritical = kpi.status === 'critical' || kpi.status === 'below_target';
+                                        const borderColor = isCritical ? 'border-red-200' : isWarning ? 'border-orange-200' : 'border-green-200';
+                                        const valueColor = isCritical ? 'text-red-600' : isWarning ? 'text-orange-500' : 'text-green-600';
+                                        const currentDisplay = kpi.current != null
+                                            ? `${kpi.current}${kpi.unit}`
+                                            : '—';
+                                        const targetDisplay = kpi.target != null
+                                            ? `${kpi.target}${kpi.unit}`
+                                            : '—';
+                                        return (
+                                            <div key={kpi.key} className={`bg-white border ${borderColor} rounded-lg p-3`}>
+                                                <div className="text-sm font-bold text-gray-900 mb-2 leading-tight">{kpi.name}</div>
+                                                <div className={`text-2xl font-bold ${valueColor}`}>{currentDisplay}</div>
+                                                <div className="text-xs text-gray-500 mt-1">Goal: {targetDisplay}</div>
+                                                {kpi.change != null && (
+                                                    <div className={`text-xs mt-1 font-medium ${kpi.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                        {kpi.change >= 0 ? '↑' : '↓'} {Math.abs(kpi.change)}{kpi.unit}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-gray-400 py-4 text-center">No contributor data available.</div>
+                            )}
                         </div>
 
-                        {/* Section 4: Medicine Impact */}
-                        {medicineImpact && (
+                        {/* Section 4: Medicine Impact — OTIF only */}
+                        {isOtif && medicineImpact && (
                             <div>
                                 <div className="flex items-center gap-2 mb-4">
                                     <Info size={20} className="text-teal-600" />
                                     <h3 className="text-lg font-bold text-gray-900">Medicine Impact</h3>
                                 </div>
-
                                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div className="bg-white rounded-lg p-3 border border-gray-200">
@@ -343,7 +402,6 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedM
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="text-sm text-gray-700 bg-white rounded-lg p-3 border border-gray-200">
                                         <span className="font-semibold">Impact Summary:</span> Achieving the forecast OTIF
                                         will improve overall performance by {medicineImpact.deltaOtifPct.toFixed(2)}% and
@@ -353,14 +411,13 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedM
                             </div>
                         )}
 
-                        {/* Section 5: Key Inputs */}
-                        {inputs && (
+                        {/* Section 5: Key Inputs — OTIF only */}
+                        {isOtif && inputs && (
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
                                     <Info size={20} className="text-teal-600" />
                                     <h3 className="text-lg font-bold text-gray-900">Key Inputs</h3>
                                 </div>
-
                                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                                     <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                                         <div className="flex justify-between">
