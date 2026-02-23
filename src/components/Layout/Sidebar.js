@@ -16,7 +16,8 @@ import {
     User,
     Settings,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    Briefcase
 } from 'lucide-react';
 import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
 
@@ -151,6 +152,17 @@ const Sidebar = ({
                     >
                         <Target size={18} />
                         <span className="text-sm font-medium">Objectives</span>
+                    </button>
+                </div>
+
+                {/* Work Pulse */}
+                <div className="px-4 mb-2">
+                    <button
+                        onClick={() => window.open('http://192.168.1.111:8011/', '_blank')}
+                        className="w-full px-4 py-2.5 flex items-center gap-2 transition-colors text-left rounded-lg text-gray-700 hover:bg-gray-50"
+                    >
+                        <Briefcase size={18} />
+                        <span className="text-sm font-medium">Work Pulse</span>
                     </button>
                 </div>
 
