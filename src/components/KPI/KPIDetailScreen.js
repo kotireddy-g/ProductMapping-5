@@ -7,6 +7,9 @@ import { kpiDetailData, relatedKPIs as fallbackRelatedKPIs } from '../../data/kp
 import kpiService from '../../services/kpiService';
 
 const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule = 'otif' }) => {
+    // Internal active KPI id – starts from prop, updates when a Related KPI is clicked
+    const [activeKPIId, setActiveKPIId] = useState(selectedKPI?.id || 'otif');
+    const [activeKPIName, setActiveKPIName] = useState(selectedKPI?.name || '');
     const [kpiData, setKpiData] = useState(null);
     const [relatedKPIs, setRelatedKPIs] = useState(fallbackRelatedKPIs);
     const [loading, setLoading] = useState(true);
@@ -14,23 +17,31 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
     const [timePeriod, setTimePeriod] = useState('daily');
     const [recommendations, setRecommendations] = useState([]);
 
-    // Scroll to top when component mounts or KPI changes
+    // When the parent changes the KPI (search / navigation), sync internal state
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (selectedKPI?.id && selectedKPI.id !== activeKPIId) {
+            setActiveKPIId(selectedKPI.id);
+            setActiveKPIName(selectedKPI.name || '');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedKPI?.id]);
 
-    // Fetch KPI detail from API whenever kpiId, module or timePeriod changes
+    // Scroll to top whenever the active KPI changes
     useEffect(() => {
-        const kpiId = selectedKPI?.id || 'otif';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [activeKPIId]);
 
+    // Fetch KPI detail from API whenever activeKPIId, module or timePeriod changes
+    useEffect(() => {
         const fetchDetail = async () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await kpiService.getKPIDetail(kpiId, selectedModule, timePeriod);
+                const response = await kpiService.getKPIDetail(activeKPIId, selectedModule, timePeriod);
                 if (response?.success && response?.data) {
                     const apiData = response.data;
                     setKpiData(apiData);
+                    setActiveKPIName(apiData.name || activeKPIName);
                     setRecommendations(apiData.recommendations || []);
                     if (apiData.relatedKPIs?.length) {
                         setRelatedKPIs(apiData.relatedKPIs);
@@ -40,9 +51,8 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
                 }
             } catch (err) {
                 console.error('KPI detail fetch failed, using mock data:', err);
-                // Graceful fallback to mock data
-                const fallback = kpiDetailData[kpiId] || kpiDetailData.otif;
-                const merged = selectedKPI?.data
+                const fallback = kpiDetailData[activeKPIId] || kpiDetailData.otif;
+                const merged = selectedKPI?.data && activeKPIId === selectedKPI?.id
                     ? { ...fallback, ...selectedKPI.data }
                     : fallback;
                 setKpiData(merged);
@@ -54,7 +64,7 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
         };
 
         fetchDetail();
-    }, [selectedKPI?.id, selectedModule, timePeriod]);
+    }, [activeKPIId, selectedModule, timePeriod]);
 
     const handleImplementRecommendation = (recId) => {
         setRecommendations(prev =>
@@ -250,9 +260,9 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
                 <RelatedKPIsGrid
                     relatedKPIs={relatedKPIs}
                     onKPIClick={(kpi) => {
-                        if (onNavigateToKPI) {
-                            onNavigateToKPI({ id: kpi.id, name: kpi.name });
-                        }
+                        setActiveKPIId(kpi.id);
+                        setActiveKPIName(kpi.name || kpi.id);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                 />
             </div>
