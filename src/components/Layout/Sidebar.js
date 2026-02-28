@@ -17,7 +17,8 @@ import {
     Settings,
     ChevronDown,
     ChevronRight,
-    Briefcase
+    Briefcase,
+    Plug
 } from 'lucide-react';
 import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
 
@@ -252,6 +253,21 @@ const Sidebar = ({
                 >
                     <FileText size={18} />
                     <span className="text-sm font-medium">Supplier Forecast Report</span>
+                </button>
+
+                {/* Connectors */}
+                <button
+                    onClick={() => onNavigate && onNavigate('connectors')}
+                    className={`w-full px-4 py-3 flex items-center justify-between text-left transition-colors ${currentScreen === 'connectors'
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Plug size={18} />
+                        <span className="text-sm font-medium">Connectors</span>
+                    </div>
+                    <span className="text-[10px] font-bold bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">NEW</span>
                 </button>
 
                 {/* Language */}

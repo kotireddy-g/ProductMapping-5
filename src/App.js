@@ -17,6 +17,9 @@ import CommandCenterDashboard from './components/CommandCenter/CommandCenterDash
 import DecisionActionsScreen from './components/DecisionActions/DecisionActionsScreen';
 import ForecastInternalDetailsScreen from './components/Forecast/ForecastInternalDetailsScreen';
 import KPIDetailScreen from './components/KPI/KPIDetailScreen';
+import SourceConnectionPage from './components/Connectors/SourceConnectionPage';
+import SourceListPage from './components/Connectors/SourceListPage';
+import WorkPulseDashboard from './components/WorkPulse/WorkPulseDashboard';
 
 import notificationsService from './services/notificationsService';
 import authService from './services/authService';
@@ -25,6 +28,12 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authView, setAuthView] = useState('login');
   const [currentUser, setCurrentUser] = useState(null);
+
+  // appFlow: 'source-connection' → shows post-login source page; 'main' → normal dashboard
+  const [appFlow, setAppFlow] = useState('source-connection');
+  const [connectedSources, setConnectedSources] = useState(
+    () => JSON.parse(localStorage.getItem('connectedSources') || '[]')
+  );
 
   const [currentScreen, setCurrentScreen] = useState('dashboard');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -115,13 +124,22 @@ function App() {
   const handleLogin = (user) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
+    // After login always show source connection page first
+    setAppFlow('source-connection');
     // isAuthenticated changing to true triggers the notification useEffect above
   };
 
   const handleSignup = (user) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
+    setAppFlow('source-connection');
     // isAuthenticated changing to true triggers the notification useEffect above
+  };
+
+  const handleSourcesContinue = (sources) => {
+    setConnectedSources(sources);
+    localStorage.setItem('connectedSources', JSON.stringify(sources));
+    setAppFlow('main');
   };
 
   const handleLogout = () => {
@@ -130,6 +148,7 @@ function App() {
     setIsAuthenticated(false);
     setAuthView('login');
     setCurrentScreen('dashboard');
+    setAppFlow('source-connection');
     setToasts([]);
   };
 
@@ -173,6 +192,11 @@ function App() {
   };
 
   const handleNavigation = (screen, data = null) => {
+    // Special screens handled outside the main layout
+    if (screen === 'workpulse-dashboard' || screen === 'connectors') {
+      setCurrentScreen(screen);
+      return;
+    }
     setCurrentScreen(screen);
 
     // Handle different navigation types
@@ -322,6 +346,39 @@ function App() {
     );
   }
 
+  // ── Post-login: Source Connection Flow ──────────────────────────────────────
+  if (isAuthenticated && appFlow === 'source-connection') {
+    if (connectedSources.length > 0) {
+      return (
+        <SourceConnectionPage
+          connectedSources={connectedSources}
+          onConnectMore={() => {
+            // Go straight to SourceListPage, with existing connections pre-filled
+            setAppFlow('source-list');
+          }}
+          onContinue={() => setAppFlow('main')}
+        />
+      );
+    }
+    return (
+      <SourceConnectionPage
+        connectedSources={[]}
+        onConnectSource={() => setAppFlow('source-list')}
+        onContinue={() => setAppFlow('main')}
+      />
+    );
+  }
+
+  if (isAuthenticated && appFlow === 'source-list') {
+    return (
+      <SourceListPage
+        initialConnected={connectedSources}
+        onBack={() => setAppFlow('source-connection')}
+        onContinue={handleSourcesContinue}
+      />
+    );
+  }
+
   if (currentScreen === 'product-journey') {
     return (
       <>
@@ -375,6 +432,16 @@ function App() {
 
 
 
+  // ── WorkPulse Dashboard (full-screen, replaces entire app layout) ───────────
+  if (currentScreen === 'workpulse-dashboard') {
+    return (
+      <div style={{ height: '100vh', overflow: 'hidden' }}>
+        <WorkPulseDashboard onBack={() => setCurrentScreen('dashboard')} />
+        <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-[#F8F9FA] overflow-hidden">
       {/* Sidebar */}
@@ -395,6 +462,7 @@ function App() {
         {/* Global Search Bar - Fixed */}
         <GlobalSearchBar
           onNavigate={handleLandingPageNavigate}
+          onNavigateToWorkPulse={() => setCurrentScreen('workpulse-dashboard')}
           dashboardData={{
             departments: [],
             forecastAreas: [],
@@ -449,6 +517,19 @@ function App() {
               selectedForecastArea={selectedForecastData?.areaName || 'ICU'}
               onBack={handleBackToDashboard}
               selectedModule={selectedModule}
+            />
+          )}
+
+          {/* Connectors page inside the main layout */}
+          {currentScreen === 'connectors' && (
+            <SourceListPage
+              initialConnected={connectedSources}
+              onBack={() => setCurrentScreen('dashboard')}
+              onContinue={(sources) => {
+                setConnectedSources(sources);
+                localStorage.setItem('connectedSources', JSON.stringify(sources));
+                setCurrentScreen('dashboard');
+              }}
             />
           )}
         </div>

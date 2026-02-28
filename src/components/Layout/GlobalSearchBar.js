@@ -6,6 +6,7 @@ import { parseSearchQuery } from '../../utils/searchParser';
 
 const GlobalSearchBar = ({
     onNavigate,
+    onNavigateToWorkPulse,
     dashboardData = { departments: [], forecastAreas: [], decisionActions: [] },
     onActionSelect,
     onLogout,
@@ -206,6 +207,36 @@ const GlobalSearchBar = ({
                         </div>
                     )}
                 </div>
+
+                {/* LIVE WorkPulse Button */}
+                <button
+                    onClick={() => onNavigateToWorkPulse && onNavigateToWorkPulse()}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 7,
+                        background: 'linear-gradient(135deg,#0F172A,#1E293B)',
+                        border: '1px solid rgba(255,255,255,0.10)',
+                        borderRadius: 10, padding: '10px 16px',
+                        cursor: 'pointer', transition: 'all 0.2s',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                        flexShrink: 0,
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                    title="Open WorkPulse Live Dashboard"
+                >
+                    <span style={{
+                        width: 8, height: 8, borderRadius: '50%',
+                        background: '#22C55E',
+                        boxShadow: '0 0 0 3px rgba(34,197,94,0.25)',
+                        animation: 'pulse-dot 2s infinite',
+                        flexShrink: 0,
+                    }} />
+                    <span style={{
+                        fontSize: 12, fontWeight: 800, color: '#FFFFFF',
+                        letterSpacing: '0.06em',
+                        fontFamily: "'Syne',system-ui,sans-serif",
+                    }}>LIVE</span>
+                </button>
 
                 {/* Logout Button */}
                 <button
