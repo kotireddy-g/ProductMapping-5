@@ -121,6 +121,7 @@ const LandingPage = forwardRef(({
   // Module mapping - same as Sidebar.js
   const moduleMap = {
     'otif': 'OTIF',
+    'dtif': 'DTIF',
     'staff-allocation': 'Staff Allocation',
     'customer-satisfaction': 'Customer Satisfaction',
     'resource-utilization': 'Resource Utilization',
@@ -130,15 +131,15 @@ const LandingPage = forwardRef(({
 
   // Function to get display name from module ID
   const getModuleDisplayName = (moduleId) => {
-    return moduleMap[moduleId] || 'OTIF';
+    return moduleMap[moduleId] || (isITSM ? 'DTIF' : 'OTIF');
   };
 
   // Module-specific metrics
   // If API returns module ID in displayName, map it to proper display name
-  const apiDisplayName = overviewData?.displayName || 'OTIF';
+  const apiDisplayName = overviewData?.displayName || (isITSM ? 'DTIF' : 'OTIF');
   const moduleDisplayName = getModuleDisplayName(apiDisplayName.toLowerCase());
   const moduleCurrentValue = overviewData?.currentValue || overallOTIF;
-  const isOTIFModule = selectedModule === 'otif';
+  const isOTIFModule = selectedModule === 'otif'; // dtif is NOT otif — ITSM card won't show OTIF sub-items
 
   // Reorder departments: Lab and Radiology last
   const rawDepartments = overviewData?.departments || mockOtifDepartments;

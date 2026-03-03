@@ -64,6 +64,7 @@ const Sidebar = ({
 
     // Get the display name for the selected module
     const getModuleDisplayName = () => {
+        if (isITSM) return 'DTIF';
         const module = modules.find(m => m.id === selectedModule);
         return module ? module.name : 'OTIF';
     };

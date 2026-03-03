@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronLeft, Maximize2, X, Clock, TrendingUp, BarChart3 } from 'lucide-react';
 import supplyDemandService from '../services/supplyDemandService';
+import itsmSupplyDemandService from '../services/itsmSupplyDemandService';
 
 // Mock data structures (fallback)
 const hospitalSupply = {
@@ -370,7 +371,7 @@ const generateConnections = (supplyItems, demandItems, flowsData) => {
   return connections;
 };
 
-const HospitalSankeyDiagram = ({ selectedModule = 'otif' }) => {
+const HospitalSankeyDiagram = ({ selectedModule = 'otif', isITSM = false }) => {
   // Drill-down state
   const [supplyLevel, setSupplyLevel] = useState(1);
   const [demandLevel, setDemandLevel] = useState(1);
@@ -400,13 +401,13 @@ const HospitalSankeyDiagram = ({ selectedModule = 'otif' }) => {
       try {
         setLoading(true);
 
-        // Build query parameters for drill-down, time period, and module
-        const params = {
-          time_period: timePeriod // Add time period to API call
-        };
+        // Build query parameters
+        const params = { time_period: timePeriod };
 
-        // Add module parameter if not OTIF
-        if (selectedModule && selectedModule !== 'otif') {
+        // ITSM: always use itsmSupplyDemandService (bakes in module=itsm + ITSM base URL)
+        // Pharma: use supplyDemandService with optional module param
+        const svc = isITSM ? itsmSupplyDemandService : supplyDemandService;
+        if (!isITSM && selectedModule && selectedModule !== 'otif') {
           params.module = selectedModule;
         }
 
@@ -419,7 +420,7 @@ const HospitalSankeyDiagram = ({ selectedModule = 'otif' }) => {
           params.demandParent = demandPath[demandLevel - 2];
         }
 
-        const response = await supplyDemandService.getFlowData(params);
+        const response = await svc.getFlowData(params);
 
         if (response.success && response.data) {
           setApiData(response.data);
@@ -428,14 +429,13 @@ const HospitalSankeyDiagram = ({ selectedModule = 'otif' }) => {
       } catch (err) {
         console.error('Failed to fetch supply-demand flow data:', err);
         setError('Failed to load data. Using cached data.');
-        // Keep using mock data as fallback
       } finally {
         setLoading(false);
       }
     };
 
     fetchFlowData();
-  }, [supplyLevel, demandLevel, supplyPath, demandPath, timePeriod, selectedModule]); // Added selectedModule dependency
+  }, [supplyLevel, demandLevel, supplyPath, demandPath, timePeriod, selectedModule, isITSM]);
 
   // Get current items based on drill-down state
   const getCurrentSupplyItems = () => {
@@ -982,7 +982,7 @@ Z
                           pointerEvents: 'none'
                         }}
                       >
-                        OTIF: {typeof otif === 'number' ? otif.toFixed(1) : otif}%
+                        {isITSM ? 'DTIF' : 'OTIF'}: {typeof otif === 'number' ? otif.toFixed(1) : otif}%
                       </text>
 
                       {forecastOtif !== null && (
@@ -1089,7 +1089,7 @@ Z
                       <div style={{ color: '#e2e8f0', fontWeight: 600 }}>{tooltip.content.value}</div>
                     </div>
                     <div>
-                      <div style={{ color: '#94a3b8' }}>OTIF</div>
+                      <div style={{ color: '#94a3b8' }}>{isITSM ? 'DTIF' : 'OTIF'}</div>
                       <div style={{ color: getOTIFColor(tooltip.content.otif), fontWeight: 600 }}>{tooltip.content.otif}%</div>
                     </div>
                     <div>
@@ -1199,7 +1199,7 @@ Z
 
             {/* Color Coding - Right Side */}
             <div className="flex gap-6 items-center">
-              <span className="font-semibold text-gray-700 text-xs">Color Coding (OTIF):</span>
+              <span className="font-semibold text-gray-700 text-xs">Color Coding ({isITSM ? 'DTIF' : 'OTIF'}):</span>
               <div className="flex items-center gap-2">
                 <span className="text-xs">🟢 Green: 95-100%</span>
               </div>
@@ -1432,7 +1432,7 @@ Z
                         pointerEvents: 'none'
                       }}
                     >
-                      OTIF: {typeof otif === 'number' ? otif.toFixed(1) : otif}%
+                      {isITSM ? 'DTIF' : 'OTIF'}: {typeof otif === 'number' ? otif.toFixed(1) : otif}%
                     </text>
 
                     {/* Forecast OTIF - Prominent, Color-coded */}
@@ -1541,7 +1541,7 @@ Z
                     <div style={{ color: '#e2e8f0', fontWeight: 600 }}>{tooltip.content.value}</div>
                   </div>
                   <div>
-                    <div style={{ color: '#94a3b8' }}>OTIF</div>
+                    <div style={{ color: '#94a3b8' }}>{isITSM ? 'DTIF' : 'OTIF'}</div>
                     <div style={{ color: getOTIFColor(tooltip.content.otif), fontWeight: 600 }}>{tooltip.content.otif}%</div>
                   </div>
                   <div>

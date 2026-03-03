@@ -44,6 +44,8 @@ function App() {
   const [selectedForecastData, setSelectedForecastData] = useState(null);
   const [selectedKPI, setSelectedKPI] = useState(null);
   const [selectedModule, setSelectedModule] = useState('otif'); // Module state
+  // Must be derived AFTER selectedModule is declared (avoids temporal dead zone ReferenceError)
+  const effectiveModule = isITSM ? 'dtif' : selectedModule;
 
   const [notifications, setNotifications] = useState([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -452,7 +454,7 @@ function App() {
     <div className="flex h-screen bg-[#F8F9FA] overflow-hidden">
       {/* Sidebar */}
       <Sidebar
-        selectedModule={selectedModule}
+        selectedModule={effectiveModule}
         onModuleChange={handleModuleChange}
         currentScreen={currentScreen}
         onNavigate={handleNavigation}
@@ -487,7 +489,7 @@ function App() {
               ref={landingPageRef}
               currentUser={currentUser}
               onNavigate={handleLandingPageNavigate}
-              selectedModule={selectedModule}
+              selectedModule={effectiveModule}
               onActionSelect={setSelectedActionForModal}
               isITSM={isITSM}
             />
@@ -497,7 +499,7 @@ function App() {
             <CommandCenterDashboard
               departmentId={selectedDepartment?.id}
               onBack={handleBackToDashboard}
-              selectedModule={selectedModule}
+              selectedModule={effectiveModule}
               isITSM={isITSM}
             />
           )}
@@ -506,7 +508,7 @@ function App() {
             <KPIDetailScreen
               selectedKPI={selectedKPI}
               onBack={handleBackToDashboard}
-              selectedModule={selectedModule}
+              selectedModule={effectiveModule}
               isITSM={isITSM}
             />
           )}
@@ -516,7 +518,7 @@ function App() {
               actionType={selectedAction}
               mainAction={selectedAction?.mainAction}
               subAction={selectedAction?.subAction}
-              selectedModule={selectedModule}
+              selectedModule={effectiveModule}
               onBack={handleBackToDashboard}
               isITSM={isITSM}
             />
@@ -527,7 +529,7 @@ function App() {
               forecastData={selectedForecastData}
               selectedForecastArea={selectedForecastData?.areaName || 'ICU'}
               onBack={handleBackToDashboard}
-              selectedModule={selectedModule}
+              selectedModule={effectiveModule}
               isITSM={isITSM}
             />
           )}
