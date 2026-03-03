@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, Edit3, X, TrendingUp, BarChart3 } from 'lucide-react';
 
-const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
+const RCARecommendationsPage = ({ onBack, sourceTab, selectedData, isITSM = false }) => {
   const [actionStatus, setActionStatus] = useState('pending');
   const [notification, setNotification] = useState(null);
   const [formData, setFormData] = useState({
@@ -13,7 +13,49 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
 
   // Generate dynamic data based on source tab
   const generatePageData = () => {
-    if (sourceTab === 'otif') {
+    if (sourceTab === 'dtif' || isITSM) {
+      return {
+        title: 'DTIF-RCA-0024 • Critical Delivery Delay in Engineering',
+        subtitle: 'Department: Engineering | Stage: Development | Date: 06 Dec 2025',
+        policy: 'DTIF ANALYSIS • Policy: Pipeline → Quality Gate → Delivery',
+        confidence: '0.91',
+        route: 'ESCALATE',
+        decision: {
+          recommendedQty: 'Sprint re-plan',
+          vendor: 'Engineering Dept',
+          confidence: '0.91',
+          riskLevel: 'HIGH',
+          stockoutRisk: '18%',
+          onTimeDelivery: '76%',
+          qtyChange: '-8 tickets',
+          period: 'vs. committed sprint'
+        },
+        rcaDrivers: [
+          { name: 'On-Time Delivery Drop', value: -0.51, type: 'negative' },
+          { name: 'Scope Creep', value: +0.34, type: 'neutral' },
+          { name: 'Blocked Tickets Count', value: +0.27, type: 'negative' },
+          { name: 'Sprint Velocity Decline', value: -0.21, type: 'negative' }
+        ],
+        chips: [
+          { text: 'DTIF < 80% → Escalate to PMs', type: 'danger' },
+          { text: 'Blocked tickets: 8', type: 'warning' },
+          { text: 'Sprint velocity -22%', type: 'danger' }
+        ],
+        narrative: 'DTIF performance at 76% indicates delivery chain stress in Engineering. 8 tickets are blocked due to unresolved dependency. The system recommends a sprint re-plan and escalation to Program Managers.',
+        rootCause: `DTIF Decline to 76% in Engineering (HIGH)
+\u251c\u2500\u2500 [Root] Unresolved external dependency on API team
+\u2502   \u2514\u2500 Third-party API SLA breach (3-day delay)
+\u251c\u2500\u2500 [Contributing] Scope added mid-sprint
+\u2502   \u2514\u2500 PM accepted 4 additional user stories
+\u2514\u2500\u2500 [Contributing] Under-estimated ticket complexity
+    \u2514\u2500 2 tickets re-estimated at 2x original effort`,
+        scenarios: [
+          { name: 'Recommended', qty: 'Re-plan sprint', cost: '0 extra cost', stockoutRisk: '18%', serviceLevel: '82%' },
+          { name: 'Escalate to CTO', qty: 'Full sprint halt', cost: 'High disruption', stockoutRisk: '8%', serviceLevel: '91%' },
+          { name: 'Defer to next sprint', qty: 'Carry over', cost: 'Low disruption', stockoutRisk: '28%', serviceLevel: '72%' }
+        ]
+      };
+    } else if (sourceTab === 'otif') {
       return {
         title: 'SKU-MED-001 • Paracetamol 500mg',
         subtitle: 'Location: Emergency & Critical Care | Date: 06 Dec 2025',
@@ -43,16 +85,16 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
         ],
         narrative: 'Current OTIF performance at 82% indicates supply chain stress. Emergency demand has increased 28% while supplier reliability dropped to 94%. The system recommends increasing order quantity and safety stock to maintain service levels.',
         rootCause: `OTIF Decline to 82% (HIGH)
-├── [Root] Supplier delivery delays (+2.3 days avg)
-│   └─ New quality checks implemented
-├── [Contributing] Emergency demand volatility
-│   └─ Seasonal illness outbreak in region
-└── [Contributing] Insufficient safety stock buffer
-    └─ Previous month stock optimization too aggressive`,
+\u251c\u2500\u2500 [Root] Supplier delivery delays (+2.3 days avg)
+\u2502   \u2514\u2500 New quality checks implemented
+\u251c\u2500\u2500 [Contributing] Emergency demand volatility
+\u2502   \u2514\u2500 Seasonal illness outbreak in region
+\u2514\u2500\u2500 [Contributing] Insufficient safety stock buffer
+    \u2514\u2500 Previous month stock optimization too aggressive`,
         scenarios: [
-          { name: 'Recommended', qty: 420, cost: '₹ 16,800', stockoutRisk: '12%', serviceLevel: '88%' },
-          { name: '+25% Qty', qty: 525, cost: '₹ 21,000', stockoutRisk: '6%', serviceLevel: '94%' },
-          { name: '-15% Qty', qty: 357, cost: '₹ 14,280', stockoutRisk: '22%', serviceLevel: '78%' }
+          { name: 'Recommended', qty: 420, cost: '\u20b9 16,800', stockoutRisk: '12%', serviceLevel: '88%' },
+          { name: '+25% Qty', qty: 525, cost: '\u20b9 21,000', stockoutRisk: '6%', serviceLevel: '94%' },
+          { name: '-15% Qty', qty: 357, cost: '\u20b9 14,280', stockoutRisk: '22%', serviceLevel: '78%' }
         ]
       };
     } else {
@@ -85,16 +127,16 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
         ],
         narrative: 'Inventory optimization model shows strong performance with 95% forecast accuracy. Seasonal demand patterns require adjustment to safety stock levels.',
         rootCause: `Inventory Optimization Success (LOW RISK)
-├── [Success Factor] High forecast accuracy (95.2%)
-│   └─ ML model performance improved
-├── [Contributing] Multi-vendor diversification
-│   └─ Risk spread across 3 reliable suppliers
-└── [Monitoring] Seasonal demand variance
-    └─ Winter season medicine demand +15%`,
+\u251c\u2500\u2500 [Success Factor] High forecast accuracy (95.2%)
+\u2502   \u2514\u2500 ML model performance improved
+\u251c\u2500\u2500 [Contributing] Multi-vendor diversification
+\u2502   \u2514\u2500 Risk spread across 3 reliable suppliers
+\u2514\u2500\u2500 [Monitoring] Seasonal demand variance
+    \u2514\u2500 Winter season medicine demand +15%`,
         scenarios: [
-          { name: 'Recommended', qty: 850, cost: '₹ 42,500', stockoutRisk: '3%', serviceLevel: '97%' },
-          { name: '+15% Buffer', qty: 978, cost: '₹ 48,900', stockoutRisk: '1%', serviceLevel: '99%' },
-          { name: '-10% Lean', qty: 765, cost: '₹ 38,250', stockoutRisk: '8%', serviceLevel: '92%' }
+          { name: 'Recommended', qty: 850, cost: '\u20b9 42,500', stockoutRisk: '3%', serviceLevel: '97%' },
+          { name: '+15% Buffer', qty: 978, cost: '\u20b9 48,900', stockoutRisk: '1%', serviceLevel: '99%' },
+          { name: '-10% Lean', qty: 765, cost: '\u20b9 38,250', stockoutRisk: '8%', serviceLevel: '92%' }
         ]
       };
     }
@@ -113,7 +155,7 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
 
   const handleAction = (action) => {
     setActionStatus(action);
-    
+
     // Show notification based on action
     const notifications = {
       accepted: {
@@ -122,7 +164,7 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
         message: 'Your decision has been logged and the system will learn from this feedback.'
       },
       modified: {
-        type: 'warning', 
+        type: 'warning',
         title: 'Recommendation Modified',
         message: 'Changes saved successfully. The updated parameters will be applied.'
       },
@@ -132,9 +174,9 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
         message: 'Decision recorded. The system will adjust future recommendations based on this feedback.'
       }
     };
-    
+
     setNotification(notifications[action]);
-    
+
     // Auto-hide notification after 4 seconds
     setTimeout(() => {
       setNotification(null);
@@ -254,7 +296,7 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
                     return (
                       <div key={index} className="flex flex-col items-center h-full">
                         <div className="flex-1 flex items-end w-full">
-                          <div 
+                          <div
                             className={`w-full ${colors[index]} rounded-t transition-all duration-500`}
                             style={{ height: `${riskLevels[index]}%` }}
                           ></div>
@@ -307,7 +349,7 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
                     <input
                       type="number"
                       value={formData.qty}
-                      onChange={(e) => setFormData({...formData, qty: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, qty: e.target.value })}
                       className="w-full px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
@@ -315,7 +357,7 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
                     <label className="block text-xs text-gray-400 mb-1">Updated Vendor</label>
                     <select
                       value={formData.vendor}
-                      onChange={(e) => setFormData({...formData, vendor: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
                       className="w-full px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       <option value={pageData.decision.vendor}>{pageData.decision.vendor} (Reco)</option>
@@ -330,7 +372,7 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
                       min="1"
                       max="5"
                       value={formData.rating}
-                      onChange={(e) => setFormData({...formData, rating: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
                       className="w-full px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
@@ -338,7 +380,7 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
                 <textarea
                   placeholder="Add comment / reason for override (optional)…"
                   value={formData.comment}
-                  onChange={(e) => setFormData({...formData, comment: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
                   className="w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                   rows="2"
                 />
@@ -351,12 +393,11 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
                     {actionStatus === 'modified' && 'Recommendation modified and approved. Learning signal updated.'}
                     {actionStatus === 'rejected' && 'Recommendation rejected. System will learn from this feedback.'}
                   </span>
-                  <span className={`px-2 py-1 rounded text-xs border ${
-                    actionStatus === 'accepted' ? 'bg-green-100 border-green-300 text-green-700' :
-                    actionStatus === 'modified' ? 'bg-yellow-100 border-yellow-300 text-yellow-700' :
-                    actionStatus === 'rejected' ? 'bg-red-100 border-red-300 text-red-700' :
-                    'bg-gray-800 border-gray-600 text-gray-400'
-                  }`}>
+                  <span className={`px-2 py-1 rounded text-xs border ${actionStatus === 'accepted' ? 'bg-green-100 border-green-300 text-green-700' :
+                      actionStatus === 'modified' ? 'bg-yellow-100 border-yellow-300 text-yellow-700' :
+                        actionStatus === 'rejected' ? 'bg-red-100 border-red-300 text-red-700' :
+                          'bg-gray-800 border-gray-600 text-gray-400'
+                    }`}>
                     {actionStatus.charAt(0).toUpperCase() + actionStatus.slice(1)}
                   </span>
                 </div>
@@ -384,7 +425,7 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
                       <span>{driver.value > 0 ? '+' : ''}{driver.value}</span>
                     </div>
                     <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className={`h-full rounded-full ${getBarColor(driver.type)}`}
                         style={{ width: `${Math.abs(driver.value) * 100}%` }}
                       ></div>
@@ -426,7 +467,7 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
               </pre>
 
               <div className="text-xs text-gray-600 leading-relaxed mt-4">
-                <strong className="text-gray-900">Recommendation:</strong> {sourceTab === 'otif' ? 
+                <strong className="text-gray-900">Recommendation:</strong> {sourceTab === 'otif' ?
                   'Implement supplier performance monitoring and adjust safety stock parameters for critical medicines.' :
                   'Continue current optimization strategy while monitoring seasonal demand patterns.'
                 }
@@ -491,11 +532,10 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
       {/* Notification Toast */}
       {notification && (
         <div className="fixed bottom-4 right-4 z-[9999] max-w-sm">
-          <div className={`w-full shadow-xl rounded-lg pointer-events-auto border-2 transform transition-all duration-300 ${
-            notification.type === 'success' ? 'bg-green-50 border-green-300' :
-            notification.type === 'warning' ? 'bg-yellow-50 border-yellow-300' :
-            'bg-red-50 border-red-300'
-          }`}>
+          <div className={`w-full shadow-xl rounded-lg pointer-events-auto border-2 transform transition-all duration-300 ${notification.type === 'success' ? 'bg-green-50 border-green-300' :
+              notification.type === 'warning' ? 'bg-yellow-50 border-yellow-300' :
+                'bg-red-50 border-red-300'
+            }`}>
             <div className="p-4">
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0">
@@ -504,29 +544,26 @@ const RCARecommendationsPage = ({ onBack, sourceTab, selectedData }) => {
                   {notification.type === 'error' && <X className="h-6 w-6 text-red-500" />}
                 </div>
                 <div className="flex flex-col flex-1">
-                  <p className={`text-sm font-semibold ${
-                    notification.type === 'success' ? 'text-green-800' :
-                    notification.type === 'warning' ? 'text-yellow-800' :
-                    'text-red-800'
-                  }`}>
+                  <p className={`text-sm font-semibold ${notification.type === 'success' ? 'text-green-800' :
+                      notification.type === 'warning' ? 'text-yellow-800' :
+                        'text-red-800'
+                    }`}>
                     {notification.title}
                   </p>
-                  <p className={`mt-1 text-xs ${
-                    notification.type === 'success' ? 'text-green-700' :
-                    notification.type === 'warning' ? 'text-yellow-700' :
-                    'text-red-700'
-                  }`}>
+                  <p className={`mt-1 text-xs ${notification.type === 'success' ? 'text-green-700' :
+                      notification.type === 'warning' ? 'text-yellow-700' :
+                        'text-red-700'
+                    }`}>
                     {notification.message}
                   </p>
                 </div>
                 <div className="ml-4 flex-shrink-0 flex">
                   <button
                     onClick={() => setNotification(null)}
-                    className={`rounded-md inline-flex p-1 ${
-                      notification.type === 'success' ? 'text-green-500 hover:text-green-600 hover:bg-green-100' :
-                      notification.type === 'warning' ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-100' :
-                      'text-red-500 hover:text-red-600 hover:bg-red-100'
-                    } focus:outline-none transition-colors`}
+                    className={`rounded-md inline-flex p-1 ${notification.type === 'success' ? 'text-green-500 hover:text-green-600 hover:bg-green-100' :
+                        notification.type === 'warning' ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-100' :
+                          'text-red-500 hover:text-red-600 hover:bg-red-100'
+                      } focus:outline-none transition-colors`}
                   >
                     <X className="h-4 w-4" />
                   </button>

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { getDepartmentData, getOTIFColorClass, timePeriods } from '../../data/commandCenterData';
 import { getCommandCenterData } from '../../services/commandCenterService';
+import { getCommandCenterData as getItsmCommandCenterData } from '../../services/itsmCommandCenterService';
 import DemandSupplySection from './DemandSupplySection';
 import RootCausesSection from './RootCausesSection';
 import MedicineTypeImpactSection from './MedicineTypeImpactSection';
@@ -10,7 +11,7 @@ import DemandForecastSection from './DemandForecastSection';
 import AgentRecommendationsSection from './AgentRecommendationsSection';
 import { getTranslatedDepartmentName } from '../../utils/translationHelpers';
 
-const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' }) => {
+const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif', isITSM = false }) => {
     const { t } = useTranslation();
     const [selectedTimePeriod, setSelectedTimePeriod] = useState('next_7_days');
     const [showMedicineModal, setShowMedicineModal] = useState(false);
@@ -24,16 +25,25 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' 
             try {
                 setLoading(true);
                 setError(null);
-                // Convert module ID to API format
-                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
-                const response = await getCommandCenterData(departmentId, selectedTimePeriod, moduleParam);
-                if (response.success) {
-                    setApiData(response.data);
+
+                if (isITSM) {
+                    // ITSM: same endpoint path, itsmCommandCenterService uses ITSM base URL + module=itsm
+                    const dept = departmentId || 'engineering';
+                    const response = await getItsmCommandCenterData(dept, selectedTimePeriod);
+                    if (response.success) {
+                        setApiData(response.data);
+                    }
+                } else {
+                    // Pharma: unchanged
+                    const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+                    const response = await getCommandCenterData(departmentId, selectedTimePeriod, moduleParam);
+                    if (response.success) {
+                        setApiData(response.data);
+                    }
                 }
             } catch (err) {
                 console.error('Error fetching command center data:', err);
                 setError(err.message);
-                // Fallback to mock data on error
                 setApiData(null);
             } finally {
                 setLoading(false);
@@ -41,7 +51,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' 
         };
 
         fetchData();
-    }, [departmentId, selectedTimePeriod, selectedModule]);
+    }, [departmentId, selectedTimePeriod, selectedModule, isITSM]);
 
     // Transform API data to match the expected structure for child components
     const transformedData = apiData ? {
@@ -119,11 +129,11 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' 
                     <div className="flex flex-wrap items-center justify-between gap-6">
                         {/* Key Metrics */}
                         <div className="flex flex-wrap items-center gap-4">
-                            {/* OTIF Metric */}
+                            {/* Primary Metric: OTIF (pharma) or DTIF (ITSM) */}
                             <div className={`${otifColors.bg} ${otifColors.border} border-2 rounded-lg px-6 py-3`}>
-                                <div className="text-sm text-slate-600 mb-1">OTIF</div>
+                                <div className="text-sm text-slate-600 mb-1">{isITSM ? 'DTIF' : 'OTIF'}</div>
                                 <div className={`text-3xl font-bold ${otifColors.text}`}>
-                                    {overview?.otif || 0}%
+                                    {overview?.otif || overview?.dtif || 0}%
                                 </div>
                             </div>
 
@@ -131,7 +141,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' 
                             <div className="bg-gray-50 border-2 border-gray-300 rounded-lg px-6 py-3">
                                 <div className="text-sm text-slate-600 mb-1">OT (On-Time)</div>
                                 <div className="text-3xl font-bold text-blue-700">
-                                    {overview?.on_time || overview?.onTime || 0}%
+                                    {overview?.on_time || overview?.onTime || overview?.onTimePct || 0}%
                                 </div>
                             </div>
 
@@ -139,7 +149,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif' 
                             <div className="bg-purple-50 border-2 border-purple-300 rounded-lg px-6 py-3">
                                 <div className="text-sm text-slate-600 mb-1">IF (In-Full)</div>
                                 <div className="text-3xl font-bold text-purple-700">
-                                    {overview?.in_full || overview?.inFull || 0}%
+                                    {overview?.in_full || overview?.inFull || overview?.inFullPct || 0}%
                                 </div>
                             </div>
                         </div>

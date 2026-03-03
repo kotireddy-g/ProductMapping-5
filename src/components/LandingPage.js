@@ -26,6 +26,7 @@ import OTIFBreakdownDrawer from './OTIF/OTIFBreakdownDrawer';
 import HospitalPerformanceDrawer from './CommandCenter/HospitalPerformanceDrawer';
 import RootCausesModal from './Landing/RootCausesModal';
 import dashboardService from '../services/dashboardService';
+import itsmDashboardService from '../services/itsmDashboardService';
 import { parseSearchQuery } from '../utils/searchParser';
 import { getTranslatedActionName } from '../utils/translationHelpers';
 import { getUserRole, USER_ROLES } from '../utils/userRoles';
@@ -53,7 +54,8 @@ const LandingPage = forwardRef(({
   onNavigate,
   selectedModule = 'otif',
   onActionSelect,
-  scrollToSection
+  scrollToSection,
+  isITSM = false
 }, ref) => {
   const { t } = useTranslation();
 
@@ -158,53 +160,46 @@ const LandingPage = forwardRef(({
   const decisionActionSubcategories = apiData?.decisionActions?.decisionActionSubcategories || mockDecisionActionSubcategories;
   const forecastAreas = apiData?.forecast || mockForecastAreas;
 
-  // Fetch all dashboard data on mount and when module changes
+  // Fetch all dashboard data on mount and when module / isITSM changes
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
 
-        // Convert module ID to API format (e.g., 'staff-allocation')
-        const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+        // Pick the right service: ITSM uses itsmDashboardService (same paths, different base URL + module=itsm)
+        const svc = isITSM ? itsmDashboardService : dashboardService;
+        // Pharma passes the module param; ITSM service hardcodes module=itsm internally
+        const moduleParam = (!isITSM && selectedModule !== 'otif') ? selectedModule : null;
 
-        // Fetch all three APIs in parallel
         const [overviewResponse, actionsResponse, forecastResponse] = await Promise.all([
-          dashboardService.getOverview(moduleParam).catch(err => {
+          svc.getOverview(moduleParam).catch(err => {
             console.error('Overview API failed:', err);
             return null;
           }),
-          dashboardService.getDecisionActions(moduleParam).catch(err => {
+          svc.getDecisionActions(moduleParam).catch(err => {
             console.error('Decision Actions API failed:', err);
             return null;
           }),
-          dashboardService.getForecast(moduleParam).catch(err => {
+          svc.getForecast(moduleParam).catch(err => {
             console.error('Forecast API failed:', err);
             return null;
-          })
+          }),
         ]);
 
-        // Update state with API data if successful
         const newApiData = {};
-        if (overviewResponse?.success) {
-          newApiData.overview = overviewResponse.data;
-        }
-        if (actionsResponse?.success) {
-          newApiData.decisionActions = actionsResponse.data;
-        }
-        if (forecastResponse?.success) {
-          newApiData.forecast = forecastResponse.data;
-        }
+        if (overviewResponse?.success) newApiData.overview = overviewResponse.data;
+        if (actionsResponse?.success) newApiData.decisionActions = actionsResponse.data;
+        if (forecastResponse?.success) newApiData.forecast = forecastResponse.data;
         setApiData(newApiData);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
-        // Component will use mock data as fallback
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, [selectedModule]);
+  }, [selectedModule, isITSM]);
 
   // Scroll to section handler
   const handleScrollToSection = (sectionId) => {
@@ -350,10 +345,11 @@ const LandingPage = forwardRef(({
         );
 
       case 'supplyDemand':
-        // Supply & Demand Flow (originally at line 520)
+        // Supply & Demand / DTIF Flow — same ChordDiagram for both pharma and ITSM
+        // (Backend returns same shape for both; ITSM uses module=itsm via itsmSupplyDemandService inside ChordDiagram)
         return (
           <div key={key} className="mb-16" ref={supplyDemandRef}>
-            <ChordDiagram selectedModule={selectedModule} />
+            <ChordDiagram selectedModule={selectedModule} isITSM={isITSM} />
           </div>
         );
 
@@ -536,7 +532,7 @@ const LandingPage = forwardRef(({
         // KPI Dashboard (originally at line 715)
         return (
           <div key={key} ref={kpisRef}>
-            <KPIDashboard onNavigate={onNavigate} selectedModule={selectedModule} />
+            <KPIDashboard onNavigate={onNavigate} selectedModule={selectedModule} isITSM={isITSM} />
           </div>
         );
 

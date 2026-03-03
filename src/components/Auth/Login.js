@@ -40,18 +40,22 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
     setErrors({});
 
     try {
-      // Static login validation - TODO: Replace with API integration later
-      const ALLOWED_EMAIL = 'management@experienceflow.ai';
+      // Static login credentials
+      const PHARMA_EMAIL = 'management@experienceflow.ai';
+      const ITSM_EMAIL = 'adminitsm@experienceflow.ai';
       const ALLOWED_PASSWORD = 'xFlow@321';
 
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (formData.email === ALLOWED_EMAIL && formData.password === ALLOWED_PASSWORD) {
+      if (formData.password === ALLOWED_PASSWORD &&
+        (formData.email === PHARMA_EMAIL || formData.email === ITSM_EMAIL)) {
+
+        const isITSMLogin = formData.email === ITSM_EMAIL;
         const mockUser = {
-          email: ALLOWED_EMAIL,
-          name: 'Management User',
-          role: 'admin'
+          email: formData.email,
+          name: isITSMLogin ? 'ITSM Admin' : 'Management User',
+          role: isITSMLogin ? 'itsm' : 'admin'
         };
 
         // Persist session to localStorage so refresh doesn't log the user out

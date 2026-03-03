@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { kpiData as mockKpiData } from '../data/kpiData';
 import kpiService from '../services/kpiService';
+import itsmKpiService from '../services/itsmKpiService';
 import EnhancedKPICard from './KPI/EnhancedKPICard';
 
-const KPIDashboard = ({ onNavigate, selectedModule = 'otif' }) => {
+const KPIDashboard = ({ onNavigate, selectedModule = 'otif', isITSM = false }) => {
     const [kpiData, setKpiData] = useState(mockKpiData);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Fetch KPI data from API on component mount and when module changes
+    // Fetch KPI data — swap service for ITSM, same response shape expected
     useEffect(() => {
         const fetchKPIData = async () => {
             try {
                 setLoading(true);
-                // Convert module ID to API format
-                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
-                const response = await kpiService.getAllKPIs(moduleParam);
-
+                // ITSM uses itsmKpiService (same path /kpi/all, module=itsm baked in)
+                // Pharma uses kpiService with optional module param
+                const svc = isITSM ? itsmKpiService : kpiService;
+                const moduleParam = (!isITSM && selectedModule !== 'otif') ? selectedModule : null;
+                const response = await svc.getAllKPIs(moduleParam);
                 if (response.success && response.data) {
                     setKpiData(response.data);
                     setError(null);
@@ -24,34 +26,38 @@ const KPIDashboard = ({ onNavigate, selectedModule = 'otif' }) => {
             } catch (err) {
                 console.error('Failed to fetch KPI data:', err);
                 setError('Failed to load KPI data. Using cached data.');
-                // Keep using mock data as fallback
             } finally {
                 setLoading(false);
             }
         };
 
         fetchKPIData();
-    }, [selectedModule]);
+    }, [selectedModule, isITSM]);
 
     const handleKPIClick = (kpiKey, kpiName, kpiDataObj) => {
         if (onNavigate) {
-            onNavigate('kpi-detail', {
-                id: kpiKey,
-                name: kpiName,
-                data: kpiDataObj // Pass the full KPI data object
-            });
+            onNavigate('kpi-detail', { id: kpiKey, name: kpiName, data: kpiDataObj });
         }
     };
 
+    // Determine if data is array-style (ITSM dynamic list) or object-style (pharma named keys)
+    const isArrayData = Array.isArray(kpiData);
+
     return (
         <div className="mb-16">
-            {/* KPI Dashboard Header */}
+            {/* Header */}
             <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-800">Key Performance Indicators (Priority)</h2>
-                <p className="text-gray-600 mt-2">Critical pharmacy performance metrics and trends</p>
+                <h2 className="text-3xl font-bold text-gray-800">
+                    {isITSM ? 'ITSM Key Performance Indicators' : 'Key Performance Indicators (Priority)'}
+                </h2>
+                <p className="text-gray-600 mt-2">
+                    {isITSM
+                        ? 'DTIF, OPI, and operational metrics for your ITSM pipeline'
+                        : 'Critical pharmacy performance metrics and trends'}
+                </p>
             </div>
 
-            {/* Loading State */}
+            {/* Loading */}
             {loading && (
                 <div className="text-center py-12">
                     <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -59,56 +65,45 @@ const KPIDashboard = ({ onNavigate, selectedModule = 'otif' }) => {
                 </div>
             )}
 
-            {/* Error State */}
+            {/* Error */}
             {error && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                     <p className="text-yellow-800 text-sm">{error}</p>
                 </div>
             )}
 
-            {/* KPI Grid - 2 columns for enhanced cards */}
-            {!loading && (
+            {/* KPI Grid - array shape (ITSM dynamic list from API) */}
+            {!loading && isArrayData && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <EnhancedKPICard
-                        kpiKey="otif"
-                        data={kpiData.otif}
-                        isPriority={true}
-                        onClick={() => handleKPIClick('otif', kpiData.otif.title, kpiData.otif)}
-                    />
-                    <EnhancedKPICard
-                        kpiKey="stockHealth"
-                        data={kpiData.stockHealth}
-                        isPriority={true}
-                        onClick={() => handleKPIClick('stockHealth', kpiData.stockHealth.title, kpiData.stockHealth)}
-                    />
-                    <EnhancedKPICard
-                        kpiKey="expiryRisk"
-                        data={kpiData.expiryRisk}
-                        isPriority={true}
-                        onClick={() => handleKPIClick('expiryRisk', kpiData.expiryRisk.title, kpiData.expiryRisk)}
-                    />
-                    <EnhancedKPICard
-                        kpiKey="forecastAccuracy"
-                        data={kpiData.forecastAccuracy}
-                        isPriority={false}
-                        onClick={() => handleKPIClick('forecastAccuracy', kpiData.forecastAccuracy.title, kpiData.forecastAccuracy)}
-                    />
-                    <EnhancedKPICard
-                        kpiKey="fulfillmentTime"
-                        data={kpiData.fulfillmentTime}
-                        isPriority={false}
-                        onClick={() => handleKPIClick('fulfillmentTime', kpiData.fulfillmentTime.title, kpiData.fulfillmentTime)}
-                    />
-                    <EnhancedKPICard
-                        kpiKey="revenueProtection"
-                        data={kpiData.revenueProtection}
-                        isPriority={false}
-                        onClick={() => handleKPIClick('revenueProtection', kpiData.revenueProtection.title, kpiData.revenueProtection)}
-                    />
+                    {kpiData.map((kpi, idx) => (
+                        <EnhancedKPICard
+                            key={kpi.id || kpi.kpiId || idx}
+                            kpiKey={kpi.id || kpi.kpiId || `kpi-${idx}`}
+                            data={kpi}
+                            isPriority={idx < 4}
+                            onClick={() => handleKPIClick(kpi.id || kpi.kpiId || `kpi-${idx}`, kpi.title, kpi)}
+                        />
+                    ))}
                 </div>
             )}
 
-            {/* Footer Text */}
+            {/* KPI Grid - object shape (pharma named keys, unchanged) */}
+            {!loading && !isArrayData && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {['otif', 'stockHealth', 'expiryRisk', 'forecastAccuracy', 'fulfillmentTime', 'revenueProtection']
+                        .filter(key => kpiData[key])
+                        .map((key, idx) => (
+                            <EnhancedKPICard
+                                key={key}
+                                kpiKey={key}
+                                data={kpiData[key]}
+                                isPriority={idx < 3}
+                                onClick={() => handleKPIClick(key, kpiData[key].title, kpiData[key])}
+                            />
+                        ))}
+                </div>
+            )}
+
             <div className="mt-6 text-center">
                 <p className="text-xs text-gray-500 italic">Use search bar for other KPIs</p>
             </div>

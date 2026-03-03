@@ -5,8 +5,9 @@ import RootCausePanel from './RootCausePanel';
 import RelatedKPIsGrid from './RelatedKPIsGrid';
 import { kpiDetailData, relatedKPIs as fallbackRelatedKPIs } from '../../data/kpiDetailData';
 import kpiService from '../../services/kpiService';
+import itsmKpiService from '../../services/itsmKpiService';
 
-const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule = 'otif' }) => {
+const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule = 'otif', isITSM = false }) => {
     // Internal active KPI id – starts from prop, updates when a Related KPI is clicked
     const [activeKPIId, setActiveKPIId] = useState(selectedKPI?.id || 'otif');
     const [activeKPIName, setActiveKPIName] = useState(selectedKPI?.name || '');
@@ -37,7 +38,14 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
             setLoading(true);
             setError(null);
             try {
-                const response = await kpiService.getKPIDetail(activeKPIId, selectedModule, timePeriod);
+                let response;
+                if (isITSM) {
+                    // ITSM: same /kpi/detail path, itsmKpiService uses ITSM base URL + module=itsm
+                    response = await itsmKpiService.getKPIDetail(activeKPIId, timePeriod);
+                } else {
+                    // Pharma: existing logic
+                    response = await kpiService.getKPIDetail(activeKPIId, selectedModule, timePeriod);
+                }
                 if (response?.success && response?.data) {
                     const apiData = response.data;
                     setKpiData(apiData);
@@ -64,7 +72,7 @@ const KPIDetailScreen = ({ selectedKPI, onBack, onNavigateToKPI, selectedModule 
         };
 
         fetchDetail();
-    }, [activeKPIId, selectedModule, timePeriod]);
+    }, [activeKPIId, selectedModule, timePeriod, isITSM]);
 
     const handleImplementRecommendation = (recId) => {
         setRecommendations(prev =>

@@ -29,7 +29,8 @@ function App() {
   const [authView, setAuthView] = useState('login');
   const [currentUser, setCurrentUser] = useState(null);
 
-  // appFlow: 'source-connection' → shows post-login source page; 'main' → normal dashboard
+  // Derived: true when the logged-in user is the ITSM admin
+  const isITSM = currentUser?.role === 'itsm';
   const [appFlow, setAppFlow] = useState('source-connection');
   const [connectedSources, setConnectedSources] = useState(
     () => JSON.parse(localStorage.getItem('connectedSources') || '[]')
@@ -124,8 +125,12 @@ function App() {
   const handleLogin = (user) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
-    // After login always show source connection page first
-    setAppFlow('source-connection');
+    // ITSM users skip the source-connection flow — go straight to main app
+    if (user.role === 'itsm') {
+      setAppFlow('main');
+    } else {
+      setAppFlow('source-connection');
+    }
     // isAuthenticated changing to true triggers the notification useEffect above
   };
 
@@ -395,9 +400,10 @@ function App() {
     return (
       <>
         <RCARecommendationsPage
-          sourceTab="otif"
+          sourceTab={isITSM ? 'dtif' : 'otif'}
           selectedData={rcaData}
           onBack={handleBackToDashboard}
+          isITSM={isITSM}
         />
         <ToastNotification toasts={toasts} onDismiss={handleDismissToast} />
       </>
@@ -455,6 +461,7 @@ function App() {
         onTemplateClick={() => setShowTemplateSelector(true)}
         unreadNotificationCount={Array.isArray(notifications) ? notifications.filter(n => !n.read).length : 0}
         activeSection={activeSection}
+        isITSM={isITSM}
       />
 
       {/* Main Content Area */}
@@ -482,6 +489,7 @@ function App() {
               onNavigate={handleLandingPageNavigate}
               selectedModule={selectedModule}
               onActionSelect={setSelectedActionForModal}
+              isITSM={isITSM}
             />
           )}
 
@@ -490,6 +498,7 @@ function App() {
               departmentId={selectedDepartment?.id}
               onBack={handleBackToDashboard}
               selectedModule={selectedModule}
+              isITSM={isITSM}
             />
           )}
 
@@ -498,6 +507,7 @@ function App() {
               selectedKPI={selectedKPI}
               onBack={handleBackToDashboard}
               selectedModule={selectedModule}
+              isITSM={isITSM}
             />
           )}
 
@@ -508,6 +518,7 @@ function App() {
               subAction={selectedAction?.subAction}
               selectedModule={selectedModule}
               onBack={handleBackToDashboard}
+              isITSM={isITSM}
             />
           )}
 
@@ -517,6 +528,7 @@ function App() {
               selectedForecastArea={selectedForecastData?.areaName || 'ICU'}
               onBack={handleBackToDashboard}
               selectedModule={selectedModule}
+              isITSM={isITSM}
             />
           )}
 

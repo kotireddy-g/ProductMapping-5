@@ -31,7 +31,8 @@ const Sidebar = ({
     onNotificationClick,
     onTemplateClick,
     unreadNotificationCount = 0,
-    activeSection = 'top' // Track which section is active
+    activeSection = 'top', // Track which section is active
+    isITSM = false
 }) => {
     const [expandedSections, setExpandedSections] = useState({
         currentStatus: true,
@@ -45,14 +46,21 @@ const Sidebar = ({
         }));
     };
 
-    const modules = [
+    const allModules = [
         { id: 'otif', name: 'OTIF', icon: Activity },
         { id: 'staff-allocation', name: 'Staff Allocation', icon: Users },
         { id: 'customer-satisfaction', name: 'Customer Satisfaction', icon: Target },
         { id: 'resource-utilization', name: 'Resource Utilization', icon: Package },
         { id: 'order-management', name: 'Order Management', icon: ShoppingCart },
-        { id: 'bed-management', name: 'Bed Management', icon: Bed }
+        { id: 'bed-management', name: 'Bed Management', icon: Bed },
+        // ITSM-only module
+        { id: 'dtif', name: 'DTIF', icon: Activity }
     ];
+
+    // ITSM users see only the DTIF module; pharma users see the original 6
+    const modules = isITSM
+        ? allModules.filter(m => m.id === 'dtif')
+        : allModules.filter(m => m.id !== 'dtif');
 
     // Get the display name for the selected module
     const getModuleDisplayName = () => {
@@ -72,7 +80,9 @@ const Sidebar = ({
                     />
                     <div>
                         <h1 className="text-lg font-bold text-gray-900">ExperienceFlow</h1>
-                        <p className="text-xs text-gray-500">Hospital Pharma Procurement</p>
+                        <p className="text-xs text-gray-500">
+                            {isITSM ? 'ITSM Intelligence Platform' : 'Hospital Pharma Procurement'}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -120,23 +130,25 @@ const Sidebar = ({
                     </button>
                 </div>
 
-                {/* Forecast */}
-                <div className="px-4 mb-2">
-                    <button
-                        onClick={() => {
-                            if (onScrollToSection) {
-                                onScrollToSection('forecast');
-                            }
-                        }}
-                        className={`w-full px-4 py-2.5 flex items-center gap-2 transition-colors text-left rounded-lg ${activeSection === 'forecast'
-                            ? 'bg-black text-white'
-                            : 'text-gray-700 hover:bg-gray-50'
-                            }`}
-                    >
-                        <TrendingUp size={18} />
-                        <span className="text-sm font-medium">Forecast</span>
-                    </button>
-                </div>
+                {/* Forecast — hidden for ITSM */}
+                {!isITSM && (
+                    <div className="px-4 mb-2">
+                        <button
+                            onClick={() => {
+                                if (onScrollToSection) {
+                                    onScrollToSection('forecast');
+                                }
+                            }}
+                            className={`w-full px-4 py-2.5 flex items-center gap-2 transition-colors text-left rounded-lg ${activeSection === 'forecast'
+                                ? 'bg-black text-white'
+                                : 'text-gray-700 hover:bg-gray-50'
+                                }`}
+                        >
+                            <TrendingUp size={18} />
+                            <span className="text-sm font-medium">Forecast</span>
+                        </button>
+                    </div>
+                )}
 
                 {/* Objectives */}
                 <div className="px-4 mb-2">
@@ -246,21 +258,23 @@ const Sidebar = ({
                     )}
                 </button>
 
-                {/* Supplier Forecast Report */}
-                <button
-                    onClick={() => onNavigate && onNavigate('supplier-report')}
-                    className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-left"
-                >
-                    <FileText size={18} />
-                    <span className="text-sm font-medium">Supplier Forecast Report</span>
-                </button>
+                {/* Supplier Forecast Report — pharma only */}
+                {!isITSM && (
+                    <button
+                        onClick={() => onNavigate && onNavigate('supplier-report')}
+                        className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                    >
+                        <FileText size={18} />
+                        <span className="text-sm font-medium">Supplier Forecast Report</span>
+                    </button>
+                )}
 
                 {/* Connectors */}
                 <button
                     onClick={() => onNavigate && onNavigate('connectors')}
                     className={`w-full px-4 py-3 flex items-center justify-between text-left transition-colors ${currentScreen === 'connectors'
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-50'
                         }`}
                 >
                     <div className="flex items-center gap-2">
