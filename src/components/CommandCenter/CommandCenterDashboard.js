@@ -180,7 +180,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif',
                 <DemandSupplySection data={departmentData} selectedTimePeriod={selectedTimePeriod} />
 
                 {/* Section II: Root Causes */}
-                <RootCausesSection data={departmentData} selectedTimePeriod={selectedTimePeriod} selectedModule={selectedModule} />
+                <RootCausesSection data={departmentData} selectedTimePeriod={selectedTimePeriod} selectedModule={selectedModule} isITSM={isITSM} />
 
                 {/* Section III: Medicine Type Impact */}
                 <MedicineTypeImpactSection data={departmentData} selectedTimePeriod={selectedTimePeriod} />

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { X, CheckCircle } from 'lucide-react';
 import { getPriorityColor } from '../../data/rcaData';
 import { getRCAList } from '../../services/rcaService';
+import itsmRcaService from '../../services/itsmRcaService';
 
-const RootCausesSection = ({ data, selectedTimePeriod = 'today', selectedModule = 'otif' }) => {
+const RootCausesSection = ({ data, selectedTimePeriod = 'today', selectedModule = 'otif', isITSM = false }) => {
     const [rcaData, setRcaData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -18,9 +19,15 @@ const RootCausesSection = ({ data, selectedTimePeriod = 'today', selectedModule 
             try {
                 setLoading(true);
                 setError(null);
-                // Convert module ID to API format
-                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
-                const response = await getRCAList(moduleParam);
+                // ITSM: use itsmRcaService (ITSM base URL + module=itsm baked in)
+                // Pharma: use rcaService with optional module param
+                let response;
+                if (isITSM) {
+                    response = await itsmRcaService.getRCAList();
+                } else {
+                    const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+                    response = await getRCAList(moduleParam);
+                }
                 if (response.success) {
                     setRcaData(response.data);
                 }
@@ -33,7 +40,7 @@ const RootCausesSection = ({ data, selectedTimePeriod = 'today', selectedModule 
         };
 
         fetchRCAData();
-    }, [selectedModule]);
+    }, [selectedModule, isITSM]);
 
     // Handle clicking on Preventive Recommendations
     const handlePreventiveClick = (item) => {

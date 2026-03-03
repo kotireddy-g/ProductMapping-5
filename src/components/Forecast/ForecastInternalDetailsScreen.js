@@ -4,8 +4,9 @@ import { ArrowLeft, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircl
 import ToastNotification from '../Layout/ToastNotification';
 import ForecastMedicineDetailsModal from './ForecastMedicineDetailsModal';
 import forecastService from '../../services/forecastService';
+import itsmForecastService from '../../services/itsmForecastService';
 
-const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastArea, selectedModule = 'otif' }) => {
+const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastArea, selectedModule = 'otif', isITSM = false }) => {
     const { t } = useTranslation();
     const [selectedPeriod, setSelectedPeriod] = useState('Next 7 Days');
     const [selectedMedicine, setSelectedMedicine] = useState('');
@@ -37,9 +38,15 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                 setError(null);
                 const areaId = selectedForecastArea.toLowerCase();
                 const timePeriod = periodToApiParam[selectedPeriod];
-                // Convert module ID to API format
-                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
-                const response = await forecastService.getForecastDetails(areaId, timePeriod, moduleParam);
+                // ITSM: use itsmForecastService (ITSM base URL + module=itsm baked in)
+                // Pharma: use forecastService with optional module param
+                let response;
+                if (isITSM) {
+                    response = await itsmForecastService.getForecastDetails(areaId, timePeriod);
+                } else {
+                    const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+                    response = await forecastService.getForecastDetails(areaId, timePeriod, moduleParam);
+                }
 
 
                 if (response.success && response.data) {
@@ -56,7 +63,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
         };
 
         fetchData();
-    }, [selectedForecastArea, selectedPeriod, selectedModule]);
+    }, [selectedForecastArea, selectedPeriod, selectedModule, isITSM]);
 
     // Show toast notification
     const showToastNotification = (message) => {

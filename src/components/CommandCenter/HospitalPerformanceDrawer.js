@@ -3,8 +3,9 @@ import { X, TrendingUp, AlertCircle, CheckCircle, Info, BarChart3, DollarSign, U
 import HPISimulationTab from './HPISimulationTab';
 import scorMetricsData from '../../data/scorMetricsData';
 import kpiService from '../../services/kpiService';
+import itsmKpiService from '../../services/itsmKpiService';
 
-const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedModule = 'otif' }) => {
+const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedModule = 'otif', isITSM = false }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const [moduleKPIs, setModuleKPIs] = useState([]);
     const [kpiLoading, setKpiLoading] = useState(false);
@@ -20,7 +21,11 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedM
         const fetchKPIs = async () => {
             setKpiLoading(true);
             try {
-                const response = await kpiService.getAllKPIs(selectedModule);
+                // ITSM: use itsmKpiService (ITSM base URL + module=itsm baked in)
+                // Pharma: use kpiService with selectedModule
+                const response = isITSM
+                    ? await itsmKpiService.getAllKPIs()
+                    : await kpiService.getAllKPIs(selectedModule);
                 if (response?.success && response?.data) {
                     // API returns a flat object — convert to array for rendering
                     const kpiArray = Object.entries(response.data)
@@ -43,7 +48,7 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedM
             }
         };
         fetchKPIs();
-    }, [isOpen, selectedModule, isOtif]);
+    }, [isOpen, selectedModule, isOtif, isITSM]);
 
     if (!isOpen || !performanceData) return null;
 
@@ -163,6 +168,7 @@ const HospitalPerformanceDrawer = ({ isOpen, onClose, performanceData, selectedM
                             hpi: currentScore
                         }}
                         selectedModule={selectedModule}
+                        isITSM={isITSM}
                     />
                 ) : (
                     <div className="p-6 space-y-6">

@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { TrendingUp, RotateCcw, Loader } from 'lucide-react';
 import hpiSimulationService from '../../services/hpiSimulationService';
+import itsmHpiSimulationService from '../../services/itsmHpiSimulationService';
 
-const HPISimulationTab = ({ baselineData, selectedModule = 'otif' }) => {
+const HPISimulationTab = ({ baselineData, selectedModule = 'otif', isITSM = false }) => {
     // Slider configuration - OTIF only (values are already percentages)
     const sliderConfigs = [
         {
@@ -36,7 +37,10 @@ const HPISimulationTab = ({ baselineData, selectedModule = 'otif' }) => {
         setError(null);
 
         try {
-            const result = await hpiSimulationService.runSimulation({
+            // ITSM: use itsmHpiSimulationService (ITSM base URL + module=itsm baked in)
+            // Pharma: use hpiSimulationService with selectedModule
+            const svc = isITSM ? itsmHpiSimulationService : hpiSimulationService;
+            const result = await svc.runSimulation({
                 baseline: {
                     otifPct: baseline.otifPct,
                     revenueNorm: baseline.revenueNorm,
@@ -54,7 +58,7 @@ const HPISimulationTab = ({ baselineData, selectedModule = 'otif' }) => {
                 occupancyRate: 0.85,
                 revenuePerBedDay: 4000,
                 costPerBedDay: 3200
-            }, selectedModule);
+            }, isITSM ? 'itsm' : selectedModule);
 
             if (result.success) {
                 console.log('HPI Simulation Result:', result.data);

@@ -4,9 +4,10 @@ import { ArrowLeft, Info, Eye, CheckCircle } from 'lucide-react';
 import ProductJourneyModal from '../ForecastReview/ProductJourneyModal';
 import VendorDetailsModal from './VendorDetailsModal';
 import { getDecisionActionsData } from '../../services/decisionActionsService';
+import { getDecisionActionsData as getItsmDecisionActionsData } from '../../services/itsmDecisionActionsService';
 import { getTranslatedActionName } from '../../utils/translationHelpers';
 
-const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, selectedModule = 'otif' }) => {
+const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, selectedModule = 'otif', isITSM = false }) => {
     const { t } = useTranslation();
     const [humanFeedback, setHumanFeedback] = useState({});
     const [tags, setTags] = useState({});
@@ -50,9 +51,15 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
             try {
                 setLoading(true);
                 setError(null);
-                // Convert module ID to API format
-                const moduleParam = selectedModule === 'otif' ? null : selectedModule;
-                const response = await getDecisionActionsData(mainAction, subAction, moduleParam);
+                // ITSM: use itsmDecisionActionsService (ITSM base URL + module=itsm baked in)
+                // Pharma: use decisionActionsService with optional module param
+                let response;
+                if (isITSM) {
+                    response = await getItsmDecisionActionsData(mainAction, subAction);
+                } else {
+                    const moduleParam = selectedModule === 'otif' ? null : selectedModule;
+                    response = await getDecisionActionsData(mainAction, subAction, moduleParam);
+                }
 
                 if (response.success && response.data) {
                     setMedicineData(response.data);
@@ -68,7 +75,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
         };
 
         fetchData();
-    }, [mainAction, subAction, selectedModule]);
+    }, [mainAction, subAction, selectedModule, isITSM]);
 
     // Sample data for fallback (removed, now using API)
     const sampleData = [
