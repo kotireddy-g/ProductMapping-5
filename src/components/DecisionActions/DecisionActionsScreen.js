@@ -619,6 +619,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                 isOpen={showFlowModal}
                 onClose={() => setShowFlowModal(false)}
                 selectedItem={selectedFlowItem}
+                isITSM={isITSM}
             />
 
             {/* Vendor Details Modal */}

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
-const ProductJourneyModal = ({ isOpen, onClose, selectedItem }) => {
+const ProductJourneyModal = ({ isOpen, onClose, selectedItem, isITSM = false }) => {
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
   const particlesRef = useRef([]);
@@ -9,27 +9,42 @@ const ProductJourneyModal = ({ isOpen, onClose, selectedItem }) => {
   const getProductData = () => {
     if (!selectedItem) return null;
 
-    const medicineName = selectedItem.sku || 'Medicine';
+    const medicineName = selectedItem.sku || (isITSM ? 'Ticket' : 'Medicine');
     const totalUnits = parseInt(selectedItem.forecast?.split(' ')[0]) || 500;
 
-    const icuPct = 0.12, emergencyPct = 0.22, generalPct = 0.28, otPct = 0.20, pharmacyPct = 0.18;
+    const p1 = 0.12, p2 = 0.22, p3 = 0.28, p4 = 0.20, p5 = 0.18;
+
+    const distribution = isITSM ? [
+      { name: 'Engineering', units: Math.round(totalUnits * p1), color: '#ef4444', type: 'critical' },
+      { name: 'Product', units: Math.round(totalUnits * p2), color: '#ef4444', type: 'critical' },
+      { name: 'QA', units: Math.round(totalUnits * p3), color: '#10b981', type: 'normal' },
+      { name: 'Operations', units: Math.round(totalUnits * p4), color: '#3b82f6', type: 'routine' },
+      { name: 'Delivery', units: Math.round(totalUnits * p5), color: '#3b82f6', type: 'routine' }
+    ] : [
+      { name: 'ICU', units: Math.round(totalUnits * p1), color: '#ef4444', type: 'critical' },
+      { name: 'Emergency Ward', units: Math.round(totalUnits * p2), color: '#ef4444', type: 'critical' },
+      { name: 'General Ward', units: Math.round(totalUnits * p3), color: '#10b981', type: 'normal' },
+      { name: 'Operation Theater', units: Math.round(totalUnits * p4), color: '#3b82f6', type: 'routine' },
+      { name: 'Pharmacy Store', units: Math.round(totalUnits * p5), color: '#3b82f6', type: 'routine' }
+    ];
+
+    const consumption = isITSM ? [
+      { name: 'Sprint Delivery', rate: Math.round(totalUnits * 0.008), unit: '/hr' },
+      { name: 'Bug Fixes', rate: Math.round(totalUnits * 0.005), unit: '/hr' },
+      { name: 'Feature Dev', rate: Math.round(totalUnits * 0.004), unit: '/hr' },
+      { name: 'Testing', rate: Math.round(totalUnits * 0.002), unit: '/hr' }
+    ] : [
+      { name: 'Patient Care', rate: Math.round(totalUnits * 0.008), unit: '/hr' },
+      { name: 'Procedures', rate: Math.round(totalUnits * 0.005), unit: '/hr' },
+      { name: 'Outpatient', rate: Math.round(totalUnits * 0.004), unit: '/hr' },
+      { name: 'Research', rate: Math.round(totalUnits * 0.002), unit: '/hr' }
+    ];
 
     return {
       name: medicineName.replace('Tab. ', '').replace('Inj. ', ''),
       totalUnits: totalUnits,
-      distribution: [
-        { name: 'ICU', units: Math.round(totalUnits * icuPct), color: '#ef4444', type: 'critical' },
-        { name: 'Emergency Ward', units: Math.round(totalUnits * emergencyPct), color: '#ef4444', type: 'critical' },
-        { name: 'General Ward', units: Math.round(totalUnits * generalPct), color: '#10b981', type: 'normal' },
-        { name: 'Operation Theater', units: Math.round(totalUnits * otPct), color: '#3b82f6', type: 'routine' },
-        { name: 'Pharmacy Store', units: Math.round(totalUnits * pharmacyPct), color: '#3b82f6', type: 'routine' }
-      ],
-      consumption: [
-        { name: 'Patient Care', rate: Math.round(totalUnits * 0.008), unit: '/hr' },
-        { name: 'Procedures', rate: Math.round(totalUnits * 0.005), unit: '/hr' },
-        { name: 'Outpatient', rate: Math.round(totalUnits * 0.004), unit: '/hr' },
-        { name: 'Research', rate: Math.round(totalUnits * 0.002), unit: '/hr' }
-      ]
+      distribution,
+      consumption
     };
   };
 
@@ -203,7 +218,7 @@ const ProductJourneyModal = ({ isOpen, onClose, selectedItem }) => {
         const radius = 8;
 
         ctx.beginPath();
-        ctx.roundRect(node.x - boxWidth/2, node.y, boxWidth, boxHeight, radius);
+        ctx.roundRect(node.x - boxWidth / 2, node.y, boxWidth, boxHeight, radius);
         ctx.fill();
         ctx.stroke();
 
@@ -225,7 +240,7 @@ const ProductJourneyModal = ({ isOpen, onClose, selectedItem }) => {
         const boxHeight = 30;
 
         ctx.beginPath();
-        ctx.roundRect(node.x - boxWidth/2, node.y, boxWidth, boxHeight, 4);
+        ctx.roundRect(node.x - boxWidth / 2, node.y, boxWidth, boxHeight, 4);
         ctx.fill();
         ctx.stroke();
 
@@ -265,9 +280,9 @@ const ProductJourneyModal = ({ isOpen, onClose, selectedItem }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Product Journey</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{isITSM ? 'Ticket Journey' : 'Product Journey'}</h2>
             <p className="text-sm text-gray-500 mt-1">
-              {selectedItem?.sku} - Flow Analysis
+              {selectedItem?.medicineName || selectedItem?.sku} - Flow Analysis
             </p>
           </div>
           <button
@@ -302,7 +317,7 @@ const ProductJourneyModal = ({ isOpen, onClose, selectedItem }) => {
                   <span className="text-gray-600 text-xs">{node.name}</span>
                 </div>
                 <p className="text-lg font-bold text-gray-800">{node.units}</p>
-                <p className="text-gray-400 text-xs">units allocated</p>
+                <p className="text-gray-400 text-xs">{isITSM ? 'tickets assigned' : 'units allocated'}</p>
               </div>
             ))}
           </div>
