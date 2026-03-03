@@ -379,12 +379,16 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                         <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
                                             Forecast%
                                         </th>
-                                        <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                            Preferred Vendor
-                                        </th>
-                                        <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                            Vendor Count
-                                        </th>
+                                        {!isITSM && (
+                                            <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                                Preferred Vendor
+                                            </th>
+                                        )}
+                                        {!isITSM && (
+                                            <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                                                Vendor Count
+                                            </th>
+                                        )}
                                         <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
                                             Agent Suggestion
                                         </th>
@@ -506,24 +510,28 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                             </td>
 
                                             {/* Preferred Vendor */}
-                                            <td className="px-4 py-4">
-                                                <span className="text-slate-700 text-sm font-mono">
-                                                    {medicine.preferredVendor || 'N/A'}
-                                                </span>
-                                            </td>
+                                            {!isITSM && (
+                                                <td className="px-4 py-4">
+                                                    <span className="text-slate-700 text-sm font-mono">
+                                                        {medicine.preferredVendor || 'N/A'}
+                                                    </span>
+                                                </td>
+                                            )}
 
                                             {/* Vendor Count */}
-                                            <td className="px-4 py-4 text-center">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedMedicineVendors({ medicine, vendors: medicine.vendors || [] });
-                                                        setShowVendorModal(true);
-                                                    }}
-                                                    className="px-3 py-1.5 bg-gray-900 text-white rounded-full font-bold text-sm hover:bg-gray-800 transition-colors cursor-pointer shadow-md hover:shadow-lg"
-                                                >
-                                                    {medicine.vendorCount || 0}
-                                                </button>
-                                            </td>
+                                            {!isITSM && (
+                                                <td className="px-4 py-4 text-center">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedMedicineVendors({ medicine, vendors: medicine.vendors || [] });
+                                                            setShowVendorModal(true);
+                                                        }}
+                                                        className="px-3 py-1.5 bg-gray-900 text-white rounded-full font-bold text-sm hover:bg-gray-800 transition-colors cursor-pointer shadow-md hover:shadow-lg"
+                                                    >
+                                                        {medicine.vendorCount || 0}
+                                                    </button>
+                                                </td>
+                                            )}
 
                                             {/* Agent Suggestion */}
                                             <td className="px-4 py-4">
