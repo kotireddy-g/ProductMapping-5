@@ -350,7 +350,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                             Category
                                         </th>
                                         <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                            SKU/Medicine
+                                            {isITSM ? 'SKU/Ticket' : 'SKU/Medicine'}
                                         </th>
                                         <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
                                             Alert
@@ -365,7 +365,7 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                             Location
                                         </th>
                                         <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                            OTIF
+                                            {isITSM ? 'DTIF' : 'OTIF'}
                                         </th>
                                         <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
                                             Daily Demand

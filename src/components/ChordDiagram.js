@@ -311,7 +311,7 @@ const generateConnections = (supplyItems, demandItems, flowsData) => {
     const supplyIds = supplyItems.map(s => s.id);
     const demandIds = demandItems.map(d => d.id);
 
-    return flowsData
+    const matched = flowsData
       .filter(flow => supplyIds.includes(flow.source) && demandIds.includes(flow.target))
       .map(flow => ({
         source: flow.source,
@@ -327,6 +327,10 @@ const generateConnections = (supplyItems, demandItems, flowsData) => {
         forecastSharePct: flow.forecastSharePct || 0,
         forecastCount: flow.forecastCount || 0
       }));
+
+    // If matched flows found, return them. Otherwise fall through to hash-based generation.
+    // (Drill-down levels 2/3 have mod::/feat:: IDs not present in the level-1 flows array)
+    if (matched.length > 0) return matched;
   }
 
   // Fallback to mock data generation if no API data
@@ -560,9 +564,9 @@ const HospitalSankeyDiagram = ({ selectedModule = 'otif', isITSM = false }) => {
     const parts = ['Supply'];
     supplyPath.forEach((id, idx) => {
       const level = idx + 1;
-      const items = level === 1 ? hospitalSupply.level1 :
-        level === 2 ? hospitalSupply.level2[supplyPath[0]] :
-          hospitalSupply.level3[supplyPath[1]];
+      const items = level === 1 ? supplyData.level1 :
+        level === 2 ? supplyData.level2[supplyPath[0]] :
+          supplyData.level3[supplyPath[1]];
       const item = items?.find(i => i.id === id);
       if (item) parts.push(item.name);
     });
@@ -574,9 +578,9 @@ const HospitalSankeyDiagram = ({ selectedModule = 'otif', isITSM = false }) => {
     const parts = ['Demand'];
     demandPath.forEach((id, idx) => {
       const level = idx + 1;
-      const items = level === 1 ? hospitalDemand.level1 :
-        level === 2 ? hospitalDemand.level2[demandPath[0]] :
-          hospitalDemand.level3[demandPath[1]];
+      const items = level === 1 ? demandData.level1 :
+        level === 2 ? demandData.level2[demandPath[0]] :
+          demandData.level3[demandPath[1]];
       const item = items?.find(i => i.id === id);
       if (item) parts.push(item.name);
     });
@@ -864,8 +868,8 @@ Z
                 {visibleSupplyNodes.map((node) => {
                   const stock = node.stock || getStockValue(node.id);
                   const forecastQty = node.forecastQty || 0;
-                  const canDrillDown = (supplyLevel === 1 && hospitalSupply.level2[node.id]) ||
-                    (supplyLevel === 2 && hospitalSupply.level3[node.id]);
+                  const canDrillDown = (supplyLevel === 1 && (supplyData.level2?.[node.id] || node.hasChildren)) ||
+                    (supplyLevel === 2 && (supplyData.level3?.[node.id] || node.hasChildren));
 
                   return (
                     <g key={node.id}>
@@ -936,8 +940,8 @@ Z
                   const otif = node.otif || getOTIFValue(node.id);
                   const forecastOtif = node.otifForecastPct || null;
                   const tat = node.tat || getTATValue(node.id);
-                  const canDrillDown = (demandLevel === 1 && hospitalDemand.level2[node.id]) ||
-                    (demandLevel === 2 && hospitalDemand.level3[node.id]);
+                  const canDrillDown = (demandLevel === 1 && (demandData.level2?.[node.id] || node.hasChildren)) ||
+                    (demandLevel === 2 && (demandData.level3?.[node.id] || node.hasChildren));
 
                   return (
                     <g key={node.id}>
@@ -1307,8 +1311,8 @@ Z
               {visibleSupplyNodes.map((node) => {
                 const stock = node.stock || getStockValue(node.id);
                 const forecastQty = node.forecastQty || 0;
-                const canDrillDown = (supplyLevel === 1 && hospitalSupply.level2[node.id]) ||
-                  (supplyLevel === 2 && hospitalSupply.level3[node.id]);
+                const canDrillDown = (supplyLevel === 1 && (supplyData.level2?.[node.id] || node.hasChildren)) ||
+                  (supplyLevel === 2 && (supplyData.level3?.[node.id] || node.hasChildren));
 
                 return (
                   <g key={node.id}>
@@ -1383,8 +1387,8 @@ Z
                 const otif = node.otif || getOTIFValue(node.id);
                 const forecastOtif = node.otifForecastPct || null;
                 const tat = node.tat || getTATValue(node.id);
-                const canDrillDown = (demandLevel === 1 && hospitalDemand.level2[node.id]) ||
-                  (demandLevel === 2 && hospitalDemand.level3[node.id]);
+                const canDrillDown = (demandLevel === 1 && (demandData.level2?.[node.id] || node.hasChildren)) ||
+                  (demandLevel === 2 && (demandData.level3?.[node.id] || node.hasChildren));
 
                 return (
                   <g key={node.id}>

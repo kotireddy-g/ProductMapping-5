@@ -10,7 +10,8 @@ const GlobalSearchBar = ({
     dashboardData = { departments: [], forecastAreas: [], decisionActions: [] },
     onActionSelect,
     onLogout,
-    currentUser
+    currentUser,
+    isITSM = false
 }) => {
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
@@ -24,8 +25,8 @@ const GlobalSearchBar = ({
 
         const query = searchQuery.toLowerCase();
         const allSuggestions = [
-            ...searchSuggestions.otif.map(s => ({ text: s, category: 'OTIF' })),
-            ...searchSuggestions.medicines.map(s => ({ text: s, category: 'Medicine' })),
+            ...searchSuggestions.otif.map(s => ({ text: s, category: isITSM ? 'DTIF' : 'OTIF' })),
+            ...searchSuggestions.medicines.map(s => ({ text: s, category: isITSM ? 'Ticket' : 'Medicine' })),
             ...searchSuggestions.actions.map(s => ({ text: s, category: 'Action' })),
             ...searchSuggestions.labels.map(s => ({ text: s, category: 'Label' }))
         ];
@@ -33,7 +34,7 @@ const GlobalSearchBar = ({
         return allSuggestions
             .filter(s => s.text.toLowerCase().includes(query))
             .slice(0, 8);
-    }, [searchQuery]);
+    }, [searchQuery, isITSM]);
 
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
@@ -84,7 +85,11 @@ const GlobalSearchBar = ({
 
             case 'no_match':
                 // Show user-friendly message
-                alert(`Sorry, we couldn't find any results for "${query}".\n\nTry searching for:\n• Department names (ICU, Ward, OPD)\n• Forecast queries (ICU forecast, OPD prediction)\n• Decision actions (Fast moving, Stockout, Usage Velocity)`);
+                if (isITSM) {
+                    alert(`Sorry, we couldn't find any results for "${query}".\n\nTry searching for:\n• Project names (Engineering, Product, QA)\n• Sprint queries (DTIF forecast, Sprint prediction)\n• Decision actions (Backlog, SLA Breach, Escalation)`);
+                } else {
+                    alert(`Sorry, we couldn't find any results for "${query}".\n\nTry searching for:\n• Department names (ICU, Ward, OPD)\n• Forecast queries (ICU forecast, OPD prediction)\n• Decision actions (Fast moving, Stockout, Usage Velocity)`);
+                }
                 break;
 
             default:
@@ -171,7 +176,7 @@ const GlobalSearchBar = ({
                         onKeyPress={handleSearchKeyPress}
                         onFocus={() => setShowSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                        placeholder={t('search.placeholder')}
+                        placeholder={isITSM ? 'Search: DTIF, Tickets, Actions, Labels (Voice or Text)' : t('search.placeholder')}
                         className="w-full pl-14 pr-16 py-4 text-lg border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm bg-white transition-all"
                     />
 

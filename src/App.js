@@ -80,7 +80,7 @@ function App() {
 
     const fetchNotifications = async (showToasts) => {
       try {
-        const response = await notificationsService.getNotifications(selectedModule);
+        const response = await notificationsService.getNotifications(selectedModule, isITSM);
         if (response && response.success && response.data) {
           const normalized = Array.isArray(response.data.notifications)
             ? response.data.notifications
@@ -480,6 +480,7 @@ function App() {
           onActionSelect={handleActionSelect}
           onLogout={handleLogout}
           currentUser={currentUser}
+          isITSM={isITSM}
         />
 
         <div className="flex-1 overflow-y-auto" ref={contentAreaRef}>
@@ -554,6 +555,7 @@ function App() {
         notifications={notifications}
         onClose={() => setIsNotificationOpen(false)}
         onMarkAsRead={handleMarkAsRead}
+        isITSM={isITSM}
         onNavigate={(notification) => {
           setIsNotificationOpen(false);
           if (notification.type === 'stockout' || notification.type === 'low_stock') {

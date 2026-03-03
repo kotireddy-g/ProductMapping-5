@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
+const DemandSupplySection = ({ data, selectedTimePeriod = 'today', isITSM = false }) => {
     const { demandSupply, medicineCategories, name } = data;
 
     // Use API chart data if available, otherwise use fallback
@@ -11,7 +11,7 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h2 className="text-2xl font-bold text-slate-800 mb-6">
-                Demand-Supply & Medicine Category Analysis
+                {isITSM ? 'Demand-Supply & Issue Category Analysis' : 'Demand-Supply & Medicine Category Analysis'}
             </h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -22,7 +22,7 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
                     {/* Metrics */}
                     <div className="grid grid-cols-3 gap-3 mb-4">
                         <div className="bg-white p-3 rounded-lg border border-slate-200">
-                            <div className="text-xs text-slate-600 mb-1">OTIF (On-Time In-Full)</div>
+                            <div className="text-xs text-slate-600 mb-1">{isITSM ? 'DTIF (Delivered-Time In-Full)' : 'OTIF (On-Time In-Full)'}</div>
                             <div className="text-xl font-bold text-blue-700">{demandSupply?.otif || 0}%</div>
                         </div>
                         <div className="bg-white p-3 rounded-lg border border-slate-200">
@@ -60,8 +60,8 @@ const DemandSupplySection = ({ data, selectedTimePeriod = 'today' }) => {
 
                 {/* Right Panel - Medicine Category Heatmap */}
                 <div className="bg-slate-50 rounded-lg p-5 border border-slate-200">
-                    <h3 className="text-lg font-semibold text-slate-700 mb-4">MEDICINE-CATEGORY</h3>
-                    <p className="text-sm text-slate-600 mb-4">OTIF Distribution by Category Over Time</p>
+                    <h3 className="text-lg font-semibold text-slate-700 mb-4">{isITSM ? 'ISSUE-CATEGORY' : 'MEDICINE-CATEGORY'}</h3>
+                    <p className="text-sm text-slate-600 mb-4">{isITSM ? 'DTIF Distribution by Category Over Time' : 'OTIF Distribution by Category Over Time'}</p>
 
                     {/* Use API heatmap data */}
                     {(() => {

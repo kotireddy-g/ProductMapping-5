@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, AlertTriangle, Package, Clock, TrendingUp, Bell, Info, AlertCircle, CheckCircle } from 'lucide-react';
 
-const NotificationPanel = ({ isOpen, notifications, onClose, onMarkAsRead, onNavigate }) => {
+const NotificationPanel = ({ isOpen, notifications, onClose, onMarkAsRead, onNavigate, isITSM = false }) => {
   if (!isOpen) return null;
 
   const safeNotifications = Array.isArray(notifications) ? notifications : [];
@@ -41,7 +41,7 @@ const NotificationPanel = ({ isOpen, notifications, onClose, onMarkAsRead, onNav
 
   // ─── Human-readable label for a type ─────────────────────────────────────────
   const getTypeLabel = (type) => {
-    const labels = {
+    const pharmaLabels = {
       stockout: 'Stockouts',
       low_stock: 'Low Stock',
       expiry: 'Expiry Alerts',
@@ -52,6 +52,18 @@ const NotificationPanel = ({ isOpen, notifications, onClose, onMarkAsRead, onNav
       info: 'Information',
       success: 'Updates',
     };
+    const itsmLabels = {
+      stockout: 'Backlog Alerts',
+      low_stock: 'Capacity Alerts',
+      expiry: 'SLA Breach Alerts',
+      otif: 'DTIF Issues',
+      forecast: 'Sprint Deviations',
+      critical: 'Critical Alerts',
+      warning: 'Warnings',
+      info: 'Information',
+      success: 'Updates',
+    };
+    const labels = isITSM ? itsmLabels : pharmaLabels;
     return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   };
 

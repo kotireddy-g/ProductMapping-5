@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import { Filter } from 'lucide-react';
 
-const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today' }) => {
+const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today', isITSM = false }) => {
     const { medicineTypeImpact, name } = data;
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [humanInputs, setHumanInputs] = useState({});
 
     const classifications = [
         { id: 'all', label: 'All', color: 'bg-slate-100 text-slate-700' },
-        { id: 'life_saving', label: 'Life-saving', color: 'bg-red-100 text-red-700' },
+        { id: 'life_saving', label: isITSM ? 'Critical' : 'Life-saving', color: 'bg-red-100 text-red-700' },
         { id: 'fast_moving', label: 'Fast-moving', color: 'bg-orange-100 text-orange-700' },
-        { id: 'new_expiry', label: 'New Expiry', color: 'bg-purple-100 text-purple-700' },
-        { id: 'under_stock', label: 'Under stock', color: 'bg-yellow-100 text-yellow-700' }
+        { id: 'new_expiry', label: isITSM ? 'SLA Breach' : 'New Expiry', color: 'bg-purple-100 text-purple-700' },
+        { id: 'under_stock', label: isITSM ? 'Under Capacity' : 'Under stock', color: 'bg-yellow-100 text-yellow-700' }
     ];
 
     const filteredImpact = selectedFilter === 'all'
         ? medicineTypeImpact
         : medicineTypeImpact.filter(item => item.classification === selectedFilter);
 
-    const getOTIFColor = (otif) => {
+    const getDTIFColor = (otif) => {
         if (otif >= 95) return 'text-green-700 bg-green-50';
         if (otif >= 85) return 'text-yellow-700 bg-yellow-50';
         return 'text-red-700 bg-red-50';
@@ -33,12 +33,12 @@ const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today' }) => {
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            < h2 className="text-2xl font-bold text-slate-800 mb-2" >
-                Medicine Type Impacting {name.toUpperCase()}
-            </h2 >
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                {isITSM ? 'Issue Type Impacting' : 'Medicine Type Impacting'} {name.toUpperCase()}
+            </h2>
 
             {/* Classification Filters */}
-            < div className="mb-6 flex flex-wrap items-center gap-3" >
+            <div className="mb-6 flex flex-wrap items-center gap-3">
                 <Filter size={18} className="text-slate-600" />
                 {
                     classifications.map((classification) => (
@@ -54,24 +54,24 @@ const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today' }) => {
                         </button>
                     ))
                 }
-            </div >
+            </div>
 
-            {/* Medicine Type Impact Table */}
-            < div className="overflow-x-auto" >
+            {/* Impact Table */}
+            <div className="overflow-x-auto">
                 <table className="w-full">
                     <thead>
                         <tr className="bg-slate-100 border-b border-slate-300">
                             <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
-                                Medicine Type
+                                {isITSM ? 'Issue Type' : 'Medicine Type'}
                             </th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
-                                Medicine Count
+                                {isITSM ? 'Issue Count' : 'Medicine Count'}
                             </th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
-                                Location
+                                {isITSM ? 'Team' : 'Location'}
                             </th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
-                                OTIF
+                                {isITSM ? 'DTIF' : 'OTIF'}
                             </th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">
                                 Action (Agent)
@@ -95,7 +95,7 @@ const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today' }) => {
                                 </td>
                                 <td className="px-4 py-3 text-slate-700">{item.location}</td>
                                 <td className="px-4 py-3">
-                                    <span className={`px-3 py-1 rounded-lg font-semibold ${getOTIFColor(item.otif)}`}>
+                                    <span className={`px-3 py-1 rounded-lg font-semibold ${getDTIFColor(item.otif)}`}>
                                         {Number(item.otif).toFixed(2)}%
                                     </span>
                                 </td>
@@ -103,7 +103,9 @@ const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today' }) => {
                                     <select className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-700 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                         <option value={item.action}>{item.action}</option>
                                         <option value="Assign">Assign</option>
-                                        <option value="Increase Safety Stock">Increase Safety Stock</option>
+                                        <option value={isITSM ? 'Escalate' : 'Increase Safety Stock'}>
+                                            {isITSM ? 'Escalate' : 'Increase Safety Stock'}
+                                        </option>
                                         <option value="Monitor">Monitor</option>
                                         <option value="Reorder">Reorder</option>
                                         <option value="Review">Review</option>
@@ -114,7 +116,7 @@ const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today' }) => {
                                         type="text"
                                         value={humanInputs[item.type] || ''}
                                         onChange={(e) => handleHumanInputChange(item.type, e.target.value)}
-                                        placeholder="Enter reason for low OTIF..."
+                                        placeholder={isITSM ? 'Enter reason for low DTIF...' : 'Enter reason for low OTIF...'}
                                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-700 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </td>
@@ -122,13 +124,13 @@ const MedicineTypeImpactSection = ({ data, selectedTimePeriod = 'today' }) => {
                         ))}
                     </tbody>
                 </table>
-            </div >
+            </div>
 
             {/* Summary */}
-            < div className="mt-4 text-sm text-slate-600" >
-                Showing {filteredImpact.length} of {medicineTypeImpact.length} medicine types
-            </div >
-        </div >
+            <div className="mt-4 text-sm text-slate-600">
+                Showing {filteredImpact.length} of {medicineTypeImpact.length} {isITSM ? 'issue types' : 'medicine types'}
+            </div>
+        </div>
     );
 };
 

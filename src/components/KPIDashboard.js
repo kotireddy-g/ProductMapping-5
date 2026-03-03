@@ -87,7 +87,7 @@ const KPIDashboard = ({ onNavigate, selectedModule = 'otif', isITSM = false }) =
                 </div>
             )}
 
-            {/* KPI Grid - object shape (pharma named keys, unchanged) */}
+            {/* KPI Grid - object shape (pharma named keys or ITSM mock fallback) */}
             {!loading && !isArrayData && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {['otif', 'stockHealth', 'expiryRisk', 'forecastAccuracy', 'fulfillmentTime', 'revenueProtection']

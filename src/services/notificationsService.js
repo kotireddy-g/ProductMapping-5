@@ -1,4 +1,5 @@
 import apiClient from './api';
+import itsmApiClient from './itsmApiClient';
 
 /**
  * Notifications Service
@@ -9,13 +10,21 @@ const notificationsService = {
     /**
      * Get all notifications for the current user
      * @param {string} module - Optional module name (e.g., 'staff-allocation')
+     * @param {boolean} isITSM - If true, use ITSM base URL and module=itsm
      * @returns {Promise} API response with notifications list and unread count
      */
-    getNotifications: async (module) => {
+    getNotifications: async (module, isITSM = false) => {
         try {
-            // Always forward the module param so the API knows the active context
-            const params = module ? { module } : {};
-            const response = await apiClient.get('/api/notifications', { params });
+            let response;
+            if (isITSM) {
+                // ITSM: use itsmApiClient (port 8011, base already = /dtif/api)
+                // Full URL = http://192.168.1.111:8011/dtif/api/notifications?module=itsm
+                response = await itsmApiClient.get('/notifications', { params: { module: 'itsm' } });
+            } else {
+                // Pharma: always forward the module param so the API knows the active context
+                const params = module ? { module } : {};
+                response = await apiClient.get('/api/notifications', { params });
+            }
 
             // API returns: { success: true, data: { unreadCount: N, notifications: [...] } }
             // response.data.data  => { unreadCount, notifications: [...] }  (object, NOT array)
@@ -50,11 +59,16 @@ const notificationsService = {
     /**
      * Mark a notification as read
      * @param {string} notificationId - ID of the notification to mark as read
+     * @param {boolean} isITSM - If true, use ITSM base URL
      * @returns {Promise} API response
      */
-    markAsRead: async (notificationId) => {
+    markAsRead: async (notificationId, isITSM = false) => {
         try {
-            const response = await apiClient.patch(`/api/notifications/${notificationId}/read`);
+            const client = isITSM ? itsmApiClient : apiClient;
+            const path = isITSM
+                ? `/dtif/api/notifications/${notificationId}/read`
+                : `/api/notifications/${notificationId}/read`;
+            const response = await client.patch(path);
             return response.data;
         } catch (error) {
             console.error('Mark notification as read error:', error);
@@ -64,11 +78,14 @@ const notificationsService = {
 
     /**
      * Mark all notifications as read
+     * @param {boolean} isITSM - If true, use ITSM base URL
      * @returns {Promise} API response
      */
-    markAllAsRead: async () => {
+    markAllAsRead: async (isITSM = false) => {
         try {
-            const response = await apiClient.patch('/api/notifications/read-all');
+            const client = isITSM ? itsmApiClient : apiClient;
+            const path = isITSM ? '/dtif/api/notifications/read-all' : '/api/notifications/read-all';
+            const response = await client.patch(path);
             return response.data;
         } catch (error) {
             console.error('Mark all notifications as read error:', error);

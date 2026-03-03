@@ -183,7 +183,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif',
                 <RootCausesSection data={departmentData} selectedTimePeriod={selectedTimePeriod} selectedModule={selectedModule} isITSM={isITSM} />
 
                 {/* Section III: Medicine Type Impact */}
-                <MedicineTypeImpactSection data={departmentData} selectedTimePeriod={selectedTimePeriod} />
+                <MedicineTypeImpactSection data={departmentData} selectedTimePeriod={selectedTimePeriod} isITSM={isITSM} />
 
                 {/* Section IV: Demand & Risk Forecast */}
                 <DemandForecastSection
@@ -213,7 +213,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif',
                                 </button>
                             </div>
                             <p className="text-slate-600 mt-2">
-                                {departmentData.impactAnalysis.medicineDetails.form} - {departmentData.impactAnalysis.medicineDetails.purpose} - OTIF {departmentData.impactAnalysis.medicineDetails.otif}%
+                                {departmentData.impactAnalysis.medicineDetails.form} - {departmentData.impactAnalysis.medicineDetails.purpose} - {isITSM ? 'DTIF' : 'OTIF'} {departmentData.impactAnalysis.medicineDetails.otif}%
                             </p>
                         </div>
 
