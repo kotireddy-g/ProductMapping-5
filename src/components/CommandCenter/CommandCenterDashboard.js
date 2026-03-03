@@ -177,7 +177,7 @@ const CommandCenterDashboard = ({ departmentId, onBack, selectedModule = 'otif',
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
                 {/* Section I: Demand-Supply & Medicine Category */}
-                <DemandSupplySection data={departmentData} selectedTimePeriod={selectedTimePeriod} />
+                <DemandSupplySection data={departmentData} selectedTimePeriod={selectedTimePeriod} isITSM={isITSM} />
 
                 {/* Section II: Root Causes */}
                 <RootCausesSection data={departmentData} selectedTimePeriod={selectedTimePeriod} selectedModule={selectedModule} isITSM={isITSM} />
