@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Search, Mic, Plus, CheckCircle2, ChevronRight } from 'lucide-react';
 
 const DATA_SOURCES = [
-    { id: 'jira', name: 'Jira', logo: '🔵' },
-    { id: 'github', name: 'GitHub', logo: '⚫' },
-    { id: 'saperp', name: 'SAP ERP', logo: '🔷' },
-    { id: 'slack', name: 'Slack', logo: '🟣' },
-    { id: 'salesforce', name: 'Salesforce', logo: '☁️' },
+    { id: 'jira', name: 'Jira', logoUrl: 'https://cdn.worldvectorlogo.com/logos/jira-1.svg' },
+    { id: 'github', name: 'GitHub', logoUrl: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png' },
+    { id: 'saperp', name: 'SAP ERP', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg' },
+    { id: 'slack', name: 'Slack', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg' },
+    { id: 'salesforce', name: 'Salesforce', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg' },
 ];
 
 const ACTIONS = [
@@ -54,18 +54,17 @@ const ITSMSearchPage = ({
 
             {/* Top bar */}
             <header className="flex items-center justify-between px-8 py-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-5 h-5">
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
-                        </svg>
-                    </div>
-                    <span className="font-bold text-gray-800 text-base tracking-tight">ExperienceFlow</span>
+                <div className="flex items-center">
+                    <img
+                        src="https://experienceflow.ai/wp-content/uploads/2024/05/Logo-with-Tagline-240px.svg"
+                        alt="ExperienceFlow"
+                        className="h-9 w-auto"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                    />
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="text-sm text-gray-500">
-                        {isCEO ? '👔 CEO' : '🛠 ITSM Admin'}&nbsp;
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="text-gray-400">{isCEO ? '👔' : '🛠'}</span>
                         <span className="font-medium text-gray-700">{currentUser?.name || currentUser?.email?.split('@')[0]}</span>
                     </div>
                     <button
@@ -129,7 +128,7 @@ const ITSMSearchPage = ({
                                 key={src.id}
                                 className="relative flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 bg-white shadow-xs hover:shadow-sm transition-all"
                             >
-                                <span className="text-lg">{src.logo}</span>
+                                <img src={src.logoUrl} alt={src.name} className="w-5 h-5 object-contain" />
                                 <span className="text-sm font-semibold text-gray-700">{src.name}</span>
                                 {isConnected(src.id) && (
                                     <CheckCircle2 className="w-4 h-4 text-green-500 absolute -top-1.5 -right-1.5" />

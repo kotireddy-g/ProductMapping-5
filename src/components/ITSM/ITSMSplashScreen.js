@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import ExperienceFlowLogo from '../../assets/experienceflow-logo.svg';
 
 const ITSMSplashScreen = ({ onLogin }) => {
     const mountRef = useRef(null);
@@ -195,13 +196,14 @@ const ITSMSplashScreen = ({ onLogin }) => {
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
                 {/* Logo / brand */}
                 <div className="mb-4 pointer-events-none">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-900/50">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-7 h-7">
-                                <circle cx="12" cy="12" r="3" />
-                                <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
-                            </svg>
-                        </div>
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                        {/* Logo icon — natural teal colours, no filter */}
+                        <img
+                            src={ExperienceFlowLogo}
+                            alt="ExperienceFlow logo"
+                            style={{ height: '48px', width: 'auto' }}
+                        />
+                        {/* Brand name beside the logo */}
                         <span
                             className="text-3xl font-bold tracking-wide"
                             style={{ color: '#e2e8f0', textShadow: '0 0 30px rgba(0,136,255,0.6)' }}

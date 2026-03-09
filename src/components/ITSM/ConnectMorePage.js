@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { ArrowLeft, CheckCircle2, Loader2, X } from 'lucide-react';
 
 const ALL_SOURCES = [
-    { id: 'jira', name: 'Jira', emoji: '🔵', desc: 'Project & ticket tracking', fields: ['baseUrl', 'clientId', 'clientSecret'] },
-    { id: 'github', name: 'GitHub', emoji: '⚫', desc: 'Code repository & CI/CD', fields: ['token'] },
-    { id: 'saperp', name: 'SAP ERP', emoji: '🔷', desc: 'Enterprise resource planning', fields: ['clientId', 'clientSecret'] },
-    { id: 'slack', name: 'Slack', emoji: '🟣', desc: 'Team communication', fields: ['clientId', 'clientSecret'] },
-    { id: 'salesforce', name: 'Salesforce', emoji: '☁️', desc: 'CRM & customer data', fields: ['clientId', 'clientSecret'] },
-    { id: 'servicenow', name: 'ServiceNow', emoji: '🟢', desc: 'ITSM platform', fields: ['baseUrl', 'clientId', 'clientSecret'] },
-    { id: 'pagerduty', name: 'PagerDuty', emoji: '🔴', desc: 'Incident management', fields: ['token'] },
-    { id: 'azuredevops', name: 'Azure DevOps', emoji: '🔵', desc: 'Dev pipeline & boards', fields: ['clientId', 'clientSecret'] },
-    { id: 'zendesk', name: 'Zendesk', emoji: '🟡', desc: 'Customer support tickets', fields: ['token'] },
-    { id: 'monday', name: 'Monday.com', emoji: '🌈', desc: 'Work OS & project mgmt', fields: ['token'] },
+    { id: 'jira', name: 'Jira', logoUrl: 'https://cdn.worldvectorlogo.com/logos/jira-1.svg', desc: 'Project & ticket tracking', fields: ['baseUrl', 'clientId', 'clientSecret'] },
+    { id: 'github', name: 'GitHub', logoUrl: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png', desc: 'Code repository & CI/CD', fields: ['token'] },
+    { id: 'saperp', name: 'SAP ERP', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/59/SAP_2011_logo.svg', desc: 'Enterprise resource planning', fields: ['clientId', 'clientSecret'] },
+    { id: 'slack', name: 'Slack', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg', desc: 'Team communication', fields: ['clientId', 'clientSecret'] },
+    { id: 'salesforce', name: 'Salesforce', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg', desc: 'CRM & customer data', fields: ['clientId', 'clientSecret'] },
+    { id: 'servicenow', name: 'ServiceNow', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/57/ServiceNow_logo.svg', desc: 'ITSM platform', fields: ['baseUrl', 'clientId', 'clientSecret'] },
+    { id: 'pagerduty', name: 'PagerDuty', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/PagerDuty_logo_2019.svg', desc: 'Incident management', fields: ['token'] },
+    { id: 'azuredevops', name: 'Azure DevOps', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Microsoft_Azure_Logo.svg', desc: 'Dev pipeline & boards', fields: ['clientId', 'clientSecret'] },
+    { id: 'zendesk', name: 'Zendesk', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Zendesk_logo.svg', desc: 'Customer support tickets', fields: ['token'] },
+    { id: 'monday', name: 'Monday.com', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c6/New_Logo_Monday.com_2020.svg', desc: 'Work OS & project mgmt', fields: ['token'] },
 ];
 
 const FIELD_LABELS = {
@@ -87,8 +87,8 @@ const ConnectMorePage = ({ connectedSources = [], onComplete, onBack }) => {
                             <div className={`flex items-center gap-2 text-xs font-semibold transition-colors ${i <= step ? 'text-blue-600' : 'text-gray-300'
                                 }`}>
                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i < step ? 'bg-blue-600 text-white' :
-                                        i === step ? 'bg-blue-600 text-white ring-4 ring-blue-100' :
-                                            'bg-gray-200 text-gray-400'
+                                    i === step ? 'bg-blue-600 text-white ring-4 ring-blue-100' :
+                                        'bg-gray-200 text-gray-400'
                                     }`}>
                                     {i < step ? '✓' : i + 1}
                                 </div>
@@ -115,14 +115,14 @@ const ConnectMorePage = ({ connectedSources = [], onComplete, onBack }) => {
                                     onClick={() => handleSourceClick(src)}
                                     disabled={connected}
                                     className={`relative flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all duration-200 text-center ${connected
-                                            ? 'border-green-200 bg-green-50 cursor-default'
-                                            : 'border-gray-200 bg-white hover:border-blue-400 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
+                                        ? 'border-green-200 bg-green-50 cursor-default'
+                                        : 'border-gray-200 bg-white hover:border-blue-400 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
                                         }`}
                                 >
                                     {connected && (
                                         <CheckCircle2 className="w-5 h-5 text-green-500 absolute top-3 right-3" />
                                     )}
-                                    <span className="text-4xl">{src.emoji}</span>
+                                    <img src={src.logoUrl} alt={src.name} className="w-12 h-12 object-contain" />
                                     <div>
                                         <p className={`font-bold text-sm ${connected ? 'text-green-700' : 'text-gray-800'}`}>
                                             {src.name}
@@ -144,7 +144,7 @@ const ConnectMorePage = ({ connectedSources = [], onComplete, onBack }) => {
                         <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
                             {/* Source header */}
                             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
-                                <span className="text-4xl">{selected.emoji}</span>
+                                <img src={selected.logoUrl} alt={selected.name} className="w-12 h-12 object-contain" />
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900">{selected.name}</h2>
                                     <p className="text-sm text-gray-400">{selected.desc}</p>
@@ -210,7 +210,7 @@ const ConnectMorePage = ({ connectedSources = [], onComplete, onBack }) => {
                         </div>
 
                         <div className="text-center">
-                            <span className="text-4xl mb-4 block">{selected?.emoji}</span>
+                            <img src={selected?.logoUrl} alt={selected?.name} className="w-12 h-12 object-contain mb-4 block mx-auto" />
                             <h2 className="text-2xl font-bold text-gray-900 mb-2">
                                 {connectingPhase === 'connecting' && `Connecting to ${selected?.name}…`}
                                 {connectingPhase === 'syncing' && `Syncing data from ${selected?.name}…`}
