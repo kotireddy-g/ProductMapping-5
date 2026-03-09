@@ -299,27 +299,6 @@ const CEOKPIDetailPage = ({ action, onBack }) => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Top search bar (decorative, mirrors mock) */}
-            <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4">
-                <div className="flex items-center gap-2 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-5 h-5">
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
-                        </svg>
-                    </div>
-                    <input
-                        type="text"
-                        placeholder="Ask anything for business"
-                        className="flex-1 text-sm text-gray-500 outline-none bg-transparent"
-                        readOnly
-                    />
-                    <button className="px-5 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl">
-                        Search
-                    </button>
-                </div>
-            </header>
-
             <main className="max-w-6xl mx-auto px-6 py-8">
                 {/* Back + Title */}
                 <button
@@ -341,8 +320,8 @@ const CEOKPIDetailPage = ({ action, onBack }) => {
                                 key={f}
                                 onClick={() => setActiveFilter(f)}
                                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${activeFilter === f
-                                        ? 'bg-gray-900 text-white'
-                                        : 'text-gray-500 hover:text-gray-800'
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-500 hover:text-gray-800'
                                     }`}
                             >
                                 {f}
@@ -363,3 +342,4 @@ const CEOKPIDetailPage = ({ action, onBack }) => {
 };
 
 export default CEOKPIDetailPage;
+
