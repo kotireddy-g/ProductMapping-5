@@ -1153,8 +1153,8 @@ Z
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-2xl font-bold text-gray-800">Supply & Demand Flow</h3>
-              <p className="text-sm text-gray-600">Interactive visualization of hospital supply chain</p>
+              <h3 className="text-2xl font-bold text-gray-800">{isITSM ? 'Sprint & Delivery Flow' : 'Supply & Demand Flow'}</h3>
+              <p className="text-sm text-gray-600">{isITSM ? 'Interactive visualization of IT project delivery pipeline' : 'Interactive visualization of hospital supply chain'}</p>
             </div>
             <div className="flex items-center gap-3">
               {/* Periodic Filters */}
