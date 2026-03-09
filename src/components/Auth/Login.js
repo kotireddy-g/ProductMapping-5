@@ -42,20 +42,28 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
     try {
       // Static login credentials
       const PHARMA_EMAIL = 'management@experienceflow.ai';
-      const ITSM_EMAIL = 'adminitsm@experienceflow.ai';
+      const ITSM_ADMIN_EMAIL = 'adminitsm@experienceflow.ai';
+      const ITSM_CEO_EMAIL = 'ceo@experienceflow.ai';
       const ALLOWED_PASSWORD = 'xFlow@321';
 
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (formData.password === ALLOWED_PASSWORD &&
-        (formData.email === PHARMA_EMAIL || formData.email === ITSM_EMAIL)) {
+      const email = formData.email.trim().toLowerCase();
+      const validEmails = [PHARMA_EMAIL, ITSM_ADMIN_EMAIL, ITSM_CEO_EMAIL];
 
-        const isITSMLogin = formData.email === ITSM_EMAIL;
+      if (formData.password === ALLOWED_PASSWORD && validEmails.includes(email)) {
+
+        const roleMap = {
+          [PHARMA_EMAIL]: { role: 'admin', name: 'Management User' },
+          [ITSM_ADMIN_EMAIL]: { role: 'itsm-admin', name: 'ITSM Admin' },
+          [ITSM_CEO_EMAIL]: { role: 'itsm-ceo', name: 'CEO' },
+        };
+
         const mockUser = {
           email: formData.email,
-          name: isITSMLogin ? 'ITSM Admin' : 'Management User',
-          role: isITSMLogin ? 'itsm' : 'admin'
+          name: roleMap[email].name,
+          role: roleMap[email].role,
         };
 
         // Persist session to localStorage so refresh doesn't log the user out

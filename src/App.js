@@ -20,6 +20,10 @@ import KPIDetailScreen from './components/KPI/KPIDetailScreen';
 import SourceConnectionPage from './components/Connectors/SourceConnectionPage';
 import SourceListPage from './components/Connectors/SourceListPage';
 import WorkPulseDashboard from './components/WorkPulse/WorkPulseDashboard';
+import ITSMSplashScreen from './components/ITSM/ITSMSplashScreen';
+import ITSMSearchPage from './components/ITSM/ITSMSearchPage';
+import CEOKPIDetailPage from './components/ITSM/CEOKPIDetailPage';
+import ConnectMorePage from './components/ITSM/ConnectMorePage';
 
 import notificationsService from './services/notificationsService';
 import authService from './services/authService';
@@ -29,8 +33,14 @@ function App() {
   const [authView, setAuthView] = useState('login');
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Derived: true when the logged-in user is the ITSM admin
-  const isITSM = currentUser?.role === 'itsm';
+  // Derived role helpers
+  const isITSM = ['itsm', 'itsm-admin', 'itsm-ceo'].includes(currentUser?.role);
+  const isITSMAdmin = currentUser?.role === 'itsm-admin';
+  const isITSMCEO = currentUser?.role === 'itsm-ceo';
+
+  // ITSM-specific screen state: 'splash' | 'login' | 'itsm-search' | 'ceo-kpi' | 'connect-more'
+  const [itsmScreen, setItsmScreen] = useState('splash'); // start on splash
+  const [selectedCEOAction, setSelectedCEOAction] = useState(null);
   const [appFlow, setAppFlow] = useState('source-connection');
   const [connectedSources, setConnectedSources] = useState(
     () => JSON.parse(localStorage.getItem('connectedSources') || '[]')
@@ -69,6 +79,11 @@ function App() {
     if (token && user) {
       setIsAuthenticated(true);
       setCurrentUser(user);
+      // Restore ITSM users to the search page (skip splash on refresh)
+      if (user.role === 'itsm-admin' || user.role === 'itsm-ceo') {
+        setAppFlow('itsm');
+        setItsmScreen('itsm-search');
+      }
     }
   }, []);
 
@@ -127,13 +142,17 @@ function App() {
   const handleLogin = (user) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
-    // ITSM users skip the source-connection flow — go straight to main app
-    if (user.role === 'itsm') {
+    const role = user.role;
+    if (role === 'itsm-admin' || role === 'itsm-ceo') {
+      // ITSM users → go to the ITSM search page
+      setItsmScreen('itsm-search');
+      setAppFlow('itsm');
+    } else if (role === 'itsm') {
+      // Legacy itsm role — keep old behaviour
       setAppFlow('main');
     } else {
       setAppFlow('source-connection');
     }
-    // isAuthenticated changing to true triggers the notification useEffect above
   };
 
   const handleSignup = (user) => {
@@ -156,6 +175,7 @@ function App() {
     setAuthView('login');
     setCurrentScreen('dashboard');
     setAppFlow('source-connection');
+    setItsmScreen('splash'); // reset splash for next ITSM login
     setToasts([]);
   };
 
@@ -336,6 +356,11 @@ function App() {
     setSelectedActionForModal(action);
   };
 
+  // ── ITSM Splash Screen (no session yet) ─────────────────────────────────────
+  if (!isAuthenticated && itsmScreen === 'splash') {
+    return <ITSMSplashScreen onLogin={() => setItsmScreen('login')} />;
+  }
+
   if (!isAuthenticated) {
     if (authView === 'login') {
       return (
@@ -349,6 +374,63 @@ function App() {
       <Signup
         onSignup={handleSignup}
         onSwitchToLogin={() => setAuthView('login')}
+      />
+    );
+  }
+
+  // ── ITSM Flow (itsm-admin & itsm-ceo) ───────────────────────────────────────
+  if (isAuthenticated && appFlow === 'itsm') {
+    // Connect More
+    if (itsmScreen === 'connect-more') {
+      return (
+        <ConnectMorePage
+          connectedSources={connectedSources}
+          onComplete={(sources) => {
+            setConnectedSources(sources);
+            localStorage.setItem('connectedSources', JSON.stringify(sources));
+            setItsmScreen('itsm-search');
+          }}
+          onBack={() => setItsmScreen('itsm-search')}
+        />
+      );
+    }
+
+    // CEO KPI Detail
+    if (itsmScreen === 'ceo-kpi' && isITSMCEO) {
+      return (
+        <CEOKPIDetailPage
+          action={selectedCEOAction}
+          onBack={() => setItsmScreen('itsm-search')}
+        />
+      );
+    }
+
+    // ITSM Search Page (default for both users)
+    return (
+      <ITSMSearchPage
+        currentUser={currentUser}
+        connectedSources={connectedSources}
+        onSearch={(query) => {
+          // Admin: DTIF search → existing dashboard
+          if (isITSMAdmin) {
+            setAppFlow('main');
+          }
+          // CEO: search goes to dashboard too (optional)
+          if (isITSMCEO) {
+            setAppFlow('main');
+          }
+        }}
+        onActionClick={(action) => {
+          if (isITSMCEO) {
+            setSelectedCEOAction(action);
+            setItsmScreen('ceo-kpi');
+          } else {
+            // Admin clicks action → go to existing DTIF dashboard
+            setAppFlow('main');
+          }
+        }}
+        onConnectMore={() => setItsmScreen('connect-more')}
+        onLogout={handleLogout}
       />
     );
   }
