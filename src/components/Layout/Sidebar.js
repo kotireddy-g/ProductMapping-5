@@ -31,8 +31,9 @@ const Sidebar = ({
     onNotificationClick,
     onTemplateClick,
     unreadNotificationCount = 0,
-    activeSection = 'top', // Track which section is active
-    isITSM = false
+    activeSection = 'top',
+    isITSM = false,
+    onLogoClick,          // ← new: called when logo is clicked (ITSM flow)
 }) => {
     const [expandedSections, setExpandedSections] = useState({
         currentStatus: true,
@@ -72,7 +73,12 @@ const Sidebar = ({
     return (
         <div className="w-64 bg-white h-screen flex flex-col border-r border-gray-200 overflow-y-auto">
             {/* Logo Section */}
-            <div className="p-4 border-b border-gray-200">
+            <div
+                className="p-4 border-b border-gray-200"
+                style={onLogoClick ? { cursor: 'pointer' } : {}}
+                onClick={onLogoClick || undefined}
+                title={onLogoClick ? 'Go to Search' : undefined}
+            >
                 <div className="flex items-center gap-3">
                     <img
                         src={ExperienceFlowLogo}

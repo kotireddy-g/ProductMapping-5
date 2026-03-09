@@ -395,15 +395,6 @@ function App() {
       );
     }
 
-    // CEO KPI Detail
-    if (itsmScreen === 'ceo-kpi' && isITSMCEO) {
-      return (
-        <CEOKPIDetailPage
-          action={selectedCEOAction}
-          onBack={() => setItsmScreen('itsm-search')}
-        />
-      );
-    }
 
     // ITSM Search Page (default for both users)
     return (
@@ -422,8 +413,10 @@ function App() {
         }}
         onActionClick={(action) => {
           if (isITSMCEO) {
+            // CEO: render KPI detail inside the main app layout (with sidebar)
             setSelectedCEOAction(action);
-            setItsmScreen('ceo-kpi');
+            setAppFlow('main');
+            setCurrentScreen('ceo-kpi');
           } else {
             // Admin clicks action → go to existing DTIF dashboard
             setAppFlow('main');
@@ -546,6 +539,11 @@ function App() {
         unreadNotificationCount={Array.isArray(notifications) ? notifications.filter(n => !n.read).length : 0}
         activeSection={activeSection}
         isITSM={isITSM}
+        onLogoClick={isITSM ? () => {
+          // ITSM users: logo click → back to the ITSM search page
+          setAppFlow('itsm');
+          setItsmScreen('itsm-search');
+        } : undefined}
       />
 
       {/* Main Content Area */}
@@ -614,6 +612,17 @@ function App() {
               onBack={handleBackToDashboard}
               selectedModule={effectiveModule}
               isITSM={isITSM}
+            />
+          )}
+
+          {/* CEO KPI Detail – rendered inside the main layout (sidebar + header) */}
+          {currentScreen === 'ceo-kpi' && isITSMCEO && (
+            <CEOKPIDetailPage
+              action={selectedCEOAction}
+              onBack={() => {
+                // Back → main ITSM dashboard
+                setCurrentScreen('dashboard');
+              }}
             />
           )}
 
