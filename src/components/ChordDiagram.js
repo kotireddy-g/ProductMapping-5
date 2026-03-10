@@ -375,7 +375,7 @@ const generateConnections = (supplyItems, demandItems, flowsData) => {
   return connections;
 };
 
-const HospitalSankeyDiagram = ({ selectedModule = 'otif', isITSM = false }) => {
+const HospitalSankeyDiagram = ({ selectedModule = 'otif', isITSM = false, onNodeSelect }) => {
   // Drill-down state
   const [supplyLevel, setSupplyLevel] = useState(1);
   const [demandLevel, setDemandLevel] = useState(1);
@@ -528,6 +528,8 @@ const HospitalSankeyDiagram = ({ selectedModule = 'otif', isITSM = false }) => {
     setDemandPath([]);
     setFocusedSupplyNode(null); // Clear focus
     setFocusedDemandNode(null); // Clear focus
+    // Notify parent: back to root (no selection)
+    if (onNodeSelect) onNodeSelect(null, null);
   };
 
   // Clear focus function
@@ -541,6 +543,17 @@ const HospitalSankeyDiagram = ({ selectedModule = 'otif', isITSM = false }) => {
     setFocusedSupplyNode(null);
     setFocusedDemandNode(null);
   }, [supplyLevel, demandLevel]);
+
+  // Notify parent of node selection changes (for ITSM Insights Panel)
+  useEffect(() => {
+    if (!onNodeSelect) return;
+    // supplyParent = last item drilled into on supply side
+    const supplyParent = supplyPath.length > 0 ? supplyPath[supplyPath.length - 1] : null;
+    // demandParent = last item drilled into on demand side
+    const demandParent = demandPath.length > 0 ? demandPath[demandPath.length - 1] : null;
+    onNodeSelect(supplyParent, demandParent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supplyPath, demandPath]);
 
   // Go back one level on supply side
   const goBackSupply = () => {

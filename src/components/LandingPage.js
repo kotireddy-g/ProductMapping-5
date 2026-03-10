@@ -22,6 +22,7 @@ import {
 import { decisionActionSubcategories as mockDecisionActionSubcategories } from '../data/decisionActionSubcategories';
 import ChordDiagram from './ChordDiagram';
 import KPIDashboard from './KPIDashboard';
+import ITSMInsightsPanel from './ITSM/ITSMInsightsPanel';
 import OTIFBreakdownDrawer from './OTIF/OTIFBreakdownDrawer';
 import HospitalPerformanceDrawer from './CommandCenter/HospitalPerformanceDrawer';
 import RootCausesModal from './Landing/RootCausesModal';
@@ -64,6 +65,11 @@ const LandingPage = forwardRef(({
     localStorage.getItem('dashboardTemplate') || 'executive'
   );
   const templateConfig = DASHBOARD_TEMPLATES[currentTemplate] || DASHBOARD_TEMPLATES.executive;
+
+  // ITSM: track which Sankey node is selected to drive InsightsPanel
+  const [selectedSupplyParent, setSelectedSupplyParent] = useState(null);
+  const [selectedDemandParent, setSelectedDemandParent] = useState(null);
+  const [itsmTimePeriod] = useState('next_7_days');
 
   // Listen for template changes from localStorage
   useEffect(() => {
@@ -349,13 +355,33 @@ const LandingPage = forwardRef(({
         // Supply & Demand / DTIF Flow — same ChordDiagram for both pharma and ITSM
         // (Backend returns same shape for both; ITSM uses module=itsm via itsmSupplyDemandService inside ChordDiagram)
         return (
-          <div key={key} className="mb-16" ref={supplyDemandRef}>
-            <ChordDiagram selectedModule={selectedModule} isITSM={isITSM} />
+          <div key={key} className="mb-8" ref={supplyDemandRef}>
+            <ChordDiagram
+              selectedModule={selectedModule}
+              isITSM={isITSM}
+              onNodeSelect={isITSM ? (sp, dp) => {
+                setSelectedSupplyParent(sp);
+                setSelectedDemandParent(dp);
+              } : undefined}
+            />
           </div>
         );
 
       case 'departments':
-        // Department Cards Section
+        // For ITSM: show AI Insights panel (synced to Sankey node selection)
+        // For Pharma: show department OTIF cards as before
+        if (isITSM) {
+          return (
+            <div key={key} className="mb-16" ref={departmentsRef}>
+              <ITSMInsightsPanel
+                supplyParent={selectedSupplyParent}
+                demandParent={selectedDemandParent}
+                timePeriod={itsmTimePeriod}
+              />
+            </div>
+          );
+        }
+        // Department Cards Section (Pharma)
         return (
           <div key={key} className="mb-16" ref={departmentsRef}>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
