@@ -99,7 +99,7 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0eb698] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#daf5f0] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">

@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://192.168.1.111:8055';
-
 /**
  * Forecast Service
  * Handles API calls for forecast details data
@@ -21,7 +19,7 @@ export const getForecastDetails = async (areaId, timePeriod = 'today', module = 
             params.module = module;
         }
         const response = await axios.get(
-            `${API_BASE_URL}/api/forecast/details/${areaId}`,
+            `${process.env.REACT_APP_API_BASE_URL}/forecast/details/${areaId}`,
             { params }
         );
         return response.data;
@@ -45,7 +43,7 @@ export const getForecastMedicineDetails = async (departmentId, timePeriod = 'tod
             params.module = module;
         }
         const response = await axios.get(
-            `${API_BASE_URL}/api/forecast/${departmentId}/`,
+            `${process.env.REACT_APP_API_BASE_URL}/forecast/${departmentId}/`,
             { params }
         );
         return response.data;

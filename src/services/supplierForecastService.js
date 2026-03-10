@@ -1,4 +1,3 @@
-const API_BASE_URL = 'http://192.168.1.111:8055';
 
 export default {
     /**
@@ -9,7 +8,7 @@ export default {
      * @returns {Promise} API response
      */
     getSupplierForecastReport(filter = 'all', page = 1, limit = 50) {
-        return fetch(`${API_BASE_URL}/api/supplier-forecast-report/?filter=${filter}&page=${page}&limit=${limit}`)
+        return fetch(`${process.env.REACT_APP_API_BASE_URL}/supplier-forecast-report/?filter=${filter}&page=${page}&limit=${limit}`)
             .then(response => response.json());
     }
 };

@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://192.168.1.111:8055';
-
 /**
  * Decision Actions Service
  * Handles API calls for decision actions data
@@ -21,7 +19,7 @@ export const getDecisionActionsData = async (mainAction, subAction, module = nul
             params.module = module;
         }
         const response = await axios.get(
-            `${API_BASE_URL}/api/decision-actions/${mainAction}/${subAction}`,
+            `${process.env.REACT_APP_API_BASE_URL}/decision-actions/${mainAction}/${subAction}`,
             { params }
         );
         return response.data;

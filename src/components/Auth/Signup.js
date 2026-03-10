@@ -126,7 +126,7 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0eb698] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#daf5f0] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
@@ -164,8 +164,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.name}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.name
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
+                    ? 'border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your full name"
                 />
@@ -190,8 +190,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.email
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
+                    ? 'border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your email"
                 />
@@ -216,8 +216,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.department}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.department
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
+                    ? 'border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Enter your department (e.g., ICU, Pharmacy)"
                 />
@@ -242,8 +242,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.password
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
+                    ? 'border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Create a password"
                 />
@@ -275,8 +275,8 @@ const Signup = ({ onSignup, onSwitchToLogin }) => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${errors.confirmPassword
-                      ? 'border-red-500 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
+                    ? 'border-red-500 focus:ring-red-200'
+                    : 'border-slate-200 focus:ring-gray-200 focus:border-gray-900'
                     }`}
                   placeholder="Confirm your password"
                 />

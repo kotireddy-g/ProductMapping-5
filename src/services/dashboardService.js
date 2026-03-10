@@ -14,7 +14,7 @@ const dashboardService = {
     getOverview: async (module = null) => {
         try {
             const params = module ? { module } : {};
-            const response = await apiClient.get('/api/dashboard/overview', { params });
+            const response = await apiClient.get('/dashboard/overview', { params });
             return response.data;
         } catch (error) {
             console.error('Get dashboard overview error:', error);
@@ -30,7 +30,7 @@ const dashboardService = {
     getDecisionActions: async (module = null) => {
         try {
             const params = module ? { module } : {};
-            const response = await apiClient.get('/api/dashboard/decision-actions', { params });
+            const response = await apiClient.get('/dashboard/decision-actions', { params });
             return response.data;
         } catch (error) {
             console.error('Get decision actions error:', error);
@@ -46,7 +46,7 @@ const dashboardService = {
     getForecast: async (module = null) => {
         try {
             const params = module ? { module } : {};
-            const response = await apiClient.get('/api/dashboard/forecast', { params });
+            const response = await apiClient.get('/dashboard/forecast', { params });
             return response.data;
         } catch (error) {
             console.error('Get forecast error:', error);

@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://192.168.1.111:8055/api';
-
 /**
  * Fetch Command Center data for a specific department
  * @param {string} departmentId - Department ID (e.g., 'icu', 'ot', 'ward')
@@ -15,7 +13,7 @@ export const getCommandCenterData = async (departmentId, timePeriod = 'next_7_da
         if (module) {
             params.module = module;
         }
-        const response = await axios.get(`${API_BASE_URL}/command-center/${departmentId}/`, {
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/command-center/${departmentId}/`, {
             params
         });
         return response.data;

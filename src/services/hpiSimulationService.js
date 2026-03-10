@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://192.168.1.111:8055/api';
-
 const hpiSimulationService = {
     /**
      * Run HPI simulation with adjusted metrics
@@ -16,7 +14,7 @@ const hpiSimulationService = {
      */
     runSimulation: async (params, selectedModule = 'otif') => {
         try {
-            const response = await axios.post(`${API_BASE_URL}/hpi/simulation`, {
+            const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/hpi/simulation`, {
                 baseline: {
                     otif_pct: params.baseline.otifPct,
                     revenue_norm: params.baseline.revenueNorm,

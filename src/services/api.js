@@ -1,11 +1,8 @@
 import axios from 'axios';
 
-// Base API URL - can be configured via environment variable
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://192.168.1.111:8055'; //|| 'https://demo-otif.xflow.ai';
-
 // Create axios instance with default config
 const apiClient = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: process.env.REACT_APP_API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -49,4 +46,3 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
-export { API_BASE_URL };

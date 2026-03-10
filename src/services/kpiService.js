@@ -14,7 +14,7 @@ const kpiService = {
     getAllKPIs: async (module = null) => {
         try {
             const params = module ? { module } : {};
-            const response = await apiClient.get('/api/kpi/all', { params });
+            const response = await apiClient.get('/kpi/all', { params });
             return response.data;
         } catch (error) {
             console.error('Get KPIs error:', error);
@@ -29,7 +29,7 @@ const kpiService = {
      */
     getKPI: async (kpiName) => {
         try {
-            const response = await apiClient.get(`/api/kpi/${kpiName}`);
+            const response = await apiClient.get(`/kpi/${kpiName}`);
             return response.data;
         } catch (error) {
             console.error(`Get ${kpiName} KPI error:`, error);
@@ -46,7 +46,7 @@ const kpiService = {
      */
     getKPIDetail: async (kpiId, module = 'otif', timePeriod = 'daily') => {
         try {
-            const response = await apiClient.get('/api/kpi/detail', {
+            const response = await apiClient.get('/kpi/detail', {
                 params: { kpiId, module, timePeriod },
             });
             return response.data;

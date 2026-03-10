@@ -17,7 +17,7 @@ const supplyDemandService = {
      */
     getFlowData: async (params = {}) => {
         try {
-            const response = await apiClient.get('/api/dashboard/supply-demand-flow', {
+            const response = await apiClient.get('/dashboard/supply-demand-flow', {
                 params
             });
             return response.data;

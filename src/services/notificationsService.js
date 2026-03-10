@@ -23,7 +23,7 @@ const notificationsService = {
             } else {
                 // Pharma: always forward the module param so the API knows the active context
                 const params = module ? { module } : {};
-                response = await apiClient.get('/api/notifications', { params });
+                response = await apiClient.get('/notifications', { params });
             }
 
             // API returns: { success: true, data: { unreadCount: N, notifications: [...] } }

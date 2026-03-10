@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// ITSM DTIF API base URL
-const ITSM_API_BASE_URL = 'http://192.168.1.111:8011/dtif/api';
+// ITSM DTIF API base URL — set via .env.development / .env.production
+const ITSM_API_BASE_URL =
+    process.env.REACT_APP_ITSM_API_BASE_URL || 'http://192.168.1.111:8011/dtif/api';
 
 // Create axios instance for ITSM DTIF APIs
 const itsmApiClient = axios.create({
