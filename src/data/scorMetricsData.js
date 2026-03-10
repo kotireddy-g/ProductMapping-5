@@ -1,6 +1,80 @@
 // SCOR Framework Metrics Data
 // Six key metrics that drive Performance Index and OTIF
 
+// ── ITSM equivalents of Plan / Source / Make ──────────────────────────────
+export const itsmSCORMetricsData = {
+    plan: {
+        stage: 'Intake',
+        name: 'Ticket Forecast Accuracy (WAPE)',
+        description: 'How accurately did we predict ticket volume so we planned staffing & sprint capacity correctly?',
+        currentValue: 12.5,
+        unit: '%',
+        target: 10,
+        status: 'warning',
+        formula: 'WAPE = (Σ |Aₜ − Fₜ| / Σ Aₜ) × 100',
+        formulaExplanation: 'Where A = actual ticket count, F = forecasted ticket count',
+        impact: 'high',
+        connections: [
+            'Under-staffing / SLA breaches (under-forecasting)',
+            'Over-allocation / wasted capacity (over-forecasting)',
+            'Sprint instability and firefighting',
+            'Team utilization and backlog growth'
+        ],
+        goalSetting: 'Reduce forecast error by 10–25% within 1–2 sprints',
+        typicalTargets: {
+            stable: '8-10%',
+            volatile: '15-20%'
+        }
+    },
+
+    source: {
+        stage: 'Process',
+        name: 'First Response OTIF',
+        description: 'Input reliability – Poor first response causes downstream SLA breaches and escalations',
+        currentValue: 96.8,
+        unit: '%',
+        target: 98,
+        status: 'warning',
+        formula: 'First Response OTIF = (# Tickets responded On-Time AND In-Full / Total Tickets) × 100',
+        formulaExplanation: 'Measures team initial response performance against SLA',
+        impact: 'high',
+        connections: [
+            'SLA breaches and escalations',
+            'Emergency resource allocation cost',
+            'Incomplete or low-quality initial responses',
+            'Downstream resolution DTIF'
+        ],
+        goalSetting: 'Tier tickets by priority (P1–P4) and set response SLAs',
+        typicalTargets: {
+            critical: '98-99%',
+            nonCritical: '95-98%'
+        }
+    },
+
+    make: {
+        stage: 'Resolve',
+        name: 'First Contact Resolution (FCR)',
+        description: 'Tickets resolved without reopening – One of the biggest efficiency multipliers in ITSM',
+        currentValue: 94.2,
+        unit: '%',
+        target: 96,
+        status: 'warning',
+        formula: 'FCR = (Tickets resolved on first contact / Total Tickets handled) × 100',
+        formulaExplanation: 'First-Time-Right resolution rate',
+        impact: 'high',
+        connections: [
+            'Cost of rework (reopened / escalated tickets)',
+            'Cycle time and throughput',
+            'Customer satisfaction and CSAT scores',
+            'Agent productivity and DTIF stability'
+        ],
+        goalSetting: 'Track overall and by team / priority / category',
+        typicalTargets: {
+            improvement: '+2 to +10 points per quarter'
+        }
+    }
+};
+
 export const scorMetricsData = {
     plan: {
         stage: 'Plan',

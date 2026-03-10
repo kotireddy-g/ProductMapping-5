@@ -724,6 +724,7 @@ const LandingPage = forwardRef(({
         isOpen={showRootCauses !== null}
         onClose={() => setShowRootCauses(null)}
         metricType={showRootCauses}
+        isITSM={isITSM}
       />
     </div >
   );

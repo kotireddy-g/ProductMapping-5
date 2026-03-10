@@ -1,29 +1,31 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import SCORMetricCard from './SCORMetricCard';
-import scorMetricsData from '../../data/scorMetricsData';
+import scorMetricsData, { itsmSCORMetricsData } from '../../data/scorMetricsData';
 
-const RootCausesModal = ({ isOpen, onClose, metricType }) => {
+const RootCausesModal = ({ isOpen, onClose, metricType, isITSM = false }) => {
     if (!isOpen) return null;
 
-    // Filter metrics based on type
+    // Filter metrics based on type (and isITSM for ITSM-aware labels)
     const getRelevantMetrics = () => {
-        const allMetrics = Object.values(scorMetricsData);
+        const dataSource = isITSM ? itsmSCORMetricsData : scorMetricsData;
+        const allMetrics = Object.values(dataSource);
 
         if (metricType === 'performance') {
-            // Show 3 root causes for Performance Index: Plan, Source, Make
+            // Show 3 root causes for Performance Index: Plan/Intake, Source/Process, Make/Resolve
             return [
-                allMetrics.find(m => m.stage === 'Plan'),
-                allMetrics.find(m => m.stage === 'Source'),
-                allMetrics.find(m => m.stage === 'Make')
+                allMetrics.find(m => m.stage === (isITSM ? 'Intake' : 'Plan')),
+                allMetrics.find(m => m.stage === (isITSM ? 'Process' : 'Source')),
+                allMetrics.find(m => m.stage === (isITSM ? 'Resolve' : 'Make'))
             ].filter(Boolean);
         } else if (metricType === 'otif') {
-            // Show 4 root causes for OTIF: Source, Make, Deliver, Enable
+            // For OTIF (pharma-only), use standard SCOR metrics
+            const pharmaMetrics = Object.values(scorMetricsData);
             return [
-                allMetrics.find(m => m.stage === 'Source'),
-                allMetrics.find(m => m.stage === 'Make'),
-                allMetrics.find(m => m.stage === 'Deliver'),
-                allMetrics.find(m => m.stage === 'Enable')
+                pharmaMetrics.find(m => m.stage === 'Source'),
+                pharmaMetrics.find(m => m.stage === 'Make'),
+                pharmaMetrics.find(m => m.stage === 'Deliver'),
+                pharmaMetrics.find(m => m.stage === 'Enable')
             ].filter(Boolean);
         }
 
@@ -34,11 +36,13 @@ const RootCausesModal = ({ isOpen, onClose, metricType }) => {
 
     const getTitle = () => {
         if (metricType === 'performance') {
-            return 'Performance Index - Root Causes (3 SCOR Metrics)';
+            return isITSM
+                ? 'Performance Index - Root Causes (3 DTIF Metrics)'
+                : 'Performance Index - Root Causes (3 SCOR Metrics)';
         } else if (metricType === 'otif') {
             return 'OTIF - Root Causes (4 SCOR Metrics)';
         }
-        return 'Root Causes (SCOR Framework)';
+        return isITSM ? 'Root Causes (DTIF Framework)' : 'Root Causes (SCOR Framework)';
     };
 
     return (
@@ -59,7 +63,10 @@ const RootCausesModal = ({ isOpen, onClose, metricType }) => {
                                 <div>
                                     <h2 className="text-2xl font-bold text-white">{getTitle()}</h2>
                                     <p className="text-gray-400 text-sm mt-1">
-                                        End-to-end supply chain metrics that impact overall performance
+                                        {isITSM
+                                            ? 'End-to-end ITSM metrics that impact overall team performance'
+                                            : 'End-to-end supply chain metrics that impact overall performance'
+                                        }
                                     </p>
                                 </div>
                                 <button
@@ -86,25 +93,31 @@ const RootCausesModal = ({ isOpen, onClose, metricType }) => {
                                     <div>
                                         <div className="text-sm font-semibold text-green-600 mb-1">Growth</div>
                                         <div className="text-xs text-gray-600">
-                                            Throughput / revenue per unit time
+                                            {isITSM ? 'Ticket throughput / resolved per sprint' : 'Throughput / revenue per unit time'}
                                             <br />
-                                            <span className="font-semibold">Improves when Plan + Make stabilize</span>
+                                            <span className="font-semibold">
+                                                {isITSM ? 'Improves when Intake + Resolve stabilize' : 'Improves when Plan + Make stabilize'}
+                                            </span>
                                         </div>
                                     </div>
                                     <div>
                                         <div className="text-sm font-semibold text-blue-600 mb-1">Performance</div>
                                         <div className="text-xs text-gray-600">
-                                            Customer OTIF
+                                            {isITSM ? 'Team DTIF (resolution SLA)' : 'Customer OTIF'}
                                             <br />
-                                            <span className="font-semibold">Driven by Source OTIF + FPY + E2R</span>
+                                            <span className="font-semibold">
+                                                {isITSM ? 'Driven by First Response OTIF + FCR' : 'Driven by Source OTIF + FPY + E2R'}
+                                            </span>
                                         </div>
                                     </div>
                                     <div>
                                         <div className="text-sm font-semibold text-red-600 mb-1">Efficiency</div>
                                         <div className="text-xs text-gray-600">
-                                            Lead times, rework, recovery speed
+                                            {isITSM ? 'Resolution time, rework, recovery speed' : 'Lead times, rework, recovery speed'}
                                             <br />
-                                            <span className="font-semibold">FPY and E2R are the fastest levers</span>
+                                            <span className="font-semibold">
+                                                {isITSM ? 'FCR and response speed are the fastest levers' : 'FPY and E2R are the fastest levers'}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
