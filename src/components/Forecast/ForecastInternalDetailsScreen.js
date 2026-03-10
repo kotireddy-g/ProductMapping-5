@@ -213,7 +213,10 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
 
                     <div className="flex items-center justify-between mb-6">
                         <h1 className="text-4xl font-bold text-slate-800">
-                            {selectedForecastArea.toUpperCase()} {t('forecast.title').toUpperCase()}
+                            {isITSM
+                                ? `${selectedForecastArea.toUpperCase()} WORKLOAD FORECAST`
+                                : `${selectedForecastArea.toUpperCase()} ${t('forecast.title').toUpperCase()}`
+                            }
                         </h1>
 
                         {/* Periodic Filters - Moved to Right */}
@@ -263,7 +266,10 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                     <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
                         <div className="px-6 py-4 bg-gradient-to-r from-slate-100 to-slate-50 border-b border-slate-200">
                             <h2 className="text-xl font-bold text-slate-800">
-                                {selectedForecastArea.toUpperCase()} - Internal Departments
+                                {isITSM
+                                    ? `${selectedForecastArea.toUpperCase()} - Teams Resource Allocation`
+                                    : `${selectedForecastArea.toUpperCase()} - Internal Departments`
+                                }
                             </h2>
                         </div>
 
@@ -272,13 +278,13 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                 <thead className="bg-slate-50 border-b-2 border-slate-300">
                                     <tr>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                            Internal Department
+                                            {isITSM ? 'Team / Department' : 'Internal Department'}
                                         </th>
                                         <th className="px-6 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                            Demand
+                                            {isITSM ? 'Tickets' : 'Demand'}
                                         </th>
                                         <th className="px-6 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                            Stock Available
+                                            {isITSM ? 'Capacity' : 'Stock Available'}
                                         </th>
                                         <th className="px-6 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
                                             Forecast
@@ -335,16 +341,16 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
-                                                        onClick={() => showToastNotification(`✓ Order placed for ${dept.name}`)}
+                                                        onClick={() => showToastNotification(`✓ ${isITSM ? 'Assigned' : 'Order placed'} for ${dept.name}`)}
                                                         className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
                                                     >
-                                                        Order
+                                                        {isITSM ? 'Assign' : 'Order'}
                                                     </button>
                                                     <button
-                                                        onClick={() => showToastNotification(`✓ Redistribution initiated for ${dept.name}`)}
+                                                        onClick={() => showToastNotification(`✓ ${isITSM ? 'Reassignment' : 'Redistribution'} initiated for ${dept.name}`)}
                                                         className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors"
                                                     >
-                                                        Redistribute
+                                                        {isITSM ? 'Reassign' : 'Redistribute'}
                                                     </button>
                                                 </div>
                                             </td>
@@ -368,7 +374,7 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                             {/* Medicine Selection */}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                                    Select Medicine:
+                                    {isITSM ? 'Select Work Item:' : 'Select Medicine:'}
                                 </label>
                                 <select
                                     value={selectedMedicine}
@@ -406,7 +412,9 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             onChange={(e) => setWhatIfScenario(e.target.value)}
                                             className="w-5 h-5 text-blue-600"
                                         />
-                                        <span className="font-semibold text-slate-800">Order Additional</span>
+                                        <span className="font-semibold text-slate-800">
+                                            {isITSM ? 'Assign Additional Resources' : 'Order Additional'}
+                                        </span>
                                     </label>
 
                                     <label className="flex items-center gap-3 p-4 border-2 border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
@@ -418,7 +426,9 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             onChange={(e) => setWhatIfScenario(e.target.value)}
                                             className="w-5 h-5 text-blue-600"
                                         />
-                                        <span className="font-semibold text-slate-800">Wait 7 Days</span>
+                                        <span className="font-semibold text-slate-800">
+                                            {isITSM ? 'Defer to Next Sprint' : 'Wait 7 Days'}
+                                        </span>
                                     </label>
                                 </div>
                             )}
@@ -450,18 +460,18 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                                             <div className="text-xs text-slate-600 mt-1">{results.cost.label}</div>
                                         </div>
 
-                                        {/* Revenue */}
+                                        {/* Revenue / Efficiency */}
                                         <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                                            <div className="text-xs text-slate-600 mb-1">Revenue</div>
+                                            <div className="text-xs text-slate-600 mb-1">{isITSM ? 'Efficiency' : 'Revenue'}</div>
                                             <div className={`text - xl font - bold ${results.revenue.value >= 0 ? 'text-green-700' : 'text-red-700'} `}>
                                                 {results.revenue.value >= 0 ? '+' : ''}RM {Math.abs(results.revenue.value).toLocaleString()}
                                             </div>
                                             <div className="text-xs text-slate-600 mt-1">{results.revenue.label}</div>
                                         </div>
 
-                                        {/* Patient Satisfaction */}
+                                        {/* Patient Satisfaction / Team Satisfaction */}
                                         <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                                            <div className="text-xs text-slate-600 mb-1">Patient Satisfaction</div>
+                                            <div className="text-xs text-slate-600 mb-1">{isITSM ? 'Team Satisfaction' : 'Patient Satisfaction'}</div>
                                             <div className="flex items-center gap-2">
                                                 <span className={`text - 2xl font - bold ${results.patient_satisfaction.direction === 'up' ? 'text-green-700' : 'text-red-700'} `}>
                                                     {results.patient_satisfaction.value > 0 ? '+' : ''}{Number(results.patient_satisfaction.value).toFixed(2)}%
@@ -480,10 +490,10 @@ const ForecastInternalDetailsScreen = ({ forecastData, onBack, selectedForecastA
                         <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
                             <div className="px-6 py-4 bg-gradient-to-r from-green-100 to-green-50 border-b border-green-200">
                                 <h2 className="text-2xl font-bold text-green-900">
-                                    Recommended Actions based on selected What-If Medicine
+                                    Recommended Actions based on selected {isITSM ? 'What-If Scenario' : 'What-If Medicine'}
                                 </h2>
                                 <p className="text-sm text-green-700 mt-1">
-                                    Medicine: <span className="font-semibold">{selectedMedicine}</span>
+                                    {isITSM ? 'Scenario:' : 'Medicine:'} <span className="font-semibold">{selectedMedicine}</span>
                                 </p>
                             </div>
 

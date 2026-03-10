@@ -368,16 +368,16 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                             {isITSM ? 'DTIF' : 'OTIF'}
                                         </th>
                                         <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                            Daily Demand
+                                            {isITSM ? 'Open Tickets' : 'Daily Demand'}
                                         </th>
                                         <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                            Supply
+                                            {isITSM ? 'Capacity' : 'Supply'}
                                         </th>
                                         <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                            Stock Available
+                                            {isITSM ? 'Available Bandwidth' : 'Stock Available'}
                                         </th>
                                         <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                                            Forecast%
+                                            {isITSM ? 'Resolution %' : 'Forecast%'}
                                         </th>
                                         {!isITSM && (
                                             <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
@@ -549,11 +549,23 @@ const DecisionActionsScreen = ({ actionType, onBack, mainAction, subAction, sele
                                                     className="px-3 py-2 border-2 border-slate-300 rounded-lg text-xs bg-white text-slate-700 font-semibold hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-44 transition-all"
                                                 >
                                                     <option value="">Select Reason</option>
-                                                    <option value="Supplier Delay">Supplier Delay</option>
-                                                    <option value="High Demand">High Demand</option>
-                                                    <option value="Quality Issue">Quality Issue</option>
-                                                    <option value="Regulatory Hold">Regulatory Hold</option>
-                                                    <option value="Other">Other</option>
+                                                    {isITSM ? (
+                                                        <>
+                                                            <option value="Resource Unavailable">Resource Unavailable</option>
+                                                            <option value="High Ticket Volume">High Ticket Volume</option>
+                                                            <option value="Process Bottleneck">Process Bottleneck</option>
+                                                            <option value="Compliance Hold">Compliance Hold</option>
+                                                            <option value="Other">Other</option>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <option value="Supplier Delay">Supplier Delay</option>
+                                                            <option value="High Demand">High Demand</option>
+                                                            <option value="Quality Issue">Quality Issue</option>
+                                                            <option value="Regulatory Hold">Regulatory Hold</option>
+                                                            <option value="Other">Other</option>
+                                                        </>
+                                                    )}
                                                 </select>
                                             </td>
                                         </tr>
