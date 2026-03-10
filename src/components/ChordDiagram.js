@@ -572,9 +572,13 @@ const HospitalSankeyDiagram = ({ selectedModule = 'otif', isITSM = false, onNode
   };
 
   // Get breadcrumb text
+  // ITSM: Supply-side = Work (Projects/Modules/Features), Demand-side = Teams (Departments/Resources)
+  const supplyLabel = isITSM ? 'Work' : 'Supply';
+  const demandLabel = isITSM ? 'Teams' : 'Demand';
+
   const getSupplyBreadcrumb = () => {
-    if (supplyLevel === 1) return 'Supply: Level 1';
-    const parts = ['Supply'];
+    if (supplyLevel === 1) return `${supplyLabel}: Level 1`;
+    const parts = [supplyLabel];
     supplyPath.forEach((id, idx) => {
       const level = idx + 1;
       const items = level === 1 ? supplyData.level1 :
@@ -587,8 +591,8 @@ const HospitalSankeyDiagram = ({ selectedModule = 'otif', isITSM = false, onNode
   };
 
   const getDemandBreadcrumb = () => {
-    if (demandLevel === 1) return 'Demand: Level 1';
-    const parts = ['Demand'];
+    if (demandLevel === 1) return `${demandLabel}: Level 1`;
+    const parts = [demandLabel];
     demandPath.forEach((id, idx) => {
       const level = idx + 1;
       const items = level === 1 ? demandData.level1 :
@@ -1122,19 +1126,19 @@ Z
             <div className="grid grid-cols-3 gap-4 mt-6">
               {[
                 {
-                  label: 'Current Pending Supply',
+                  label: isITSM ? 'Open Work Items' : 'Current Pending Supply',
                   value: apiData?.metrics?.currentPendingSupply?.toLocaleString() || '0',
                   color: '#f59e0b',
                   icon: Clock
                 },
                 {
-                  label: 'Forecast Next Hour',
+                  label: isITSM ? 'Forecast Next Sprint' : 'Forecast Next Hour',
                   value: apiData?.metrics?.forecastNextHour?.toLocaleString() || '0',
                   color: '#10b981',
                   icon: TrendingUp
                 },
                 {
-                  label: 'Today Demand',
+                  label: isITSM ? 'Active Teams' : 'Today Demand',
                   value: apiData?.metrics?.todayDemand?.toLocaleString() || '0',
                   color: '#3b82f6',
                   icon: BarChart3
@@ -1574,19 +1578,19 @@ Z
           <div className="grid grid-cols-3 gap-4 mt-6">
             {[
               {
-                label: 'Current Pending Supply',
+                label: isITSM ? 'Open Work Items' : 'Current Pending Supply',
                 value: apiData?.metrics?.currentPendingSupply?.toLocaleString() || '0',
                 color: '#f59e0b',
                 icon: Clock
               },
               {
-                label: 'Forecast Next Hour',
+                label: isITSM ? 'Forecast Next Sprint' : 'Forecast Next Hour',
                 value: apiData?.metrics?.forecastNextHour?.toLocaleString() || '0',
                 color: '#10b981',
                 icon: TrendingUp
               },
               {
-                label: 'Today Demand',
+                label: isITSM ? 'Active Teams' : 'Today Demand',
                 value: apiData?.metrics?.todayDemand?.toLocaleString() || '0',
                 color: '#3b82f6',
                 icon: BarChart3
