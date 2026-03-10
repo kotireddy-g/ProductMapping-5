@@ -930,7 +930,7 @@ Z
                           pointerEvents: 'none'
                         }}
                       >
-                        Stock: {stock}
+                        {isITSM ? 'Capacity' : 'Stock'}: {stock}
                       </text>
 
                       {forecastQty > 0 && (
@@ -1376,7 +1376,7 @@ Z
                         pointerEvents: 'none'
                       }}
                     >
-                      Stock: {stock}
+                      {isITSM ? 'Capacity' : 'Stock'}: {stock}
                     </text>
 
                     {/* Forecast Quantity - Prominent */}
