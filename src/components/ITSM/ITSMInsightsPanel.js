@@ -103,24 +103,22 @@ const CriticalModuleChip = ({ mod }) => {
 };
 
 const ModuleSummaryCard = ({ m }) => {
-    const STATUS_CARD = {
-        GREEN: { gradient: 'from-green-50 to-emerald-100/40', accent: 'bg-green-500', badge: 'bg-green-100 text-green-700 border border-green-300', scoreColor: 'text-green-700' },
-        AMBER: { gradient: 'from-amber-50 to-yellow-100/40', accent: 'bg-amber-500', badge: 'bg-amber-100 text-amber-700 border border-amber-300', scoreColor: 'text-amber-700' },
-        RED: { gradient: 'from-red-50 to-rose-100/40', accent: 'bg-rose-500', badge: 'bg-rose-100 text-rose-700 border border-rose-300', scoreColor: 'text-rose-700' },
-        CRITICAL: { gradient: 'from-red-50 to-red-100/40', accent: 'bg-red-600', badge: 'bg-red-100 text-red-700 border border-red-300', scoreColor: 'text-red-700' },
+    const STATUS_DOT = {
+        GREEN: { dot: 'bg-green-500', scoreColor: 'text-green-700', accent: 'bg-green-500' },
+        AMBER: { dot: 'bg-amber-400', scoreColor: 'text-amber-700', accent: 'bg-amber-400' },
+        RED: { dot: 'bg-rose-500', scoreColor: 'text-rose-700', accent: 'bg-rose-500' },
+        CRITICAL: { dot: 'bg-red-600', scoreColor: 'text-red-700', accent: 'bg-red-600' },
     };
-    const cfg = STATUS_CARD[m.status] || { gradient: 'from-gray-50 to-gray-100/40', accent: 'bg-gray-400', badge: 'bg-gray-100 text-gray-600 border border-gray-300', scoreColor: 'text-gray-600' };
+    const cfg = STATUS_DOT[m.status] || { dot: 'bg-gray-400', scoreColor: 'text-gray-600', accent: 'bg-gray-400' };
 
     return (
-        <div className={`rounded-xl bg-gradient-to-br ${cfg.gradient} border border-gray-200 p-4 shadow-sm flex flex-col gap-3`}>
-            {/* Top row: status badge + score */}
+        <div className="rounded-xl bg-white border border-gray-200 p-4 shadow-sm flex flex-col gap-3">
+            {/* Top row: score (left) + status dot (right) */}
             <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${cfg.badge}`}>
-                    {m.status}
-                </span>
                 <span className={`text-2xl font-extrabold ${cfg.scoreColor}`}>
                     {m.score?.toFixed(0)}%
                 </span>
+                <span className={`w-3 h-3 rounded-full ${cfg.dot}`} title={m.status} />
             </div>
             {/* Accent bar + name */}
             <div className="flex items-start gap-2">
