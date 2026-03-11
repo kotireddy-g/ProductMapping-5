@@ -72,7 +72,7 @@ const getConfig = (severity) => SEVERITY_CONFIG[severity] || SEVERITY_CONFIG.DEF
 const TopRiskCard = ({ risk }) => (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{risk.milestone_code}</span>
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{risk.project_name || risk.milestone_code}</span>
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
                 {risk.days_to_due}d left
             </span>
