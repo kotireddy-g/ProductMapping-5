@@ -102,27 +102,38 @@ const CriticalModuleChip = ({ mod }) => {
     );
 };
 
-const ModuleSummaryRow = ({ m }) => {
-    const statusColor = {
-        GREEN: 'text-green-600 bg-green-50',
-        AMBER: 'text-amber-600 bg-amber-50',
-        RED: 'text-red-600 bg-red-50',
-        CRITICAL: 'text-red-700 bg-red-100',
-    }[m.status] || 'text-gray-600 bg-gray-50';
+const ModuleSummaryCard = ({ m }) => {
+    const STATUS_CARD = {
+        GREEN: { gradient: 'from-green-50 to-emerald-100/40', accent: 'bg-green-500', badge: 'bg-green-100 text-green-700 border border-green-300', scoreColor: 'text-green-700' },
+        AMBER: { gradient: 'from-amber-50 to-yellow-100/40', accent: 'bg-amber-500', badge: 'bg-amber-100 text-amber-700 border border-amber-300', scoreColor: 'text-amber-700' },
+        RED: { gradient: 'from-red-50 to-rose-100/40', accent: 'bg-rose-500', badge: 'bg-rose-100 text-rose-700 border border-rose-300', scoreColor: 'text-rose-700' },
+        CRITICAL: { gradient: 'from-red-50 to-red-100/40', accent: 'bg-red-600', badge: 'bg-red-100 text-red-700 border border-red-300', scoreColor: 'text-red-700' },
+    };
+    const cfg = STATUS_CARD[m.status] || { gradient: 'from-gray-50 to-gray-100/40', accent: 'bg-gray-400', badge: 'bg-gray-100 text-gray-600 border border-gray-300', scoreColor: 'text-gray-600' };
 
     return (
-        <div className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-            <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-gray-800 truncate">{m.module_name}</p>
-                <p className="text-[10px] text-gray-400">{m.module_code}</p>
+        <div className={`rounded-xl bg-gradient-to-br ${cfg.gradient} border border-gray-200 p-4 shadow-sm flex flex-col gap-3`}>
+            {/* Top row: status badge + score */}
+            <div className="flex items-center justify-between">
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${cfg.badge}`}>
+                    {m.status}
+                </span>
+                <span className={`text-2xl font-extrabold ${cfg.scoreColor}`}>
+                    {m.score?.toFixed(0)}%
+                </span>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor}`}>{m.status}</span>
-                <span className="text-xs font-bold text-gray-700 w-10 text-right">{m.score?.toFixed(0)}%</span>
+            {/* Accent bar + name */}
+            <div className="flex items-start gap-2">
+                <div className={`w-1 h-8 rounded-full shrink-0 mt-0.5 ${cfg.accent}`} />
+                <div>
+                    <p className="text-sm font-bold text-gray-900 leading-snug">{m.module_name}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{m.module_code}</p>
+                </div>
             </div>
         </div>
     );
 };
+
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -316,9 +327,9 @@ const ITSMInsightsPanel = ({ supplyParent = null, demandParent = null, timePerio
                     {insight.module_summary?.length > 0 && (
                         <div>
                             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Module Summary</p>
-                            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                                 {insight.module_summary.map((m) => (
-                                    <ModuleSummaryRow key={m.module_code} m={m} />
+                                    <ModuleSummaryCard key={m.module_code} m={m} />
                                 ))}
                             </div>
                         </div>
