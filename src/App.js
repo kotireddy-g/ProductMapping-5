@@ -411,10 +411,10 @@ function App() {
             setAppFlow('main');
           }
         }}
-        onActionClick={(action) => {
+        onActionClick={(actionId, actionLabel) => {
           if (isITSMCEO) {
             // CEO: render KPI detail inside the main app layout (with sidebar)
-            setSelectedCEOAction(action);
+            setSelectedCEOAction(actionId);
             setAppFlow('main');
             setCurrentScreen('ceo-kpi');
           } else {
