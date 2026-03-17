@@ -1017,31 +1017,213 @@ const InsightsRenderer = ({ data }) => {
 };
 
 /* RECOMMENDATIONS */
+/* EXEC APPROVALS — /dtif/api/recommendations/ */
 const RecsRenderer = ({ data }) => {
-    const items = data.items || data.recommendations || (Array.isArray(data) ? data : []);
+    /* API shape: { decisionActions[], byCategory[], decisionActionsSummary{ totalPendingActions, alert_counters, labels_by_family[] } } */
+    const actions = data?.decisionActions || data?.data?.decisionActions || [];
+    const byCategory = data?.byCategory || data?.data?.byCategory || [];
+    const summary = data?.decisionActionsSummary || data?.data?.decisionActionsSummary || {};
+    const alertCnt = summary?.alert_counters || {};
+    const totalCount = data?.totalCount || data?.data?.totalCount || actions.length;
+    const highCount = data?.highPriorityCount || data?.data?.highPriorityCount || 0;
+
+    // Category filter tabs
+    const CATS = [{ id: 'ALL', label: 'All', color: '#64748b' }, ...byCategory.map(c => ({ id: c.family_id, label: c.family_name, color: c.color, count: c.total_items }))];
+    const [activeCat, setActiveCat] = React.useState('ALL');
+    const [openCard, setOpenCard] = React.useState(null);
+
+    const filtered = activeCat === 'ALL' ? actions : actions.filter(a => a.category === activeCat);
+
+    const sevBadgeCls = sev => sev === 'high' ? 'bg-red-100 text-red-700' : sev === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700';
+    const catColor = cat => byCategory.find(c => c.family_id === cat)?.color || '#64748b';
+    const entityIcon = e => e === 'feature' ? '🔧' : e === 'project' ? '📦' : e === 'department' ? '👥' : e === 'infrastructure' ? '🖥️' : '📌';
+
+    const ALERT_META = [
+        { key: 'pr_bottleneck_count', label: 'PR Bottleneck', color: 'bg-indigo-100 text-indigo-700' },
+        { key: 'reopen_surge_count', label: 'Reopen Surge', color: 'bg-orange-100 text-orange-700' },
+        { key: 'change_failure_count', label: 'Change Failure', color: 'bg-red-100 text-red-700' },
+        { key: 'wip_overload_count', label: 'WIP Overload', color: 'bg-amber-100 text-amber-700' },
+        { key: 'high_priority_recs', label: 'High Priority', color: 'bg-rose-100 text-rose-700' },
+        { key: 'total_open', label: 'Total Open', color: 'bg-slate-100 text-slate-700' },
+    ];
+
     return (
-        <div>
-            <SummaryBanner grad="bg-gradient-to-br from-emerald-600 to-teal-700" icon={<Lightbulb className="w-4 h-4" />} subtitle="AI Recommendations" label="Actionable Recommendations">
-                <BStat label="Total" value={data.total || items.length} />
-                <BStat label="Pending" value={data.pending_count} />
-                <BStat label="DTIF Impact" value={data.expected_dtif_delta ? `+${data.expected_dtif_delta}%` : '—'} />
-                <BStat label="Revenue" value={fmtINR(data.revenue_impact)} />
-            </SummaryBanner>
-            <div className="space-y-3">
-                {items.map((r, i) => (
-                    <div key={i} className="bg-white border border-gray-100 rounded-xl shadow-sm p-4">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                            <p className="text-sm font-bold text-gray-900">{r.title || r.label || r.action || `Recommendation #${i + 1}`}</p>
-                            {(r.priority || r.severity) && <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-lg shrink-0 ${sevCls(r.priority || r.severity)}`}>{r.priority || r.severity}</span>}
-                        </div>
-                        {r.description && <p className="text-xs text-slate-500 leading-relaxed mb-2">{r.description}</p>}
-                        <div className="flex flex-wrap gap-2">
-                            {r.expected_dtif_delta && <span className="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-lg">+{r.expected_dtif_delta}% DTIF</span>}
-                            {r.revenue_impact && <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-lg">{fmtINR(r.revenue_impact)}</span>}
-                        </div>
+        <div className="space-y-4">
+            {/* ── Hero Banner ── */}
+            <div className="bg-gradient-to-br from-violet-700 to-purple-800 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Exec Approvals · AI Decision Actions</p>
+                </div>
+                <p className="text-3xl font-extrabold mb-0.5">{totalCount} <span className="text-base font-semibold opacity-70">Actions Pending</span></p>
+                <p className="text-[10px] opacity-70 mb-3">{highCount} HIGH priority · {byCategory.length} categories</p>
+
+                <div className="grid grid-cols-4 gap-2">
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold">{totalCount}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Total</p>
                     </div>
-                ))}
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold text-red-200">{highCount}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">High Priority</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold">{alertCnt.pr_bottleneck_count ?? '—'}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">PR Bottleneck</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold">{alertCnt.wip_overload_count ?? '—'}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">WIP Overload</p>
+                    </div>
+                </div>
             </div>
+
+            {/* ── Alert Counters Grid ── */}
+            {Object.keys(alertCnt).length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                    {ALERT_META.map(({ key, label, color }) => alertCnt[key] != null && (
+                        <div key={key} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm text-center">
+                            <p className={`text-sm font-extrabold px-2 py-0.5 rounded-lg ${color} inline-block mb-1`}>{alertCnt[key]}</p>
+                            <p className="text-[10px] text-slate-500">{label}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* ── Category Tabs ── */}
+            {byCategory.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                    {CATS.map(c => (
+                        <button
+                            key={c.id}
+                            onClick={() => setActiveCat(c.id)}
+                            className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all ${activeCat === c.id ? 'text-white shadow-sm border-transparent' : 'bg-white text-slate-600 border-gray-200 hover:border-gray-300'}`}
+                            style={activeCat === c.id ? { background: c.color, borderColor: c.color } : {}}
+                        >
+                            {c.label}
+                            {c.count != null && <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full ${activeCat === c.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{c.count}</span>}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* ── Decision Action Cards ── */}
+            <div className="space-y-2">
+                {filtered.length === 0 && (
+                    <p className="text-sm text-slate-400 italic text-center py-8">No actions in this category.</p>
+                )}
+                {filtered.map((action, i) => {
+                    const isOpen = openCard === action.id;
+                    const catCol = catColor(action.category);
+                    return (
+                        <div key={action.id} className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                            {/* Color bar */}
+                            <div className="h-1 w-full" style={{ background: action.color || catCol }} />
+
+                            <button
+                                className="w-full px-4 pt-3 pb-3 text-left flex items-start gap-3"
+                                onClick={() => setOpenCard(isOpen ? null : action.id)}
+                            >
+                                {/* Left: entity icon + index */}
+                                <div className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-sm mt-0.5"
+                                    style={{ background: `${action.color || catCol}18` }}>
+                                    <span>{entityIcon(action.targetEntity)}</span>
+                                </div>
+
+                                {/* Middle: title + meta */}
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-slate-900 leading-snug mb-1">{action.title}</p>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${sevBadgeCls(action.severity)}`}>
+                                            {action.priority || action.severity?.toUpperCase()}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 font-semibold px-2 py-0.5 rounded-full bg-slate-100">
+                                            {action.categoryLabel}
+                                        </span>
+                                        {action.expiresAt && (() => {
+                                            const hrs = Math.round((new Date(action.expiresAt) - Date.now()) / 36e5);
+                                            return hrs > 0
+                                                ? <span className={`text-[10px] font-bold ${hrs <= 24 ? 'text-red-600' : 'text-amber-600'}`}>⏱ {hrs}h left</span>
+                                                : <span className="text-[10px] font-bold text-red-700">⚠ Expired</span>;
+                                        })()}
+                                    </div>
+                                </div>
+
+                                {/* Right: toggle */}
+                                <span className="text-slate-400 text-xs shrink-0 mt-1">{isOpen ? '▲' : '▼'}</span>
+                            </button>
+
+                            {isOpen && (
+                                <div className="border-t border-gray-100 p-4 space-y-3 bg-slate-50">
+                                    {/* Target */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase">Target</span>
+                                        <span className="text-[11px] text-slate-700 font-semibold">{action.targetName}</span>
+                                    </div>
+
+                                    {/* Description */}
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Context</p>
+                                        <p className="text-[11px] text-slate-700 leading-relaxed">{action.description}</p>
+                                    </div>
+
+                                    {/* Impact */}
+                                    {action.estimatedImpact && (
+                                        <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
+                                            <p className="text-[10px] font-extrabold text-emerald-700 uppercase mb-0.5">📈 Estimated Impact</p>
+                                            <p className="text-[11px] text-emerald-800">{action.estimatedImpact}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Signals */}
+                                    {action.signals?.length > 0 && (
+                                        <div>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1.5">Signals</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {action.signals.map((s, si) => {
+                                                    const isJira = s.startsWith('JIRA');
+                                                    const isGithub = s.startsWith('GitHub');
+                                                    const isFinance = s.toLowerCase().includes('finance') || s.includes('₹');
+                                                    const isTeams = s.startsWith('Teams');
+                                                    const isHRMS = s.startsWith('HRMS');
+                                                    return (
+                                                        <span key={si} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isJira ? 'bg-blue-100 text-blue-700' :
+                                                            isGithub ? 'bg-indigo-100 text-indigo-700' :
+                                                                isFinance ? 'bg-purple-100 text-purple-700' :
+                                                                    isTeams ? 'bg-sky-100 text-sky-700' :
+                                                                        isHRMS ? 'bg-amber-100 text-amber-700' :
+                                                                            'bg-slate-100 text-slate-600'
+                                                            }`}>{s}</span>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* ── Category Summary ── */}
+            {byCategory.length > 0 && (
+                <div>
+                    <SecTitle icon={<BarChart2 className="w-3.5 h-3.5" />} label="By Category" />
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                        {byCategory.map((cat, i) => (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-center gap-3">
+                                <div className="w-2 h-10 rounded-full shrink-0" style={{ background: cat.color }} />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-slate-900">{cat.family_name}</p>
+                                    <p className="text-[10px] text-slate-400">{cat.total_items} action{cat.total_items !== 1 ? 's' : ''}</p>
+                                </div>
+                                <span className="text-lg font-extrabold shrink-0" style={{ color: cat.color }}>{cat.total_items}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -1431,52 +1613,221 @@ const PrRenderer = ({ data }) => {
 };
 
 /* NOTIFICATIONS */
+/* CRITICAL ALERTS — /dtif/api/notifications/ */
 const NotifRenderer = ({ data }) => {
-    const items = data.notifications || data.items || (Array.isArray(data) ? data : []);
-    const scalars = scalarKpis(data);
+    /* API shape: { unreadCount, notifications[{ id, type, title, message, timestamp, read, actionRequired, actionLink }] } */
+    const notifs = data?.notifications || data?.data?.notifications || (Array.isArray(data) ? data : []);
+    const unread = data?.unreadCount ?? data?.data?.unreadCount ?? notifs.filter(n => !n.read).length;
+    const total = notifs.length;
+    const actionReq = notifs.filter(n => n.actionRequired).length;
+
+    const typeIcon = t => t === 'critical' ? '🔴' : t === 'warning' ? '🟡' : t === 'error' ? '🔴' : '🔵';
+    const typeColor = t => t === 'critical' ? 'border-l-red-500' : t === 'warning' ? 'border-l-amber-400' : t === 'error' ? 'border-l-red-400' : 'border-l-blue-400';
+    const fmtTs = ts => {
+        if (!ts) return '';
+        try {
+            const d = new Date(ts);
+            const diffMs = Date.now() - d.getTime();
+            const diffMin = Math.floor(diffMs / 60000);
+            if (diffMin < 60) return `${diffMin}m ago`;
+            if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h ago`;
+            return d.toLocaleDateString();
+        } catch { return ts; }
+    };
+
     return (
-        <div>
-            <SummaryBanner grad="bg-gradient-to-br from-amber-500 to-orange-600" icon={<Bell className="w-4 h-4" />} subtitle="Alerts" label="Notifications">
-                {scalars.slice(0, 4).map(([k, v]) => <BStat key={k} label={k.replace(/_/g, ' ')} value={fmtNum(k, v)} />)}
-                {scalars.length < 4 && [...Array(Math.max(0, 4 - scalars.length))].map((_, i) => <BStat key={i} label="" value="" />)}
-            </SummaryBanner>
-            <div className="space-y-2">
-                {items.map((n, i) => (
-                    <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-start gap-3">
-                        <span className="text-lg">{n.type === 'critical' ? '🔴' : n.type === 'warning' ? '🟡' : '🔵'}</span>
-                        <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-900">{n.title || n.message || n.label}</p>
-                            {n.description && <p className="text-xs text-slate-500 mt-0.5">{n.description}</p>}
-                        </div>
-                        {n.created_at && <p className="text-[10px] text-slate-400 shrink-0">{n.created_at}</p>}
+        <div className="space-y-4">
+            {/* ── Banner ── */}
+            <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                    <Bell className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Critical Alerts · Notifications</p>
+                </div>
+                <p className="text-3xl font-extrabold mb-0.5">{unread} <span className="text-base font-semibold opacity-70">Unread</span></p>
+                <p className="text-[10px] opacity-70 mb-3">{total} total · {actionReq} action required</p>
+
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold">{total}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Total</p>
                     </div>
-                ))}
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold text-yellow-200">{unread}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Unread</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold text-red-200">{actionReq}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Action Req.</p>
+                    </div>
+                </div>
             </div>
+
+            {/* ── Notification List ── */}
+            {notifs.length === 0 ? (
+                <p className="text-sm text-slate-400 italic text-center py-10">No notifications.</p>
+            ) : (
+                <div className="space-y-2">
+                    {notifs.map((n, i) => (
+                        <div key={n.id || i}
+                            className={`bg-white border border-gray-100 border-l-4 ${typeColor(n.type)} rounded-xl shadow-sm p-3 flex items-start gap-3 ${!n.read ? 'bg-amber-50/30' : ''
+                                }`}
+                        >
+                            <span className="text-base shrink-0 mt-0.5">{typeIcon(n.type)}</span>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2 mb-0.5">
+                                    <p className={`text-xs font-bold truncate ${!n.read ? 'text-gray-900' : 'text-gray-600'}`}>
+                                        {n.title}
+                                    </p>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        {n.actionRequired && (
+                                            <span className="text-[9px] font-extrabold bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">ACTION</span>
+                                        )}
+                                        {!n.read && (
+                                            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Unread" />
+                                        )}
+                                    </div>
+                                </div>
+                                {n.message && <p className="text-[11px] text-slate-500 leading-snug">{n.message}</p>}
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[10px] text-slate-400">{fmtTs(n.timestamp)}</span>
+                                    {n.actionLink && (
+                                        <a href={n.actionLink} target="_blank" rel="noreferrer"
+                                            className="text-[10px] text-blue-600 hover:underline">View →</a>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
 
-/* DECISION ACTIONS */
+/* BOTTLENECK ALERTS — /dtif/api/decision-actions/list/ */
 const DecisionRenderer = ({ data }) => {
-    const items = data.items || data.actions || (Array.isArray(data) ? data : []);
-    const scalars = scalarKpis(data);
+    /* API shape: flat array of { label_code, label_name, priority, family, family_name, trigger, short_description, recommended_action, owner } */
+    const items = Array.isArray(data) ? data : (data?.data || data?.items || []);
+
+    // Group by family
+    const familyMap = {};
+    items.forEach(item => {
+        const fid = item.family || 'OTHER';
+        if (!familyMap[fid]) familyMap[fid] = { name: item.family_name || fid, items: [] };
+        familyMap[fid].items.push(item);
+    });
+    const families = Object.entries(familyMap);
+
+    const FAMILY_META = {
+        INCIDENT_PRODUCTIVITY: { color: '#ef4444', bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700', icon: '🚨' },
+        FLOW_EFFICIENCY: { color: '#f59e0b', bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', icon: '🔄' },
+        QUALITY: { color: '#8b5cf6', bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700', icon: '🔍' },
+        DELIVERY: { color: '#3b82f6', bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', icon: '🚀' },
+        FINANCIAL: { color: '#10b981', bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', icon: '💰' },
+    };
+    const priBadge = p => p === 'P0' ? 'bg-red-600 text-white'
+        : p === 'P1' ? 'bg-red-100 text-red-700'
+            : p === 'P2' ? 'bg-amber-100 text-amber-700'
+                : 'bg-slate-100 text-slate-600';
+
+    const [openItem, setOpenItem] = React.useState(null);
+    const p0Count = items.filter(i => i.priority === 'P0').length;
+    const p1Count = items.filter(i => i.priority === 'P1').length;
+    const p2Count = items.filter(i => i.priority === 'P2').length;
+
     return (
-        <div>
-            <SummaryBanner grad="bg-gradient-to-br from-cyan-600 to-teal-700" icon={<Target className="w-4 h-4" />} subtitle="Actions Queue" label="AI Decision Actions">
-                {scalars.slice(0, 4).map(([k, v]) => <BStat key={k} label={k.replace(/_/g, ' ')} value={fmtNum(k, v)} />)}
-                {scalars.length < 4 && [...Array(Math.max(0, 4 - scalars.length))].map((_, i) => <BStat key={i} label="" value="" />)}
-            </SummaryBanner>
-            <div className="space-y-3">
-                {items.map((a, i) => (
-                    <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                        <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-bold text-gray-900">{a.title || a.label || a.action || `Action #${i + 1}`}</p>
-                            {a.priority && <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-lg shrink-0 ${sevCls(a.priority)}`}>{a.priority}</span>}
-                        </div>
-                        {a.description && <p className="text-xs text-slate-500 mt-1">{a.description}</p>}
+        <div className="space-y-4">
+            {/* ── Banner ── */}
+            <div className="bg-gradient-to-br from-cyan-700 to-teal-800 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Bottleneck Alerts · Decision Actions</p>
+                </div>
+                <p className="text-3xl font-extrabold mb-0.5">{items.length} <span className="text-base font-semibold opacity-70">Alert Types</span></p>
+                <p className="text-[10px] opacity-70 mb-3">{families.length} categories — watch these signals for incoming bottlenecks</p>
+
+                <div className="grid grid-cols-4 gap-2">
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold">{items.length}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Total</p>
                     </div>
-                ))}
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold text-red-200">{p0Count}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">P0</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold text-orange-200">{p1Count}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">P1</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold text-yellow-200">{p2Count}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">P2</p>
+                    </div>
+                </div>
             </div>
+
+            {/* ── Grouped by Family ── */}
+            {families.map(([fid, fam]) => {
+                const meta = FAMILY_META[fid] || { color: '#64748b', bg: 'bg-slate-50', border: 'border-slate-200', badge: 'bg-slate-100 text-slate-700', icon: '📋' };
+                return (
+                    <div key={fid}>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-base">{meta.icon}</span>
+                            <span className="text-xs font-extrabold text-slate-700">{fam.name}</span>
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: meta.color + '20', color: meta.color }}>
+                                {fam.items.length}
+                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            {fam.items.map((item, i) => {
+                                const key = `${fid}-${i}`;
+                                const isOpen = openItem === key;
+                                return (
+                                    <div key={key} className={`bg-white border ${meta.border} rounded-xl shadow-sm overflow-hidden`}>
+                                        <button
+                                            className="w-full px-4 py-3 text-left flex items-center gap-3"
+                                            onClick={() => setOpenItem(isOpen ? null : key)}
+                                        >
+                                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 ${priBadge(item.priority)}`}>
+                                                {item.priority}
+                                            </span>
+                                            <p className="text-xs font-bold text-slate-900 flex-1 text-left">{item.label_name}</p>
+                                            <span className="text-slate-400 text-xs shrink-0">{isOpen ? '▲' : '▼'}</span>
+                                        </button>
+
+                                        {isOpen && (
+                                            <div className={`border-t ${meta.border} p-3 space-y-2.5 ${meta.bg}`}>
+                                                {/* Short description */}
+                                                <p className="text-[11px] text-slate-700 leading-relaxed">{item.short_description}</p>
+
+                                                {/* Trigger */}
+                                                <div className="bg-white border border-gray-100 rounded-lg p-2.5">
+                                                    <p className="text-[10px] font-extrabold text-slate-500 uppercase mb-0.5">⚡ Trigger Condition</p>
+                                                    <p className="text-[11px] text-slate-700 font-mono leading-relaxed">{item.trigger}</p>
+                                                </div>
+
+                                                {/* Recommended Action */}
+                                                <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
+                                                    <p className="text-[10px] font-extrabold text-emerald-700 uppercase mb-0.5">✅ Recommended Action</p>
+                                                    <p className="text-[11px] text-emerald-800 leading-relaxed">{item.recommended_action}</p>
+                                                </div>
+
+                                                {/* Owner */}
+                                                {item.owner && (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">Owner</span>
+                                                        <span className="text-[11px] text-slate-700 font-semibold">{item.owner}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })}
         </div>
     );
 };
