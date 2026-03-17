@@ -1126,6 +1126,189 @@ const DecisionRenderer = ({ data }) => {
     );
 };
 
+/* KPI DETAIL — /api/kpi/detail/ */
+const KpiDetailRenderer = ({ data }) => {
+    /* API: { kpiId, title, subtitle, description, current, target, unit, change, status, formula, whyItMatters, goal{}, trendData{history[], forecast{dates[],values[]}}, relatedKPIs[] } */
+    const d = data?.data || data || {};
+    const td = d.trendData || {};
+    const history = td.history || [];
+    const forecast = td.forecast || {};
+    const related = d.relatedKPIs || [];
+
+    // Combine history + forecast into one chart dataset with a forecast flag
+    const overlapPts = forecast.overlapPoints || 2;
+    const fcDates = forecast.dates || [];
+    const fcVals = forecast.values || [];
+    const allDates = [...new Set([...history.map(h => h.date), ...fcDates])];
+    const histMap = Object.fromEntries(history.map(h => [h.date, h.value]));
+    const fcMap = Object.fromEntries(fcDates.map((d, i) => [d, fcVals[i]]));
+    const chartData = allDates.map(dt => ({
+        date: dt,
+        actual: histMap[dt] ?? null,
+        forecast: fcMap[dt] ?? null,
+    }));
+
+    const stClr = s => s === 'critical' ? 'text-red-600' : s === 'warning' ? 'text-amber-500' : 'text-emerald-600';
+    const bgBanner = s => s === 'critical'
+        ? 'bg-gradient-to-br from-red-600 to-rose-700'
+        : s === 'warning'
+            ? 'bg-gradient-to-br from-amber-500 to-orange-600'
+            : 'bg-gradient-to-br from-emerald-600 to-teal-700';
+    const pct = d.target > 0 ? Math.min((d.current / d.target) * 100, 150) : 0;
+    const barW = Math.min(pct, 100);
+
+    return (
+        <div className="space-y-4">
+            {/* ── Hero Banner ── */}
+            <div className={`${bgBanner(d.status)} rounded-2xl p-5 text-white`}>
+                <div className="flex items-center gap-2 mb-1">
+                    <BarChart2 className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">{d.kpiId} · KPI Detail</p>
+                </div>
+                <p className="text-3xl font-extrabold mb-0.5">{d.current}{d.unit}</p>
+                <p className="text-xs font-bold opacity-80 mb-3">{d.title}</p>
+                <p className="text-[10px] opacity-60 leading-snug mb-3">{d.subtitle}</p>
+
+                {/* vs target bar */}
+                <div className="mb-3">
+                    <div className="flex justify-between text-[10px] mb-1 opacity-80">
+                        <span>Current: {d.current}{d.unit}</span>
+                        <span>Target: {d.target}{d.unit}</span>
+                    </div>
+                    <div className="w-full bg-white/20 rounded-full h-2.5">
+                        <div className="h-2.5 rounded-full bg-white transition-all" style={{ width: `${barW}%` }} />
+                    </div>
+                    <div className="flex justify-between text-[10px] mt-1 opacity-70">
+                        <span>{pct.toFixed(1)}% of target</span>
+                        <span className={d.change >= 0 ? 'text-green-200' : 'text-red-200'}>
+                            {d.change >= 0 ? '▲' : '▼'} {Math.abs(d.change)}{d.unit} change
+                        </span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-xs font-extrabold">{d.current}{d.unit}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">Current</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-xs font-extrabold">{d.target}{d.unit}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">Target</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className={`text-xs font-extrabold ${d.change >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                            {d.change >= 0 ? '+' : ''}{d.change}{d.unit}
+                        </p>
+                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">Change</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Description ── */}
+            {d.description && (
+                <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                    <p className="text-[11px] text-slate-600 leading-relaxed">{d.description}</p>
+                </div>
+            )}
+
+            {/* ── Trend + Forecast Chart ── */}
+            {chartData.length > 1 && (
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                        <SecTitle icon={<TrendingUp className="w-3.5 h-3.5" />} label="Trend & Forecast" />
+                        {forecast.confidencePct && (
+                            <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded">
+                                {forecast.confidencePct}% confidence
+                            </span>
+                        )}
+                    </div>
+                    <ResponsiveContainer width="100%" height={160}>
+                        <AreaChart data={chartData} margin={{ top: 5, right: 8, left: -24, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                            <XAxis dataKey="date" tick={{ fontSize: 9 }} tickFormatter={v => v?.slice(5)} />
+                            <YAxis tick={{ fontSize: 9 }} />
+                            <Tooltip
+                                contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                                formatter={(v, name) => [`${v}${d.unit}`, name === 'actual' ? 'Actual' : 'Forecast']}
+                                labelFormatter={l => l}
+                            />
+                            <Area type="monotone" dataKey="actual" stroke="#6366f1" fill="#e0e7ff" strokeWidth={2} dot={{ r: 2 }} connectNulls />
+                            <Area type="monotone" dataKey="forecast" stroke="#64748b" fill="#f1f5f9" strokeWidth={1.5} strokeDasharray="5 3" dot={{ r: 2 }} connectNulls />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                    {/* Target line annotation */}
+                    <div className="flex items-center gap-3 mt-2 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-6 h-0.5 bg-indigo-500" />
+                            <span className="text-[10px] text-slate-500">Actual</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-6 h-0.5 bg-slate-400" style={{ borderTop: '2px dashed #64748b', background: 'none' }} />
+                            <span className="text-[10px] text-slate-500">Forecast</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-6 h-0.5 bg-blue-400" style={{ borderTop: '2px dashed #60a5fa', background: 'none' }} />
+                            <span className="text-[10px] text-slate-500">Target {d.target}{d.unit}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Goal ── */}
+            {d.goal && (
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                    <SecTitle icon={<Target className="w-3.5 h-3.5" />} label="Goal" />
+                    <div className="flex items-center justify-between mt-1">
+                        <p className="text-xs text-slate-600">{d.goal.description}</p>
+                        <span className="text-lg font-extrabold text-slate-900 ml-3 shrink-0">{d.goal.value}{d.goal.unit}</span>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Formula ── */}
+            {d.formula && (
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                    <SecTitle icon={<Zap className="w-3.5 h-3.5" />} label="Formula" />
+                    <p className="text-xs font-mono bg-slate-50 rounded-lg px-3 py-2 mt-2 text-slate-800">{d.formula}</p>
+                </div>
+            )}
+
+            {/* ── Why It Matters ── */}
+            {d.whyItMatters && (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                    <SecTitle icon={<Lightbulb className="w-3.5 h-3.5" />} label="Why It Matters" />
+                    <p className="text-[11px] text-amber-800 leading-relaxed mt-1">{d.whyItMatters}</p>
+                </div>
+            )}
+
+            {/* ── Related KPIs ── */}
+            {related.length > 0 && (
+                <div>
+                    <SecTitle icon={<Activity className="w-3.5 h-3.5" />} label="Related KPIs" />
+                    <div className="space-y-2">
+                        {related.map((r, i) => (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-center justify-between gap-2">
+                                <div>
+                                    <p className="text-xs font-bold text-slate-900">{r.title}</p>
+                                    <p className="text-[10px] font-mono text-slate-400">{r.kpiId}</p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                    <p className={`text-sm font-extrabold ${r.status === 'critical' ? 'text-red-600' : r.status === 'warning' ? 'text-amber-500' : 'text-emerald-600'}`}>
+                                        {r.current}{r.unit}
+                                    </p>
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${r.status === 'critical' ? 'bg-red-100 text-red-700' :
+                                            r.status === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                                        }`}>{r.status?.toUpperCase()}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 /* GENERIC — catch-all */
 const GenericRenderer = ({ data }) => {
     if (Array.isArray(data)) {
@@ -1183,6 +1366,7 @@ const detectType = p => {
     if (p.includes('/dtif/') || p.includes('/stage/')) return 'dtif';
     if (p.includes('/forecast/')) return 'forecast';
     if (p.includes('/insights/')) return 'insights';
+    if (p.includes('/kpi/')) return 'kpidetail';
     return 'generic';
 };
 
@@ -1201,6 +1385,7 @@ const SmartRenderer = ({ data, apiPath }) => {
         case 'dtif': return <DtifRenderer data={payload} />;
         case 'forecast': return <ForecastRenderer data={payload} />;
         case 'insights': return <InsightsRenderer data={payload} />;
+        case 'kpidetail': return <KpiDetailRenderer data={payload} />;
         default: return <GenericRenderer data={payload} />;
     }
 };
