@@ -2,12 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Search, Mic, Plus, CheckCircle2, Loader2, AlertTriangle,
     Briefcase, Users, Code2, Monitor, Shield, Brain, Bell, BarChart2,
-    ChevronRight, Zap, X, ExternalLink, RefreshCw
+    ChevronRight, Zap, X, RefreshCw
 } from 'lucide-react';
+import {
+    AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
+} from 'recharts';
 import ceoItsmService from '../../services/ceoItsmService';
 import itsmApiClient from '../../services/itsmApiClient';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const ALL_SOURCES = [
     { id: 'jira', name: 'Jira', logoUrl: 'https://cdn.worldvectorlogo.com/logos/jira-1.svg' },
@@ -17,7 +20,7 @@ const ALL_SOURCES = [
     { id: 'salesforce', name: 'Salesforce', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f9/Salesforce.com_logo.svg' },
 ];
 
-const ICON_MAP = {
+const SECTION_ICON_MAP = {
     briefcase: <Briefcase className="w-4 h-4" />,
     users: <Users className="w-4 h-4" />,
     code: <Code2 className="w-4 h-4" />,
@@ -28,11 +31,13 @@ const ICON_MAP = {
     'bar-chart': <BarChart2 className="w-4 h-4" />,
 };
 
-const STATUS_BADGE = {
+const SECTION_STATUS_BADGE = {
     healthy: 'bg-green-100 text-green-700',
     warning: 'bg-amber-100 text-amber-700',
     critical: 'bg-red-100 text-red-700',
 };
+
+const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#a855f7'];
 
 const getGreeting = () => {
     const h = new Date().getHours();
@@ -40,10 +45,10 @@ const getGreeting = () => {
     if (h < 17) return 'Good Afternoon';
     return 'Good Evening';
 };
+
 const formatDate = () =>
     new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-// Extract action_id from ITSM KPI detail URL
 const extractItsmActionId = (api) => {
     try {
         const qs = api.includes('?') ? api.split('?')[1] : '';
@@ -51,97 +56,282 @@ const extractItsmActionId = (api) => {
     } catch { return null; }
 };
 
-// ── Smart Data Renderer ───────────────────────────────────────────────────────
+// ── Smart field detection helpers ─────────────────────────────────────────────
 
-const ValueCell = ({ value }) => {
-    if (value === null || value === undefined) return <span className="text-gray-300">—</span>;
-    if (typeof value === 'boolean') return <span className={value ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'}>{value ? 'Yes' : 'No'}</span>;
-    if (typeof value === 'object') return <span className="text-[10px] text-gray-400 font-mono">{JSON.stringify(value)}</span>;
-    return <span>{String(value)}</span>;
+const CURRENCY_KEYS_LIST = ['value', 'amount', 'revenue', 'pipeline_value', 'total_pipeline_value'];
+const PERCENT_KEYS_LIST = ['pct', 'percent', 'rate', 'efficiency', 'utilization', 'score', 'dtif'];
+const STATUS_FIELD_KEYS = ['status', 'sla_status', 'stage', 'priority', 'health'];
+
+const isCurrencyKey = (k) => CURRENCY_KEYS_LIST.some((s) => k.toLowerCase().includes(s));
+const isPercentKey = (k) => PERCENT_KEYS_LIST.some((s) => k.toLowerCase().includes(s));
+const isStatusKey = (k) => STATUS_FIELD_KEYS.some((s) => k.toLowerCase() === s);
+
+const isTimeSeriesArr = (arr) =>
+    Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'object' &&
+    ('date' in arr[0] || 'week' in arr[0] || 'month' in arr[0] || 'period' in arr[0]) &&
+    ('value' in arr[0] || 'score' in arr[0] || 'count' in arr[0]);
+
+const statusBadgeClass = (val) => {
+    const v = String(val).toLowerCase();
+    if (['on_track', 'healthy', 'success', 'won', 'active', 'resolved', 'closed'].some((s) => v.includes(s)))
+        return 'bg-green-100 text-green-700 border-green-200';
+    if (['warning', 'at_risk', 'delayed', 'pending', 'escalated'].some((s) => v.includes(s)))
+        return 'bg-amber-100 text-amber-700 border-amber-200';
+    if (['critical', 'breached', 'p1_critical', 'high', 'overdue', 'failed', 'no'].some((s) => v.includes(s)))
+        return 'bg-red-100 text-red-700 border-red-200';
+    return 'bg-gray-100 text-gray-600 border-gray-200';
 };
 
-const ObjectCard = ({ obj, idx }) => {
-    const entries = Object.entries(obj).filter(([, v]) => typeof v !== 'object' || v === null);
-    const nested = Object.entries(obj).filter(([, v]) => typeof v === 'object' && v !== null);
+const formatINR = (v) => {
+    if (v >= 1e7) return `₹${(v / 1e7).toFixed(1)}Cr`;
+    if (v >= 1e5) return `₹${(v / 1e5).toFixed(1)}L`;
+    if (v >= 1e3) return `₹${(v / 1e3).toFixed(0)}K`;
+    return `₹${v}`;
+};
+
+const smartFormatValue = (key, val) => {
+    if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+    if (typeof val !== 'number') return String(val);
+    if (isCurrencyKey(key) && val > 1000) return formatINR(val);
+    if (isPercentKey(key)) return `${val.toFixed(1)}%`;
+    if (Number.isInteger(val)) return val.toLocaleString();
+    return val.toFixed(2);
+};
+
+// ── Drill-Down Panel Sub-components ──────────────────────────────────────────
+
+/** Stat cards row for top-level scalar fields */
+const StatCards = ({ obj }) => {
+    const entries = Object.entries(obj)
+        .filter(([k, v]) =>
+            !['id', '_id', 'uuid', 'created_at', 'updated_at'].includes(k.toLowerCase()) &&
+            (typeof v === 'number' || (typeof v === 'string' && v.length < 50))
+        )
+        .slice(0, 6);
+
+    if (entries.length === 0) return null;
+
     return (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-            {idx !== undefined && <p className="text-[10px] font-bold text-gray-400 tracking-widest mb-2">#{idx + 1}</p>}
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                {entries.map(([k, v]) => (
-                    <div key={k}>
-                        <dt className="text-[10px] text-gray-400 capitalize">{k.replace(/_/g, ' ')}</dt>
-                        <dd className="text-xs font-semibold text-gray-800"><ValueCell value={v} /></dd>
-                    </div>
-                ))}
-            </dl>
-            {nested.map(([k, v]) => (
-                <div key={k} className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{k.replace(/_/g, ' ')}</p>
-                    {Array.isArray(v)
-                        ? <SmartRenderer data={v} />
-                        : <SmartRenderer data={v} />
-                    }
+        <div className="grid grid-cols-2 gap-3 mb-5">
+            {entries.map(([key, val]) => (
+                <div key={key} className="bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                        {key.replace(/_/g, ' ')}
+                    </p>
+                    {isStatusKey(key) ? (
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(val)}`}>
+                            {String(val).replace(/_/g, ' ')}
+                        </span>
+                    ) : (
+                        <p className="text-xl font-extrabold text-gray-900">{smartFormatValue(key, val)}</p>
+                    )}
                 </div>
             ))}
         </div>
     );
 };
 
-const SmartRenderer = ({ data }) => {
-    if (data === null || data === undefined) return <p className="text-xs text-gray-400">No data</p>;
+/** Area chart for time-series arrays */
+const TrendAreaChart = ({ data, title, color = '#6366f1' }) => {
+    const dateKey = 'date' in data[0] ? 'date' : 'week' in data[0] ? 'week' : 'period';
+    const valKey = 'value' in data[0] ? 'value' : 'score' in data[0] ? 'score' : 'count';
+    const gradId = `grad-${valKey}-${color.replace('#', '')}`;
 
-    if (Array.isArray(data)) {
-        if (data.length === 0) return <p className="text-xs text-gray-400 italic">Empty list</p>;
-        if (typeof data[0] === 'object' && data[0] !== null) {
-            return (
-                <div className="grid grid-cols-1 gap-3">
-                    {data.map((item, i) => <ObjectCard key={i} obj={item} idx={i} />)}
+    return (
+        <div className="mb-5">
+            {title && (
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
+                    {title.replace(/_/g, ' ')}
+                </p>
+            )}
+            <div className="bg-gradient-to-br from-indigo-50/50 to-white border border-indigo-100 rounded-xl p-4">
+                <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={data}>
+                            <defs>
+                                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor={color} stopOpacity={0.25} />
+                                    <stop offset="95%" stopColor={color} stopOpacity={0.02} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                            <XAxis dataKey={dateKey} tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                            <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} width={32} />
+                            <Tooltip
+                                contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                                labelStyle={{ color: '#64748b', fontWeight: 700 }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey={valKey}
+                                stroke={color}
+                                strokeWidth={2.5}
+                                fill={`url(#${gradId})`}
+                                dot={false}
+                                activeDot={{ r: 4, stroke: color, strokeWidth: 2, fill: '#fff' }}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
                 </div>
-            );
-        }
+            </div>
+        </div>
+    );
+};
+
+/** Rich card for a single object in an array */
+const ItemCard = ({ item, idx }) => {
+    const TITLE_CANDIDATES = ['title', 'name', 'label', 'deal_code', 'module_name', 'project_name', 'feature_name'];
+    const SUBTITLE_CANDIDATES = ['client', 'subtitle', 'description', 'team', 'owner_name', 'stage'];
+    const VALUE_CANDIDATES = ['value', 'amount', 'score', 'count', 'total'];
+
+    const titleField = TITLE_CANDIDATES.find((k) => item[k]);
+    const subtitleField = SUBTITLE_CANDIDATES.find((k) => item[k] && k !== titleField);
+    const valueField = VALUE_CANDIDATES.find((k) => typeof item[k] === 'number');
+    const statusField = STATUS_FIELD_KEYS.find((k) => item[k]);
+
+    const kv = Object.entries(item).filter(([k, v]) => {
+        if ([titleField, subtitleField, valueField, statusField, 'id', '_id'].includes(k)) return false;
+        return typeof v !== 'object' && v !== null;
+    }).slice(0, 6);
+
+    return (
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-gray-50 flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                    {titleField
+                        ? <p className="text-sm font-bold text-gray-900 truncate">{item[titleField]}</p>
+                        : <p className="text-xs font-bold text-gray-400">Item #{idx + 1}</p>
+                    }
+                    {subtitleField && (
+                        <p className="text-xs text-gray-400 mt-0.5 truncate">{item[subtitleField]}</p>
+                    )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                    {valueField && (
+                        <span className="text-base font-extrabold text-gray-900">
+                            {smartFormatValue(valueField, item[valueField])}
+                        </span>
+                    )}
+                    {statusField && item[statusField] && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(item[statusField])}`}>
+                            {String(item[statusField]).replace(/_/g, ' ')}
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {/* Key-value grid */}
+            {kv.length > 0 && (
+                <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2">
+                    {kv.map(([k, v]) => (
+                        <div key={k}>
+                            <p className="text-[10px] text-gray-400 capitalize">{k.replace(/_/g, ' ')}</p>
+                            {isStatusKey(k) ? (
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusBadgeClass(v)}`}>
+                                    {String(v).replace(/_/g, ' ')}
+                                </span>
+                            ) : (
+                                <p className="text-xs font-semibold text-gray-800">{smartFormatValue(k, v)}</p>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+/** Recursive smart renderer */
+const SmartRenderer = ({ data, depth = 0, parentKey = '' }) => {
+    if (data === null || data === undefined)
+        return <p className="text-xs text-gray-400 italic">No data returned</p>;
+
+    // Time-series → area chart
+    if (isTimeSeriesArr(data)) {
         return (
-            <ul className="space-y-1.5">
-                {data.map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 text-xs text-gray-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
-                        {String(item)}
-                    </li>
-                ))}
-            </ul>
+            <TrendAreaChart
+                data={data}
+                title={parentKey}
+                color={CHART_COLORS[depth % CHART_COLORS.length]}
+            />
         );
     }
 
-    if (typeof data === 'object') {
+    // Array
+    if (Array.isArray(data)) {
+        if (data.length === 0)
+            return <p className="text-xs text-gray-400 italic">No items found</p>;
+
+        if (typeof data[0] === 'object' && data[0] !== null) {
+            return (
+                <div className="space-y-3">
+                    {data.map((item, i) => <ItemCard key={i} item={item} idx={i} />)}
+                </div>
+            );
+        }
+        // Array of primitives → pill chips
         return (
-            <div className="space-y-3">
-                {Object.entries(data).map(([key, val]) => {
-                    if (typeof val === 'object' && val !== null) {
-                        return (
-                            <div key={key}>
-                                <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">
-                                    {key.replace(/_/g, ' ')}
-                                </p>
-                                <SmartRenderer data={val} />
-                            </div>
-                        );
-                    }
-                    return (
-                        <div key={key} className="flex items-center justify-between py-1.5 border-b border-gray-50">
-                            <span className="text-xs text-gray-500 capitalize">{key.replace(/_/g, ' ')}</span>
-                            <span className="text-xs font-semibold text-gray-800"><ValueCell value={val} /></span>
-                        </div>
-                    );
-                })}
+            <div className="flex flex-wrap gap-2">
+                {data.map((item, i) => (
+                    <span key={i} className="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1 rounded-lg">
+                        {String(item)}
+                    </span>
+                ))}
             </div>
         );
     }
 
-    return <p className="text-sm text-gray-700">{String(data)}</p>;
+    // Plain object
+    if (typeof data === 'object') {
+        const scalars = Object.entries(data).filter(([, v]) => typeof v !== 'object' || v === null);
+        const nested = Object.entries(data).filter(([, v]) => typeof v === 'object' && v !== null);
+
+        return (
+            <div className="space-y-5">
+                {/* Summary stat cards (top level only) */}
+                {scalars.length > 0 && depth === 0 && (
+                    <StatCards obj={Object.fromEntries(scalars)} />
+                )}
+
+                {/* Nested sections */}
+                {nested.map(([key, val]) => (
+                    <div key={key}>
+                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+                            {key.replace(/_/g, ' ')}
+                        </p>
+                        <SmartRenderer data={val} depth={depth + 1} parentKey={key} />
+                    </div>
+                ))}
+
+                {/* Compact key-value for nested scalars */}
+                {scalars.length > 0 && depth > 0 && (
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        {scalars.map(([k, v]) => (
+                            <div key={k}>
+                                <p className="text-[10px] text-gray-400 capitalize">{k.replace(/_/g, ' ')}</p>
+                                {isStatusKey(k) ? (
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${statusBadgeClass(v)}`}>
+                                        {String(v).replace(/_/g, ' ')}
+                                    </span>
+                                ) : (
+                                    <p className="text-xs font-semibold text-gray-800">{smartFormatValue(k, v)}</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    return <p className="text-sm text-gray-800">{String(data)}</p>;
 };
 
-// ── Drill-Down Slide-Over Panel ──────────────────────────────────────────────
+// ── Drill-Down Slide-Over Panel ───────────────────────────────────────────────
 
-const DrillDownPanel = ({ open, title, apiPath, onClose, onNavigateToKPI }) => {
+const DrillDownPanel = ({ open, title, apiPath, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [payload, setPayload] = useState(null);
@@ -153,13 +343,12 @@ const DrillDownPanel = ({ open, title, apiPath, onClose, onNavigateToKPI }) => {
         setPayload(null);
         try {
             // drill_down_api paths start with /api/... but itsmApiClient base already ends with /api
-            // Strip the leading /api prefix to avoid doubling: /api/api/opi/ → /opi/
             const normalizedPath = apiPath.replace(/^\/api\//, '/');
             const res = await itsmApiClient.get(normalizedPath);
             setPayload(res.data);
         } catch (err) {
             console.error('DrillDownPanel fetch error:', err);
-            setError('Unable to load data. Please check your connection and try again.');
+            setError('Unable to load data. Please check your connection.');
         } finally {
             setLoading(false);
         }
@@ -171,7 +360,6 @@ const DrillDownPanel = ({ open, title, apiPath, onClose, onNavigateToKPI }) => {
 
     if (!open) return null;
 
-    // Determine what data to render
     const displayData = payload?.data ?? payload;
 
     return (
@@ -182,49 +370,56 @@ const DrillDownPanel = ({ open, title, apiPath, onClose, onNavigateToKPI }) => {
                 onClick={onClose}
             />
 
-            {/* Panel */}
+            {/* Slide-over panel */}
             <div className="fixed top-0 right-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col">
+
                 {/* Header */}
-                <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100 bg-gray-50">
-                    <div>
-                        <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-0.5">Drill-Down</p>
-                        <h2 className="text-base font-bold text-gray-900">{title}</h2>
-                        <p className="text-[11px] text-gray-400 mt-0.5 font-mono">{apiPath}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {!loading && payload && (
+                <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white">
+                    <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0 pr-4">
+                            <p className="text-[10px] font-bold text-indigo-400 tracking-widest uppercase mb-0.5">
+                                Drill-Down View
+                            </p>
+                            <h2 className="text-lg font-bold text-gray-900 truncate">{title}</h2>
+                            <p className="text-[11px] text-gray-400 mt-0.5 font-mono truncate">{apiPath}</p>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                            {!loading && payload && (
+                                <button
+                                    onClick={doFetch}
+                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-700"
+                                    title="Refresh"
+                                >
+                                    <RefreshCw className="w-4 h-4" />
+                                </button>
+                            )}
                             <button
-                                onClick={doFetch}
-                                className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-400"
-                                title="Refresh"
+                                onClick={onClose}
+                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-900"
                             >
-                                <RefreshCw className="w-3.5 h-3.5" />
+                                <X className="w-4 h-4" />
                             </button>
-                        )}
-                        <button
-                            onClick={onClose}
-                            className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500"
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
+                        </div>
                     </div>
                 </div>
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto px-6 py-5">
                     {loading && (
-                        <div className="flex items-center justify-center py-20 gap-3 text-gray-400">
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            <span className="text-sm">Fetching data…</span>
+                        <div className="flex flex-col items-center justify-center py-24 gap-4">
+                            <div className="w-10 h-10 rounded-full border-2 border-indigo-200 border-t-indigo-500 animate-spin" />
+                            <p className="text-sm text-gray-400">Fetching data…</p>
                         </div>
                     )}
+
                     {!loading && error && (
                         <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
                             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                             <div className="flex-1">{error}</div>
-                            <button onClick={doFetch} className="text-xs underline shrink-0">Retry</button>
+                            <button onClick={doFetch} className="text-xs underline font-semibold shrink-0">Retry</button>
                         </div>
                     )}
+
                     {!loading && payload && !error && (
                         <SmartRenderer data={displayData} />
                     )}
@@ -234,7 +429,7 @@ const DrillDownPanel = ({ open, title, apiPath, onClose, onNavigateToKPI }) => {
                 <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                        className="px-4 py-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
                     >
                         Close
                     </button>
@@ -244,7 +439,7 @@ const DrillDownPanel = ({ open, title, apiPath, onClose, onNavigateToKPI }) => {
     );
 };
 
-// ── Sub-item Row ──────────────────────────────────────────────────────────────
+// ── Dashboard Sub-item Row ────────────────────────────────────────────────────
 
 const SubItemRow = ({ item, onDrillDown }) => (
     <button
@@ -260,7 +455,8 @@ const SubItemRow = ({ item, onDrillDown }) => (
         </div>
         <div className="shrink-0 flex flex-col items-end gap-1">
             <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                {item.value}<span className="text-xs font-normal text-gray-400 ml-0.5">{item.unit}</span>
+                {item.value}
+                <span className="text-xs font-normal text-gray-400 ml-0.5">{item.unit}</span>
             </span>
             <span
                 className="w-2 h-2 rounded-full mt-0.5"
@@ -274,19 +470,18 @@ const SubItemRow = ({ item, onDrillDown }) => (
 // ── Section Card ──────────────────────────────────────────────────────────────
 
 const SectionCard = ({ section, onSubItemDrillDown, onCardDrillDown, onActionClick, isCEO }) => {
-    const icon = ICON_MAP[section.icon] || <Briefcase className="w-4 h-4" />;
-    const badgeCls = STATUS_BADGE[section.overall_status] || 'bg-gray-100 text-gray-600';
+    const icon = SECTION_ICON_MAP[section.icon] || <Briefcase className="w-4 h-4" />;
+    const badgeCls = SECTION_STATUS_BADGE[section.overall_status] || 'bg-gray-100 text-gray-600';
 
     return (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-            {/* Coloured top bar */}
             <div className="h-1" style={{ backgroundColor: section.color }} />
 
-            {/* Card header */}
+            {/* Header */}
             <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-2 border-b border-gray-100">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                     <span style={{ color: section.color }}>{icon}</span>
-                    <h3 className="text-sm font-bold text-gray-900 leading-snug">{section.label}</h3>
+                    <h3 className="text-sm font-bold text-gray-900 leading-snug truncate">{section.label}</h3>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                     <span className="text-lg font-extrabold text-gray-900">{section.overall_score}</span>
@@ -299,15 +494,11 @@ const SectionCard = ({ section, onSubItemDrillDown, onCardDrillDown, onActionCli
             {/* Sub-items */}
             <div className="px-4 py-1 flex-1">
                 {section.sub_items?.map((item) => (
-                    <SubItemRow
-                        key={item.id}
-                        item={item}
-                        onDrillDown={onSubItemDrillDown}
-                    />
+                    <SubItemRow key={item.id} item={item} onDrillDown={onSubItemDrillDown} />
                 ))}
             </div>
 
-            {/* ITSM action pills for itsm_service_reliability */}
+            {/* ITSM action pills (only for itsm_service_reliability) */}
             {section.itsm_action_pills?.length > 0 && (
                 <div className="px-4 pb-3 pt-1 flex flex-wrap gap-1.5">
                     {section.itsm_action_pills.slice(0, 4).map((pill) => (
@@ -328,7 +519,7 @@ const SectionCard = ({ section, onSubItemDrillDown, onCardDrillDown, onActionCli
                 </div>
             )}
 
-            {/* Drill-down footer — clickable */}
+            {/* Drill-down footer */}
             {section.drill_down && (
                 <button
                     onClick={() => onCardDrillDown(section.drill_down.api, section.drill_down.label)}
@@ -344,7 +535,7 @@ const SectionCard = ({ section, onSubItemDrillDown, onCardDrillDown, onActionCli
     );
 };
 
-// ── Agent Column ──────────────────────────────────────────────────────────────
+// ── Agent Panel Column ────────────────────────────────────────────────────────
 
 const AgentColumn = ({ title, tags, tagColor, items }) => (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex-1">
@@ -387,7 +578,7 @@ const ITSMSearchPage = ({
     const isCEO = currentUser?.role === 'itsm-ceo';
 
     useEffect(() => {
-        const fetchHomeData = async () => {
+        const fetch = async () => {
             setLoading(true);
             setError(null);
             try {
@@ -400,13 +591,13 @@ const ITSMSearchPage = ({
                     setError('Failed to load dashboard data.');
                 }
             } catch (err) {
-                console.error('ITSMSearchPage home fetch error:', err);
-                setError('Unable to reach the server. Please try again.');
+                console.error(err);
+                setError('Unable to reach the server.');
             } finally {
                 setLoading(false);
             }
         };
-        fetchHomeData();
+        fetch();
     }, []);
 
     const handleSearch = (e) => {
@@ -417,15 +608,10 @@ const ITSMSearchPage = ({
 
     const isConnected = (id) => connectedSources.includes(id);
 
-    /**
-     * Central handler for any drill-down click.
-     * If the API is an ITSM KPI detail endpoint → navigate to CEOKPIDetailPage.
-     * Otherwise → open the slide-over panel.
-     */
+    /** Central drill-down handler */
     const handleDrillDown = (api, title) => {
         if (!api) return;
-
-        // ITSM KPI detail → navigate to the full KPI detail page
+        // ITSM KPI sub-items → navigate to CEOKPIDetailPage
         if (api.includes('/itsm/ceo/kpi-detail')) {
             const actionId = extractItsmActionId(api);
             if (actionId) {
@@ -433,8 +619,7 @@ const ITSMSearchPage = ({
                 return;
             }
         }
-
-        // Everything else → fetch and display in the panel
+        // All other endpoints → slide-over panel
         setPanel({ open: true, title, api });
     };
 
@@ -445,14 +630,12 @@ const ITSMSearchPage = ({
 
             {/* Top bar */}
             <header className="flex items-center justify-between px-8 py-4 border-b border-gray-200 bg-white">
-                <div className="flex items-center">
-                    <img
-                        src="https://experienceflow.ai/wp-content/uploads/2024/05/Logo-with-Tagline-240px.svg"
-                        alt="ExperienceFlow"
-                        className="h-9 w-auto"
-                        onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                </div>
+                <img
+                    src="https://experienceflow.ai/wp-content/uploads/2024/05/Logo-with-Tagline-240px.svg"
+                    alt="ExperienceFlow"
+                    className="h-9 w-auto"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                />
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 text-sm">
                         <span className="text-gray-400">{isCEO ? '👔' : '🛠'}</span>
@@ -505,7 +688,7 @@ const ITSMSearchPage = ({
                     </div>
                     <div className="flex flex-wrap gap-3">
                         {ALL_SOURCES.map((src) => (
-                            <div key={src.id} className="relative flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 bg-white shadow-xs hover:shadow-sm transition-all">
+                            <div key={src.id} className="relative flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 bg-white shadow-sm hover:shadow transition-all">
                                 <img src={src.logoUrl} alt={src.name} className="w-5 h-5 object-contain" />
                                 <span className="text-sm font-semibold text-gray-700">{src.name}</span>
                                 {isConnected(src.id) && (
@@ -531,7 +714,7 @@ const ITSMSearchPage = ({
                     </div>
                 )}
 
-                {/* ── Dashboard Section Cards ── */}
+                {/* Section Cards Grid */}
                 {!loading && dashboardSections.length > 0 && (
                     <div className="mb-10">
                         <p className="text-xs font-bold text-gray-400 tracking-widest mb-4">CEO EXECUTIVE DASHBOARD</p>
@@ -550,7 +733,7 @@ const ITSMSearchPage = ({
                     </div>
                 )}
 
-                {/* ── Agent-Driven Decision Intelligence ── */}
+                {/* Agent Intelligence Panel */}
                 {!loading && agentIntelligence && (
                     <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-5 shadow-sm">
                         <div className="flex items-center gap-2 mb-1">
@@ -582,16 +765,12 @@ const ITSMSearchPage = ({
                 )}
             </main>
 
-            {/* ── Drill-Down Slide-Over Panel ── */}
+            {/* Drill-Down Panel */}
             <DrillDownPanel
                 open={panel.open}
                 title={panel.title}
                 apiPath={panel.api}
                 onClose={closePanel}
-                onNavigateToKPI={(actionId) => {
-                    closePanel();
-                    onActionClick && onActionClick(actionId, actionId);
-                }}
             />
         </div>
     );
