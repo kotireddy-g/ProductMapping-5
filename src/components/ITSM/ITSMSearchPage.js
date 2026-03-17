@@ -3,7 +3,7 @@ import {
     Search, Mic, Plus, CheckCircle2, Loader2, AlertTriangle,
     Briefcase, Users, Code2, Monitor, Shield, Brain, Bell, BarChart2,
     ChevronRight, Zap, X, RefreshCw, TrendingUp, TrendingDown,
-    AlertCircle, Clock, GitPullRequest, Activity, Target, Lightbulb, DollarSign, Flame,
+    AlertCircle, Clock, GitPullRequest, Activity, Target, Lightbulb, DollarSign, Flame, Layers,
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import ceoItsmService from '../../services/ceoItsmService';
@@ -691,60 +691,386 @@ const RecsRenderer = ({ data }) => {
     );
 };
 
-/* ENGINEERING */
+/* ENGINEERING / TEAM PERFORMANCE */
 const EngRenderer = ({ data }) => {
-    const teams = data.teams || data.engineers || (Array.isArray(data) ? data : []);
-    const scalars = scalarKpis(data);
+    /* API: { data: { context, insight: { metrics, kpis, stage_breakdown, active_deals, rca_events, recommendations, signals, trend } } } */
+    const ctx = data?.context || data?.data?.context || {};
+    const ins = data?.insight || data?.data?.insight || data?.data || data || {};
+    const metrics = ins.metrics || {};
+    const kpis = ins.kpis || [];
+    const stages = ins.stage_breakdown || [];
+    const deals = ins.active_deals || [];
+    const rcaEvts = ins.rca_events || [];
+    const recs = ins.recommendations || [];
+    const signals = ins.signals || [];
+    const trend = ins.trend || [];
+
+    const kpiColor = s => s === 'healthy' ? 'text-emerald-600 bg-emerald-50' : s === 'warning' ? 'text-amber-600 bg-amber-50' : s === 'critical' ? 'text-red-600 bg-red-50' : 'text-slate-600 bg-slate-50';
+    const stgColor = s => s === 'critical' ? 'text-red-600' : s === 'warning' ? 'text-amber-600' : 'text-emerald-600';
+    const dealPriColor = p => p === 'P1_CRITICAL' ? 'bg-red-100 text-red-700' : p === 'P2_HIGH' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-600';
+
+    const [showRec, setShowRec] = React.useState(false);
+
     return (
-        <div>
-            <SummaryBanner grad="bg-gradient-to-br from-slate-700 to-slate-900" icon={<Code2 className="w-4 h-4" />} subtitle="Engineering" label="Team Performance">
-                {scalars.slice(0, 4).map(([k, v]) => <BStat key={k} label={k.replace(/_/g, ' ')} value={fmtNum(k, v)} />)}
-                {scalars.length < 4 && [...Array(Math.max(0, 4 - scalars.length))].map((_, i) => <BStat key={i} label="" value="" />)}
-            </SummaryBanner>
-            <div className="space-y-3">
-                {teams.map((t, i) => {
-                    const util = t.utilization_pct || t.utilization || 0;
-                    return (
-                        <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-bold text-slate-900">{t.name || t.team || `Team #${i + 1}`}</p>
-                                <p className={`text-sm font-extrabold ${util < 65 ? 'text-red-600' : util > 85 ? 'text-amber-500' : 'text-green-600'}`}>{util}%</p>
-                            </div>
-                            <div className="w-full bg-slate-100 rounded-full h-2">
-                                <div className={`h-2 rounded-full ${util < 65 ? 'bg-red-500' : util > 85 ? 'bg-amber-500' : 'bg-green-500'}`} style={{ width: `${Math.min(util, 100)}%` }} />
-                            </div>
-                        </div>
-                    );
-                })}
+        <div className="space-y-4">
+            {/* ── Header banner ── */}
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                    <Code2 className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Team Performance · {ctx.entity_name || 'Engineering Command Center'}</p>
+                </div>
+                <div className="flex items-end gap-3 mb-3">
+                    <p className="text-4xl font-extrabold">{metrics.dtif_pct?.toFixed(1) ?? ins.dtif_pct?.toFixed(1) ?? '—'}%</p>
+                    <div className="mb-1">
+                        <p className="text-xs font-bold text-emerald-400">DTIF Score</p>
+                        <p className="text-[10px] opacity-60">{ins.title || ins.summary?.slice(0, 80)}</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-lg font-extrabold">{metrics.on_time_pct?.toFixed(1) ?? '—'}%</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">On Time</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-lg font-extrabold">{metrics.in_full_pct?.toFixed(1) ?? '—'}%</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">In Full</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-lg font-extrabold">{metrics.active_items ?? '—'}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">Active Items</p>
+                    </div>
+                </div>
+                <div className="flex gap-3 mt-2">
+                    <span className="bg-red-500/30 text-red-200 text-[10px] font-bold px-2 py-0.5 rounded-lg">⚠ {metrics.sla_breach_count ?? 0} SLA Breached</span>
+                    <span className="bg-white/10 text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-lg">Risk Score: {metrics.risk_score ?? '—'}</span>
+                    <span className="bg-emerald-500/30 text-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-lg">Confidence: {ins.confidence ?? '—'}%</span>
+                </div>
             </div>
+
+            {/* ── Signals chip list ── */}
+            {signals.length > 0 && (
+                <div>
+                    <SecTitle icon={<Activity className="w-3.5 h-3.5" />} label="Live Signals" />
+                    <div className="space-y-1.5">
+                        {signals.map((s, i) => (
+                            <div key={i} className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-[11px] text-slate-700 leading-snug">
+                                • {s}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── KPI Grid ── */}
+            {kpis.length > 0 && (
+                <div>
+                    <SecTitle icon={<BarChart2 className="w-3.5 h-3.5" />} label="Engineering KPIs" />
+                    <div className="grid grid-cols-2 gap-2">
+                        {kpis.map((k, i) => {
+                            const hitTarget = k.status === 'healthy';
+                            const pct = k.target > 0 ? Math.min((k.current / k.target) * 100, 150) : 0;
+                            const barW = Math.min(pct, 100);
+                            return (
+                                <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <p className="text-[10px] text-slate-500 font-semibold">{k.title}</p>
+                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${kpiColor(k.status)}`}>{k.status?.toUpperCase()}</span>
+                                    </div>
+                                    <p className="text-xl font-extrabold text-slate-900">{k.current}<span className="text-xs font-normal text-slate-400 ml-1">{k.unit}</span></p>
+                                    <div className="mt-1.5 w-full bg-slate-100 rounded-full h-1.5">
+                                        <div className={`h-1.5 rounded-full ${hitTarget ? 'bg-emerald-500' : k.status === 'warning' ? 'bg-amber-400' : 'bg-red-500'}`} style={{ width: `${barW}%` }} />
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-1">Target: {k.target} {k.unit}</p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Stage Breakdown ── */}
+            {stages.length > 0 && (
+                <div>
+                    <SecTitle icon={<Layers className="w-3.5 h-3.5" />} label="Stage Breakdown" />
+                    <div className="space-y-2">
+                        {stages.map((s, i) => (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.colorHex || '#94a3b8' }} />
+                                        <p className="text-sm font-bold text-slate-900">{s.stageName}</p>
+                                    </div>
+                                    <span className={`text-sm font-extrabold ${stgColor(s.status)}`}>{s.dtifPct?.toFixed(1)}%</span>
+                                </div>
+                                <div className="w-full bg-slate-100 rounded-full h-2 mb-2">
+                                    <div className="h-2 rounded-full bg-red-500/70 transition-all" style={{ width: `${Math.min(s.dtifPct ?? 0, 100)}%` }} />
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="text-center">
+                                        <p className="text-[10px] text-slate-400">On-Time</p>
+                                        <p className="text-xs font-bold text-slate-700">{s.onTimePct?.toFixed(1)}%</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-[10px] text-slate-400">In-Full</p>
+                                        <p className="text-xs font-bold text-slate-700">{s.inFullPct?.toFixed(1)}%</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-[10px] text-slate-400">Avg Cycle</p>
+                                        <p className="text-xs font-bold text-slate-700">{s.avgCycleHours ? `${s.avgCycleHours.toFixed(0)}h` : '—'}</p>
+                                    </div>
+                                </div>
+                                {s.slaBreachCount > 0 && (
+                                    <p className="text-[10px] text-red-500 font-bold mt-1.5">⚠ {s.slaBreachCount} SLA breaches</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Active Deals ── */}
+            {deals.length > 0 && (
+                <div>
+                    <SecTitle icon={<DollarSign className="w-3.5 h-3.5" />} label={`${deals.length} Active Deals`} />
+                    <div className="space-y-2">
+                        {deals.map((d, i) => (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${dealPriColor(d.priority)}`}>{d.priority?.replace('_', ' ')}</span>
+                                        <span className="text-[10px] font-mono text-slate-400">{d.deal_code}</span>
+                                        <span className="text-[10px] text-slate-400">{d.stage}</span>
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-900">{d.title}</p>
+                                    <div className="flex gap-2 mt-1">
+                                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${d.on_time ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>OT {d.on_time ? '✓' : '✗'}</span>
+                                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${d.in_full ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>IF {d.in_full ? '✓' : '✗'}</span>
+                                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${d.risk_score < 30 ? 'bg-emerald-50 text-emerald-700' : d.risk_score < 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>Risk {d.risk_score?.toFixed(0)}</span>
+                                    </div>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                    <p className="text-sm font-extrabold text-slate-900">{fmtINR(d.value)}</p>
+                                    <p className="text-[10px] text-slate-400">{d.client}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── RCA Events ── */}
+            {rcaEvts.length > 0 && (
+                <div>
+                    <SecTitle icon={<AlertTriangle className="w-3.5 h-3.5" />} label="Active RCA Events" />
+                    <div className="space-y-2">
+                        {rcaEvts.map((r, i) => (
+                            <div key={i} className={`bg-white border-l-4 ${r.severity === 'P1' ? 'border-l-red-500' : 'border-l-orange-400'} border border-gray-100 rounded-xl p-3 shadow-sm`}>
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${r.severity === 'P1' ? 'bg-red-600 text-white' : 'bg-orange-500 text-white'}`}>{r.severity}</span>
+                                        <span className="text-[10px] font-mono text-slate-400">{r.rca_id}</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">DTIF -{r.reason?.dtif_impact_pct?.toFixed(1)}%</span>
+                                </div>
+                                <p className="text-xs font-bold text-slate-900 leading-snug">{r.reason?.title}</p>
+                                <p className="text-[11px] text-slate-500 mt-1 leading-snug">{r.action?.display_text?.slice(0, 120)}…</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Recommendations ── */}
+            {recs.length > 0 && (
+                <div>
+                    <button className="w-full flex items-center justify-between py-1" onClick={() => setShowRec(v => !v)}>
+                        <SecTitle icon={<Lightbulb className="w-3.5 h-3.5" />} label={`${recs.length} Recommendations`} />
+                        <span className="text-slate-400 text-xs">{showRec ? '▲' : '▼'}</span>
+                    </button>
+                    {showRec && (
+                        <div className="space-y-2 mt-2">
+                            {recs.map((r, i) => (
+                                <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                                    <div className="flex gap-2 flex-wrap mb-1">
+                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${r.severity === 'high' ? 'bg-orange-500 text-white' : 'bg-amber-400 text-gray-900'}`}>{r.severity?.toUpperCase()}</span>
+                                        <span className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">{r.category?.replace('_', ' ')}</span>
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-900 leading-snug">{r.name}</p>
+                                    <p className="text-[11px] text-slate-500 mt-1">{r.details}</p>
+                                    {r.signals && (
+                                        <div className="flex flex-wrap gap-1 mt-1.5">
+                                            {r.signals.slice(0, 3).map((s, si) => (
+                                                <span key={si} className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded">{s}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── DTIF Trend chart ── */}
+            {trend.length > 1 && (
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                    <SecTitle icon={<TrendingUp className="w-3.5 h-3.5" />} label="DTIF Trend" />
+                    <TrendChart data={trend} xKey="date" yKey="dtif_pct" color="#6366f1" />
+                </div>
+            )}
         </div>
     );
 };
 
-/* PR AGING */
+/* PR AGING / PR REVIEW DELAYS */
 const PrRenderer = ({ data }) => {
-    const prs = data.prs || data.items || (Array.isArray(data) ? data : []);
-    const scalars = scalarKpis(data);
+    /* API shape: { data: { pr_list[], summary{} }, meta{} } */
+    const prList = data?.pr_list || data?.data?.pr_list || (Array.isArray(data) ? data : []);
+    const summary = data?.summary || data?.data?.summary || {};
+    const meta = data?.meta || data?.data?.meta || {};
+
+    const healthClr = s => s === 'GREEN' ? 'bg-emerald-100 text-emerald-700' :
+        s === 'AMBER' ? 'bg-amber-100 text-amber-700' :
+            s === 'RED' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600';
+    const ageClr = d => d > (summary.target_review_days || 2) ? 'text-red-600' : 'text-emerald-600';
+    const sevClr = s => s === 'critical' ? 'bg-red-600 text-white' : s === 'warning' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white';
+
     return (
-        <div>
-            <SummaryBanner grad="bg-gradient-to-br from-pink-600 to-rose-700" icon={<GitPullRequest className="w-4 h-4" />} subtitle="PR Health" label="Pull Request Aging">
-                {scalars.slice(0, 4).map(([k, v]) => <BStat key={k} label={k.replace(/_/g, ' ')} value={fmtNum(k, v)} />)}
-                {scalars.length < 4 && [...Array(Math.max(0, 4 - scalars.length))].map((_, i) => <BStat key={i} label="" value="" />)}
-            </SummaryBanner>
-            <div className="space-y-2">
-                {prs.map((p, i) => {
-                    const age = p.age_days || p.days_open || p.review_days || 0;
+        <div className="space-y-4">
+            {/* ── Summary banner ── */}
+            <div className="bg-gradient-to-br from-pink-600 to-rose-700 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                    <GitPullRequest className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">PR Review Delays · {meta.snapshot_date || 'Live'}</p>
+                </div>
+                <div className="flex items-end gap-3 mb-3">
+                    <p className="text-4xl font-extrabold">{summary.total_open_prs ?? prList.length}</p>
+                    <div className="mb-1">
+                        <p className="text-xs font-bold text-pink-200">Open PRs</p>
+                        <p className="text-[10px] opacity-60">{summary.total_features_with_prs ?? prList.length} features · avg {summary.avg_age_days?.toFixed(1) ?? '—'}d age</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-lg font-extrabold">{summary.oldest_pr_days ?? '—'}d</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">Oldest PR</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-lg font-extrabold">{summary.target_review_days ?? 2}d</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">Target Review</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-lg font-extrabold">{summary.critical_path_count ?? 0}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">Critical Path</p>
+                    </div>
+                </div>
+                {summary.bottleneck_severity && (
+                    <div className="mt-2">
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-lg ${sevClr(summary.bottleneck_severity)}`}>
+                            ⚠ Bottleneck: {summary.bottleneck_severity.toUpperCase()}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Per-PR cards ── */}
+            <SecTitle icon={<GitPullRequest className="w-3.5 h-3.5" />} label={`${prList.length} Open Pull Requests`} />
+            <div className="space-y-3">
+                {prList.map((p, i) => {
+                    const target = summary.target_review_days || 2;
+                    const barW = Math.min((p.pr_age_days / Math.max(target * 2.5, p.pr_age_days)) * 100, 100);
+                    const isOverdue = p.pr_age_days > target;
                     return (
-                        <div key={i} className={`bg-white border ${age > 3 ? 'border-red-200' : 'border-gray-100'} rounded-xl p-3 shadow-sm flex items-start justify-between gap-2`}>
-                            <div>
-                                <p className="text-sm font-semibold text-gray-900">{p.title || p.pr_title || `PR #${p.pr_number || i + 1}`}</p>
-                                <p className="text-xs text-slate-400">{p.author || p.developer} · {p.repo || p.repository}</p>
+                        <div key={i} className={`bg-white border ${p.health_status === 'RED' ? 'border-red-200' : p.health_status === 'AMBER' ? 'border-amber-200' : 'border-gray-100'} rounded-xl p-4 shadow-sm`}>
+                            {/* Header row */}
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                        <span className="text-[10px] font-mono font-bold text-slate-500">{p.feature_code}</span>
+                                        <span className="text-[10px] text-slate-400">·</span>
+                                        <span className="text-[10px] text-slate-400">{p.module_code}</span>
+                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${healthClr(p.health_status)}`}>{p.health_status}</span>
+                                        {p.is_critical_path && <span className="text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded">CRITICAL PATH</span>}
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-900">{p.feature_name}</p>
+                                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">{p.github_branch}</p>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                    <p className={`text-xl font-extrabold ${ageClr(p.pr_age_days)}`}>{p.pr_age_days}d</p>
+                                    <p className="text-[10px] text-slate-400">PR age</p>
+                                </div>
                             </div>
-                            <div className={`text-sm font-extrabold shrink-0 ${age > 3 ? 'text-red-600' : 'text-amber-500'}`}>{age}d</div>
+
+                            {/* Age progress bar */}
+                            <div className="w-full bg-slate-100 rounded-full h-2 mb-3">
+                                <div className={`h-2 rounded-full transition-all ${isOverdue ? 'bg-red-500' : 'bg-emerald-500'}`} style={{ width: `${barW}%` }} />
+                            </div>
+
+                            {/* Stats row */}
+                            <div className="grid grid-cols-3 gap-2 mb-2">
+                                <div className="bg-slate-50 rounded-lg p-2 text-center">
+                                    <p className="text-[10px] text-slate-400">Open PRs</p>
+                                    <p className="text-sm font-bold text-slate-900">{p.prs_open}</p>
+                                </div>
+                                <div className="bg-slate-50 rounded-lg p-2 text-center">
+                                    <p className="text-[10px] text-slate-400">Approvals Needed</p>
+                                    <p className="text-sm font-bold text-slate-900">{p.approvals_needed}</p>
+                                </div>
+                                <div className="bg-slate-50 rounded-lg p-2 text-center">
+                                    <p className="text-[10px] text-slate-400">Last Commit</p>
+                                    <p className={`text-sm font-bold ${p.last_commit_days === 0 ? 'text-emerald-600' : p.last_commit_days > 2 ? 'text-red-600' : 'text-slate-900'}`}>
+                                        {p.last_commit_days === 0 ? 'Today' : `${p.last_commit_days}d ago`}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Assignee + JIRA row */}
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${p.current_assignee?.present ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                    <p className="text-xs text-slate-700 font-semibold">{p.current_assignee?.name || '—'}</p>
+                                    <span className="text-[10px] text-slate-400">{p.current_assignee?.emp_code}</span>
+                                    {p.current_assignee?.on_leave && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">ON LEAVE</span>}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded">{p.jira_ticket}</span>
+                                    <span className="text-[10px] text-slate-400">{p.jira_status?.replace('_', ' ')}</span>
+                                </div>
+                            </div>
+
+                            {/* Risk label */}
+                            {p.risk_label && (
+                                <div className="mt-2 pt-2 border-t border-slate-100">
+                                    <p className="text-[11px] text-slate-600 font-medium">{p.risk_label}</p>
+                                </div>
+                            )}
+
+                            {/* URL Links */}
+                            {p.urls && (
+                                <div className="flex gap-2 mt-2 flex-wrap">
+                                    {p.urls.pr && (
+                                        <a href={p.urls.pr} target="_blank" rel="noopener noreferrer" className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded hover:bg-indigo-100 transition-colors">
+                                            ↗ GitHub PR
+                                        </a>
+                                    )}
+                                    {p.urls.jira && (
+                                        <a href={p.urls.jira} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded hover:bg-blue-100 transition-colors">
+                                            ↗ JIRA {p.jira_ticket}
+                                        </a>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     );
                 })}
             </div>
+
+            {/* Meta footer */}
+            {meta.generated_at && (
+                <p className="text-[10px] text-slate-400 text-center">
+                    Snapshot: {meta.snapshot_date} · Generated {new Date(meta.generated_at).toLocaleTimeString()}
+                </p>
+            )}
         </div>
     );
 };
