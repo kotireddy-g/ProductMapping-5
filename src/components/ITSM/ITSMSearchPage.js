@@ -178,30 +178,202 @@ const DealsRenderer = ({ data }) => {
 
 /* RCA */
 const RcaRenderer = ({ data }) => {
-    const list = data.rca_list || data.items || data.data || (Array.isArray(data) ? data : []);
+    /* API: { data: [], total, openCount, p1Count, p2Count } */
+    const list = Array.isArray(data) ? data : (data.data || []);
+    const total = data.total ?? list.length;
+    const open = data.openCount ?? list.filter(r => r.isOpen).length;
+    const p1 = data.p1Count ?? 0;
+    const p2 = data.p2Count ?? 0;
+
+    const [expanded, setExpanded] = React.useState(null);
+    const toggle = id => setExpanded(prev => prev === id ? null : id);
+
+    const sevGrad = s => {
+        const v = String(s || '').toUpperCase();
+        if (v === 'CRITICAL') return { pill: 'bg-red-600 text-white', border: 'border-l-red-600', badge: 'bg-red-600 text-white' };
+        if (v === 'HIGH') return { pill: 'bg-orange-500 text-white', border: 'border-l-orange-500', badge: 'bg-orange-500 text-white' };
+        if (v === 'MEDIUM') return { pill: 'bg-amber-400 text-gray-900', border: 'border-l-amber-400', badge: 'bg-amber-400 text-gray-900' };
+        return { pill: 'bg-slate-200 text-slate-700', border: 'border-l-slate-300', badge: 'bg-slate-200 text-slate-700' };
+    };
+
     return (
-        <div>
-            <SummaryBanner grad="bg-gradient-to-br from-red-600 to-rose-700" icon={<Flame className="w-4 h-4" />} subtitle="Incidents" label="Root Cause Analysis">
-                <BStat label="Open" value={data.total_open_rca || list.length} />
-                <BStat label="P1 Critical" value={data.p1_critical} />
-                <BStat label="P2 High" value={data.p2_high} />
-                <BStat label="P3 Medium" value={data.p3_medium} />
-            </SummaryBanner>
-            <div className="space-y-3">
-                {list.map((r, i) => (
-                    <div key={i} className="bg-white border border-gray-100 rounded-xl shadow-sm p-4">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                            <p className="text-sm font-bold text-gray-900 leading-snug">{r.title || r.name || `Incident #${i + 1}`}</p>
-                            {(r.severity || r.priority) && <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-lg shrink-0 ${sevCls(r.severity || r.priority)}`}>{r.severity || r.priority}</span>}
-                        </div>
-                        {r.description && <p className="text-xs text-slate-500 leading-relaxed mb-2">{r.description}</p>}
-                        <div className="flex flex-wrap gap-2">
-                            {r.status && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusCls(r.status).pill}`}>{r.status.replace(/_/g, ' ')}</span>}
-                            {r.assigned_to && <span className="bg-slate-50 text-slate-600 text-[10px] px-2 py-0.5 rounded-lg">👤 {r.assigned_to}</span>}
-                            {r.impact && <span className="bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded-lg">⚠ {r.impact}</span>}
-                        </div>
+        <div className="space-y-4">
+            {/* ── Summary banner ── */}
+            <div className="bg-gradient-to-br from-red-600 to-rose-700 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                    <Flame className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Top Risks · Root Cause Analysis</p>
+                </div>
+                <p className="text-3xl font-extrabold mb-1">{total} <span className="text-base font-semibold opacity-70">Incidents Tracked</span></p>
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                    <div className="bg-white/20 rounded-xl p-3 text-center">
+                        <p className="text-2xl font-extrabold">{open}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider opacity-80 mt-0.5">Open</p>
                     </div>
-                ))}
+                    <div className="bg-white/20 rounded-xl p-3 text-center">
+                        <p className="text-2xl font-extrabold">{p1}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider opacity-80 mt-0.5">CRITICAL</p>
+                    </div>
+                    <div className="bg-white/20 rounded-xl p-3 text-center">
+                        <p className="text-2xl font-extrabold">{p2}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider opacity-80 mt-0.5">HIGH</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Per-incident cards ── */}
+            <SecTitle icon={<AlertTriangle className="w-3.5 h-3.5" />} label={`${list.length} Active Incidents`} />
+            <div className="space-y-3">
+                {list.map((r, i) => {
+                    const cls = sevGrad(r.severity);
+                    const isExp = expanded === r.id;
+                    const rev = r.context?.impactRevenue;
+                    const days = r.context?.impactDays;
+                    const whyChain = r.why?.full_why_chain || [];
+                    const signals = r.why?.signals || [];
+                    const opts = r.action?.recommended_options || [];
+                    const tags = r.context?.tags || [];
+                    const prevTags = r.preventive?.prevention_tags || [];
+
+                    return (
+                        <div key={r.id || i} className={`bg-white border border-l-4 ${cls.border} border-gray-100 rounded-xl shadow-sm overflow-hidden`}>
+                            {/* ── Card header (always visible) ── */}
+                            <button
+                                className="w-full px-4 pt-3 pb-3 text-left"
+                                onClick={() => toggle(r.id)}
+                            >
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${cls.badge}`}>{r.severity}</span>
+                                            <span className="text-[10px] font-mono text-slate-400">{r.rca_code}</span>
+                                            <span className="text-[10px] text-slate-400">{r.reason?.cause_group}</span>
+                                        </div>
+                                        <p className="text-sm font-bold text-slate-900 leading-snug">{r.reason?.title || `Incident #${i + 1}`}</p>
+                                    </div>
+                                    <div className="shrink-0 flex flex-col items-end gap-1">
+                                        {r.reason?.dtif_impact_pct != null && (
+                                            <span className="text-xs font-extrabold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg">
+                                                DTIF -{r.reason.dtif_impact_pct}%
+                                            </span>
+                                        )}
+                                        <span className="text-slate-300 text-xs">{isExp ? '▲' : '▼'}</span>
+                                    </div>
+                                </div>
+
+                                {/* Key impact pills (always visible) */}
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {rev > 0 && <span className="bg-red-50 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-lg">💰 {fmtINR(rev)} at risk</span>}
+                                    {days > 0 && <span className="bg-amber-50 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-lg">⏱ {days}d delay risk</span>}
+                                    <span className="bg-slate-50 text-slate-600 text-[10px] px-2 py-0.5 rounded-lg">{r.context?.department} · {r.context?.stage}</span>
+                                </div>
+                            </button>
+
+                            {/* ── Expanded details ── */}
+                            {isExp && (
+                                <div className="border-t border-slate-100">
+                                    {/* Cause display text */}
+                                    {r.reason?.display_text && (
+                                        <div className="px-4 py-3 bg-red-50 border-b border-red-100">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-1">Root Cause</p>
+                                            <p className="text-xs text-red-800 leading-relaxed">{r.reason.display_text}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Signals grid */}
+                                    {signals.length > 0 && (
+                                        <div className="px-4 py-3 border-b border-slate-100">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Health Signals</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {signals.map((s, si) => (
+                                                    <div key={si} className="bg-slate-50 rounded-lg p-2.5 flex items-center justify-between">
+                                                        <p className="text-[10px] text-slate-500 leading-tight">{s.label}</p>
+                                                        <span className={`text-sm font-extrabold shrink-0 ml-1 ${s.direction === 'up' ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                            {s.value}{s.unit === '%' ? '%' : ''}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 5-Why chain */}
+                                    {whyChain.length > 0 && (
+                                        <div className="px-4 py-3 border-b border-slate-100">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">5-Why Analysis</p>
+                                            <div className="space-y-2">
+                                                {whyChain.map((w, wi) => (
+                                                    <div key={wi} className="flex gap-2.5">
+                                                        <span className="shrink-0 w-5 h-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-extrabold flex items-center justify-center mt-0.5">{w.level}</span>
+                                                        <div>
+                                                            <p className="text-[10px] font-bold text-violet-600">{w.label}</p>
+                                                            <p className="text-xs text-slate-700 leading-relaxed">{w.text}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Recommended options */}
+                                    {opts.length > 0 && (
+                                        <div className="px-4 py-3 border-b border-slate-100">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Recommended Options</p>
+                                            <div className="space-y-2">
+                                                {opts.map((o, oi) => (
+                                                    <div key={oi} className={`rounded-xl p-3 flex items-start justify-between gap-2 ${oi === 0 ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-50 border border-slate-100'}`}>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-1.5 mb-0.5">
+                                                                <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${oi === 0 ? 'bg-emerald-600 text-white' : 'bg-slate-400 text-white'}`}>#{o.rank}</span>
+                                                                <p className="text-xs font-bold text-slate-900">{o.label}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="shrink-0 text-right">
+                                                            <p className={`text-sm font-extrabold ${o.expected_dtif_delta_pct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                                {o.expected_dtif_delta_pct >= 0 ? '+' : ''}{o.expected_dtif_delta_pct}%
+                                                            </p>
+                                                            <p className="text-[10px] text-slate-400">DTIF Δ</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Action summary */}
+                                    {r.action?.display_text && (
+                                        <div className="px-4 py-3 bg-blue-50 border-b border-blue-100">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500 mb-1">Recommended Action</p>
+                                            <p className="text-xs text-blue-800 leading-relaxed">{r.action.display_text}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Preventive */}
+                                    {r.preventive?.display_text && (
+                                        <div className="px-4 py-3 bg-amber-50 border-b border-amber-100">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-1">Prevention</p>
+                                            <p className="text-xs text-amber-900 leading-relaxed mb-2">{r.preventive.display_text}</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {prevTags.map((t, ti) => (
+                                                    <span key={ti} className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-lg">{t}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Context tags */}
+                                    {tags.length > 0 && (
+                                        <div className="px-4 py-3 flex flex-wrap gap-1.5">
+                                            {tags.map((t, ti) => (
+                                                <span key={ti} className="bg-slate-100 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded-lg">{t}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
