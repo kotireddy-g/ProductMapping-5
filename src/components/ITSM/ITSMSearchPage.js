@@ -5,7 +5,7 @@ import {
     ChevronRight, Zap, X, RefreshCw, TrendingUp, TrendingDown,
     AlertCircle, Clock, GitPullRequest, Activity, Target, Lightbulb, DollarSign, Flame, Layers,
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import ceoItsmService from '../../services/ceoItsmService';
 import itsmApiClient from '../../services/itsmApiClient';
 
@@ -506,31 +506,121 @@ const OpiRenderer = ({ data }) => {
 
 /* DTIF/Sprint */
 const DtifRenderer = ({ data }) => {
-    const trend = data.trend || data.weekly_data || data.data_points || [];
-    const dtif = data.dtif_pct ?? data.dtif_score ?? data.score;
-    const stage = data.stage_name || data.stage || '';
-    const transitions = data.total_transitions ?? data.transitions;
-    const tk = trend.length ? tsKeys(trend[0]) : { xk: 'date', yk: 'value' };
+    /* API: { stage, stage_name, owner_dept, dtif_pct, total_transitions, dtif_count, avg_cycle_hours, status, status_color, trend[] } */
+    const d = data?.data || data || {};
+    const trend = d.trend || [];
+    const dtif = d.dtif_pct ?? d.dtif_score ?? d.score;
+    const stage = d.stage_name || d.stage || '';
+    const statuCol = d.status === 'critical' ? 'from-red-700 to-rose-800'
+        : d.status === 'warning' ? 'from-amber-600 to-orange-700'
+            : 'from-emerald-600 to-teal-700';
+    const statBadge = d.status === 'critical'
+        ? 'bg-red-100 text-red-700' : d.status === 'warning'
+            ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700';
+
+    // Subsample trend for chart readability (max 60 points)
+    const step = Math.max(1, Math.floor(trend.length / 60));
+    const chartData = trend.filter((_, i) => i % step === 0);
+
     return (
-        <div>
-            <SummaryBanner grad="bg-gradient-to-br from-rose-600 to-red-700" icon={<Target className="w-4 h-4" />} subtitle="Stage Performance" label={stage || 'DTIF Overview'}>
-                <BStat label="DTIF %" value={dtif != null ? `${Number(dtif).toFixed(1)}%` : '—'} />
-                <BStat label="Stage" value={stage || '—'} />
-                <BStat label="Transitions" value={transitions?.toLocaleString() || '—'} />
-                <BStat label="Target" value={data.target_pct ? `${data.target_pct}%` : '85%'} />
-            </SummaryBanner>
-            {trend.length > 0 ? (
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm mb-5">
-                    <SecTitle icon={<TrendingUp className="w-3.5 h-3.5" />} label="Historical Trend" />
-                    <TrendChart data={trend} xKey={tk.xk} yKey={tk.yk} color="#ef4444" />
+        <div className="space-y-4">
+            {/* ── Hero Banner ── */}
+            <div className={`bg-gradient-to-br ${statuCol} rounded-2xl p-5 text-white`}>
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <Layers className="w-4 h-4 opacity-80" />
+                        <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Stage Performance</p>
+                    </div>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${statBadge}`}>
+                        {(d.status || 'unknown').toUpperCase()}
+                    </span>
+                </div>
+                <p className="text-3xl font-extrabold mb-0.5">{dtif != null ? `${Number(dtif).toFixed(1)}%` : '—'}</p>
+                <p className="text-xs font-bold opacity-80 mb-3">{stage || 'Execution & Delivery'}</p>
+
+                {/* DTIF progress bar vs 85% target */}
+                <div className="mb-3">
+                    <div className="flex justify-between text-[10px] mb-1 opacity-80">
+                        <span>DTIF: {dtif != null ? `${Number(dtif).toFixed(1)}%` : '—'}</span>
+                        <span>Target: {d.target_pct ?? 85}%</span>
+                    </div>
+                    <div className="w-full bg-white/20 rounded-full h-2.5">
+                        <div className="h-2.5 rounded-full bg-white transition-all"
+                            style={{ width: `${Math.min(dtif ?? 0, 100)}%` }} />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-xs font-extrabold">{dtif != null ? `${Number(dtif).toFixed(1)}%` : '—'}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">DTIF</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-xs font-extrabold">{d.total_transitions?.toLocaleString() ?? '—'}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Transitions</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-xs font-extrabold">{d.dtif_count != null ? `${Number(d.dtif_count).toLocaleString()}%` : '—'}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">DTIF Count</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-xs font-extrabold">{d.avg_cycle_hours != null ? `${d.avg_cycle_hours}h` : '—'}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Avg Cycle</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Stage Info Row ── */}
+            <div className="grid grid-cols-3 gap-3">
+                {[
+                    { label: 'Stage', value: d.stage },
+                    { label: 'Owner Dept', value: d.owner_dept },
+                    { label: 'SLA Hours', value: d.sla_hours != null ? `${d.sla_hours}h` : 'N/A' },
+                ].map(({ label, value }) => (
+                    <div key={label} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                        <p className="text-[10px] text-slate-500 font-semibold">{label}</p>
+                        <p className="text-sm font-extrabold text-slate-900 mt-0.5">{value || '—'}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* ── Multi-line Trend Chart ── */}
+            {chartData.length > 1 ? (
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                    <SecTitle icon={<TrendingUp className="w-3.5 h-3.5" />} label="Historical Trend — DTIF / On-Time / In-Full" />
+                    <ResponsiveContainer width="100%" height={200}>
+                        <LineChart data={chartData} margin={{ top: 5, right: 8, left: -24, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                            <XAxis dataKey="date" tick={{ fontSize: 8 }}
+                                tickFormatter={v => v?.slice(5)}
+                                interval={Math.floor(chartData.length / 8)} />
+                            <YAxis tick={{ fontSize: 8 }} domain={[0, 100]} tickFormatter={v => `${v}%`} />
+                            <Tooltip
+                                contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                                formatter={(v, name) => [`${Number(v).toFixed(1)}%`, name]}
+                                labelFormatter={l => l}
+                            />
+                            <Line type="monotone" dataKey="dtif_pct" name="DTIF" stroke="#ef4444" strokeWidth={2} dot={false} />
+                            <Line type="monotone" dataKey="on_time_pct" name="On-Time" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
+                            <Line type="monotone" dataKey="in_full_pct" name="In-Full" stroke="#10b981" strokeWidth={1.5} dot={false} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                    <div className="flex items-center gap-4 mt-2 flex-wrap">
+                        {[['#ef4444', 'DTIF %'], ['#3b82f6', 'On-Time %'], ['#10b981', 'In-Full %']].map(([c, label]) => (
+                            <div key={label} className="flex items-center gap-1.5">
+                                <div className="w-4 h-2 rounded-full" style={{ background: c }} />
+                                <span className="text-[10px] text-slate-500">{label}</span>
+                            </div>
+                        ))}
+                        <span className="text-[10px] text-slate-400 ml-auto">{trend.length} data points · showing every {step}th</span>
+                    </div>
                 </div>
             ) : (
-                <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-500 mb-4">
+                <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-500">
                     <AlertCircle className="w-4 h-4 text-slate-400 shrink-0" />
                     No trend data available for this stage.
                 </div>
             )}
-            <AutoKpiGrid obj={data} />
         </div>
     );
 };
@@ -636,26 +726,291 @@ const ForecastRenderer = ({ data }) => {
     );
 };
 
-/* INSIGHTS */
+/* INSIGHTS — /dashboard/insights/ : Release Readiness */
 const InsightsRenderer = ({ data }) => {
-    const scalars = scalarKpis(data);
-    const listArr = firstListArray(data);
-    const trendEntry = Object.entries(data).find(([, v]) => isTimeSeries(v));
+    /* API shape: { context{}, insight{ severity, title, summary, signals[], recommendation, impact, actions[], blockers[], top_risks[], critical_modules[], critical_decisions[] } } */
+    const ctx = data?.context || data?.data?.context || {};
+    const ins = data?.insight || data?.data?.insight || data || {};
+    const blockers = ins.blockers || [];
+    const topRisks = ins.top_risks || [];
+    const critModules = ins.critical_modules || [];
+    const critDecisions = ins.critical_decisions || [];
+    const signals = ins.signals || [];
+    const actions = ins.actions || [];
+
+    const sevBanner = s => s === 'CRITICAL' ? 'from-red-700 to-rose-800'
+        : s === 'WARNING' ? 'from-amber-600 to-orange-700'
+            : 'from-emerald-600 to-teal-700';
+    const sevBadge = s => s === 'CRITICAL' ? 'bg-red-100 text-red-700'
+        : s === 'WARNING' ? 'bg-amber-100 text-amber-700'
+            : 'bg-emerald-100 text-emerald-700';
+    const healthClr = h => h === 'CRITICAL' ? 'bg-red-100 text-red-700'
+        : h === 'RED' ? 'bg-orange-100 text-orange-700'
+            : h === 'AMBER' ? 'bg-amber-100 text-amber-700'
+                : 'bg-emerald-100 text-emerald-700';
+    const riskClr = r => r === 'AT_RISK' ? 'bg-red-100 text-red-700'
+        : r === 'WATCH' ? 'bg-amber-100 text-amber-700'
+            : 'bg-emerald-100 text-emerald-700';
+
+    const [openBlocker, setOpenBlocker] = React.useState(null);
+    const [openAction, setOpenAction] = React.useState(null);
+
     return (
-        <div>
-            <SummaryBanner grad="bg-gradient-to-br from-emerald-600 to-teal-700" icon={<Lightbulb className="w-4 h-4" />} subtitle="AI Insights" label="Release Insights">
-                {scalars.slice(0, 4).map(([k, v]) => <BStat key={k} label={k.replace(/_/g, ' ')} value={fmtNum(k, v)} />)}
-                {scalars.length < 4 && [...Array(Math.max(0, 4 - scalars.length))].map((_, i) => <BStat key={i} label="" value="" />)}
-            </SummaryBanner>
-            {trendEntry && (
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm mb-5">
-                    <SecTitle icon={<TrendingUp className="w-3.5 h-3.5" />} label={trendEntry[0].replace(/_/g, ' ')} />
-                    <TrendChart data={trendEntry[1]} xKey={tsKeys(trendEntry[1][0]).xk} yKey={tsKeys(trendEntry[1][0]).yk} color="#10b981" />
+        <div className="space-y-4">
+            {/* ── Severity Banner ── */}
+            <div className={`bg-gradient-to-br ${sevBanner(ins.severity)} rounded-2xl p-5 text-white`}>
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 opacity-80" />
+                        <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">
+                            {ctx.entity_name || 'Company'} · Release Readiness
+                        </p>
+                    </div>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${sevBadge(ins.severity)}`}>
+                        {ins.severity}
+                    </span>
+                </div>
+                <p className="text-sm font-bold mb-1 leading-snug">{ins.title}</p>
+                <p className="text-[10px] opacity-70 leading-relaxed mb-3">{ins.summary}</p>
+
+                <div className="grid grid-cols-4 gap-2">
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold">{blockers.length}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Blockers</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold">{topRisks.length}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">At-Risk</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold">{critModules.length}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Crit Mods</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-sm font-extrabold">{critDecisions.length}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">Decisions</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Live Signals ── */}
+            {signals.length > 0 && (
+                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
+                    <SecTitle icon={<Activity className="w-3.5 h-3.5" />} label="Live Signals" />
+                    <div className="flex flex-wrap gap-2 mt-2">
+                        {signals.map((s, i) => {
+                            const isCrit = s.startsWith('CRITICAL');
+                            const isRed = s.startsWith('RED');
+                            const isRisk = s.startsWith('Finance');
+                            return (
+                                <span key={i} className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${isCrit ? 'bg-red-100 text-red-700'
+                                    : isRed ? 'bg-orange-100 text-orange-700'
+                                        : isRisk ? 'bg-purple-100 text-purple-700'
+                                            : 'bg-slate-100 text-slate-600'
+                                    }`}>{s}</span>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
-            {listArr && <div className="space-y-3">{listArr.map((item, i) => <AutoItemCard key={i} item={item} idx={i} />)}</div>}
-            {!trendEntry && !listArr && scalars.length === 0 && (
-                <p className="text-sm text-slate-400 italic text-center py-10">No insights data available.</p>
+
+            {/* ── Impact & Recommendation ── */}
+            {(ins.impact || ins.recommendation) && (
+                <div className="grid grid-cols-1 gap-3">
+                    {ins.impact && (
+                        <div className="bg-red-50 border border-red-100 rounded-xl p-3">
+                            <p className="text-[10px] font-extrabold text-red-700 uppercase mb-1">💰 Impact</p>
+                            <p className="text-xs text-red-800 leading-relaxed">{ins.impact}</p>
+                        </div>
+                    )}
+                    {ins.recommendation && (
+                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                            <p className="text-[10px] font-extrabold text-blue-700 uppercase mb-1">💡 Recommendation</p>
+                            <p className="text-xs text-blue-800 leading-relaxed">{ins.recommendation}</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── Critical Modules ── */}
+            {critModules.length > 0 && (
+                <div>
+                    <SecTitle icon={<Layers className="w-3.5 h-3.5" />} label="Critical Modules" />
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                        {critModules.map((m, i) => (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-center justify-between gap-2">
+                                <div>
+                                    <p className="text-xs font-bold text-slate-900">{m.name}</p>
+                                    <p className="text-[10px] text-slate-400">{m.project_name} · {m.module_code}</p>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    {m.finance_at_risk && (
+                                        <span className="text-[10px] bg-purple-100 text-purple-700 font-bold px-1.5 py-0.5 rounded">₹ At Risk</span>
+                                    )}
+                                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${healthClr(m.status)}`}>
+                                        {m.status}
+                                    </span>
+                                    <span className="text-sm font-extrabold text-slate-700">{m.score?.toFixed(0)}%</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Top Finance Risks ── */}
+            {topRisks.length > 0 && (
+                <div>
+                    <SecTitle icon={<DollarSign className="w-3.5 h-3.5" />} label="Finance Milestones at Risk" />
+                    <div className="space-y-2 mt-2">
+                        {topRisks.map((r, i) => (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-900">{r.title}</p>
+                                        <p className="text-[10px] text-slate-400">{r.project_name} · {r.milestone_code}</p>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <p className="text-sm font-extrabold text-purple-700">₹{(r.amount_inr / 100000).toFixed(1)}L</p>
+                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${riskClr(r.status)}`}>{r.status}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[10px] text-slate-500">Due: {r.due_date}</span>
+                                    <span className={`text-[10px] font-bold ${r.days_to_due <= 7 ? 'text-red-600' : 'text-amber-600'}`}>
+                                        {r.days_to_due}d remaining
+                                    </span>
+                                </div>
+                                <p className="text-[10px] text-slate-500 leading-relaxed">{r.risk_reason}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Blockers ── */}
+            {blockers.length > 0 && (
+                <div>
+                    <SecTitle icon={<AlertTriangle className="w-3.5 h-3.5" />} label={`Blocked Features (${blockers.length})`} />
+                    <div className="space-y-2 mt-2">
+                        {blockers.map((b, i) => (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                                <button
+                                    className="w-full p-3 text-left flex items-center justify-between gap-2"
+                                    onClick={() => setOpenBlocker(openBlocker === i ? null : i)}
+                                >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded shrink-0 ${healthClr(b.health_status)}`}>
+                                            {b.health_status}
+                                        </span>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-bold text-slate-900 truncate">{b.feature_name}</p>
+                                            <p className="text-[10px] text-slate-400">{b.module_name} · {b.assignee}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {b.github?.prs_open > 0 && (
+                                            <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded">
+                                                {b.github.prs_open} PR
+                                            </span>
+                                        )}
+                                        {b.finance?.amount_lakh && (
+                                            <span className="text-[10px] bg-purple-50 text-purple-700 font-bold px-1.5 py-0.5 rounded">
+                                                ₹{b.finance.amount_lakh}L
+                                            </span>
+                                        )}
+                                        <span className="text-slate-400 text-xs">{openBlocker === i ? '▲' : '▼'}</span>
+                                    </div>
+                                </button>
+                                {openBlocker === i && (
+                                    <div className="border-t border-gray-100 p-3 space-y-2 bg-slate-50">
+                                        {/* JIRA */}
+                                        {b.jira && (
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-[10px] font-bold text-slate-600">JIRA:</span>
+                                                <a href={b.jira.url} target="_blank" rel="noreferrer"
+                                                    className="text-[10px] text-blue-600 hover:underline font-mono">{b.jira.ticket}</a>
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${b.jira.status === 'BLOCKED' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                                                    }`}>{b.jira.status}</span>
+                                                <span className="text-[10px] text-slate-400">{b.jira.days_open}d open</span>
+                                            </div>
+                                        )}
+                                        {/* GitHub */}
+                                        {b.github && (
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-[10px] font-bold text-slate-600">GitHub:</span>
+                                                <a href={b.github.branch_url} target="_blank" rel="noreferrer"
+                                                    className="text-[10px] text-indigo-600 hover:underline font-mono truncate max-w-[160px]">{b.github.branch}</a>
+                                                <span className="text-[10px] text-slate-400">
+                                                    {b.github.last_commit_days}d since last commit
+                                                </span>
+                                            </div>
+                                        )}
+                                        {/* Finance */}
+                                        {b.finance && (
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-[10px] font-bold text-slate-600">Milestone:</span>
+                                                <span className="text-[10px] text-slate-700">{b.finance.title}</span>
+                                                <span className="text-[10px] font-bold text-purple-700">₹{b.finance.amount_lakh}L</span>
+                                                <span className={`text-[10px] font-bold ${b.finance.days_to_due <= 7 ? 'text-red-600' : 'text-amber-600'}`}>
+                                                    {b.finance.days_to_due}d to due
+                                                </span>
+                                            </div>
+                                        )}
+                                        {/* Leave */}
+                                        {b.leave && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-bold text-slate-600">Leave:</span>
+                                                <span className="text-[10px] text-amber-700">{b.leave.status} · {b.leave.from} – {b.leave.to}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Critical AI Decisions ── */}
+            {critDecisions.length > 0 && (
+                <div>
+                    <SecTitle icon={<Brain className="w-3.5 h-3.5" />} label="AI Decision Actions Required" />
+                    <div className="space-y-2 mt-2">
+                        {critDecisions.map((dec, i) => (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                                <button
+                                    className="w-full p-3 text-left flex items-center gap-2"
+                                    onClick={() => setOpenAction(openAction === i ? null : i)}
+                                >
+                                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded shrink-0 ${dec.decision_type === 'ESCALATE' ? 'bg-red-100 text-red-700'
+                                        : dec.decision_type === 'DECISION_REQUIRED' ? 'bg-amber-100 text-amber-700'
+                                            : 'bg-blue-100 text-blue-700'
+                                        }`}>{dec.decision_type?.replace(/_/g, ' ')}</span>
+                                    <p className="text-xs font-bold text-slate-900 flex-1 text-left">{dec.title}</p>
+                                    <span className="text-slate-400 text-xs shrink-0">{openAction === i ? '▲' : '▼'}</span>
+                                </button>
+                                {openAction === i && (
+                                    <div className="border-t border-gray-100 p-3 bg-blue-50">
+                                        <p className="text-[11px] text-blue-800 leading-relaxed">{dec.recommendation}</p>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Suggested Actions ── */}
+            {actions.length > 0 && (
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                    <SecTitle icon={<CheckCircle2 className="w-3.5 h-3.5" />} label="Suggested Actions" />
+                    <ol className="space-y-2 mt-2 list-decimal list-inside">
+                        {actions.map((a, i) => (
+                            <li key={i} className="text-[11px] text-slate-700 leading-relaxed">{a}</li>
+                        ))}
+                    </ol>
+                </div>
             )}
         </div>
     );
@@ -1297,7 +1652,7 @@ const KpiDetailRenderer = ({ data }) => {
                                         {r.current}{r.unit}
                                     </p>
                                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${r.status === 'critical' ? 'bg-red-100 text-red-700' :
-                                            r.status === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                                        r.status === 'warning' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
                                         }`}>{r.status?.toUpperCase()}</span>
                                 </div>
                             </div>
