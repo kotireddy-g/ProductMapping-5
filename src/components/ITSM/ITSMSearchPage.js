@@ -2652,6 +2652,309 @@ const ITSMFactorsRenderer = ({ data }) => {
 };
 
 
+/* ── Client Health Renderer ── */
+const ClientHealthRenderer = ({ data }) => {
+    const s = data.summary || {};
+    const formula = data.score_formula || {};
+    const clients = data.clients || [];
+    const [expandedClient, setExpandedClient] = React.useState(null);
+    const [expandedRca, setExpandedRca] = React.useState({});
+
+    const toggleRca = (clientCode, rcaCode) => {
+        setExpandedRca(prev => {
+            const key = `${clientCode}::${rcaCode}`;
+            return { ...prev, [key]: !prev[key] };
+        });
+    };
+
+    const pillCls = pill => {
+        if (pill === 'pg') return { bg: 'bg-green-100 text-green-800', border: 'border-l-green-500', dot: '#22c55e', ring: 'ring-green-300' };
+        if (pill === 'pa') return { bg: 'bg-amber-100 text-amber-800', border: 'border-l-amber-400', dot: '#f59e0b', ring: 'ring-amber-300' };
+        if (pill === 'pr') return { bg: 'bg-red-100 text-red-800', border: 'border-l-red-600', dot: '#ef4444', ring: 'ring-red-300' };
+        return { bg: 'bg-slate-100 text-slate-600', border: 'border-l-slate-300', dot: '#94a3b8', ring: 'ring-slate-200' };
+    };
+    const pillLabel = pill => pill === 'pg' ? 'HEALTHY' : pill === 'pa' ? 'AMBER' : pill === 'pr' ? 'CRITICAL' : '—';
+    const sentimentCls = sent => {
+        if (sent === 'BLOCKER') return 'bg-red-600 text-white';
+        if (sent === 'NEGATIVE') return 'bg-red-100 text-red-700';
+        if (sent === 'POSITIVE') return 'bg-green-100 text-green-700';
+        return 'bg-slate-100 text-slate-600';
+    };
+    const modStatusCls = st => {
+        if (st === 'CRITICAL' || st === 'RED') return 'bg-red-100 text-red-700';
+        if (st === 'AMBER') return 'bg-amber-100 text-amber-700';
+        if (st === 'GREEN') return 'bg-green-100 text-green-700';
+        return 'bg-slate-100 text-slate-600';
+    };
+
+    const ScoreBar = ({ label, raw, weighted, color = '#6366f1' }) => (
+        <div className="mb-1.5">
+            <div className="flex justify-between text-[9px] text-slate-500 mb-0.5">
+                <span>{label}</span>
+                <span className="font-bold" style={{ color }}>{raw}% → {weighted}pts</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${raw}%`, backgroundColor: color }} />
+            </div>
+        </div>
+    );
+
+    const thresholds = formula.thresholds || {};
+    const components = formula.components || [];
+
+    return (
+        <div className="space-y-5">
+            {/* Summary Banner */}
+            <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                    <Users className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Client Solution Health</p>
+                </div>
+                <div className="flex items-end gap-3 mb-4">
+                    <p className="text-4xl font-extrabold leading-none">{s.avg_health_score ?? '—'}</p>
+                    <div>
+                        <p className="text-sm font-semibold opacity-80">Avg Health Score</p>
+                        <p className="text-xs opacity-60">Target: {s.avg_score_target} · SLA Breaches: <span className={`font-bold ${s.sla_breaches > 0 ? 'text-red-300' : 'text-green-300'}`}>{s.sla_breaches}</span></p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5 mb-3">
+                    <BStat label="Total Clients" value={s.total_clients} />
+                    <BStat label="External" value={s.external_clients} />
+                    <BStat label="Critical" value={s.critical_clients} />
+                    <BStat label="Healthy" value={s.healthy_count} />
+                    <BStat label="Amber" value={s.amber_count} />
+                    <BStat label="At Risk (₹)" value={s.at_risk_fin_total} />
+                </div>
+                {/* Score thresholds legend */}
+                <div className="flex gap-2 flex-wrap">
+                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">🟢 ≥{thresholds.green}</span>
+                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">🟡 {thresholds.amber_min}–{thresholds.green - 1}</span>
+                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">🔴 ≤{thresholds.red_max}</span>
+                </div>
+                {s.critical_names?.length > 0 && (
+                    <p className="text-[10px] mt-2 opacity-70">⚠️ Critical: {s.critical_names.join(', ')}</p>
+                )}
+            </div>
+
+            {/* Score Formula */}
+            {components.length > 0 && (
+                <div className="bg-white border border-indigo-100 rounded-2xl p-4">
+                    <SecTitle icon={<Target className="w-3.5 h-3.5 text-indigo-500" />} label="Health Score Formula" />
+                    <div className="mt-3 space-y-2">
+                        {components.map((c, i) => {
+                            const colors = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'];
+                            return (
+                                <div key={i} className="flex items-center gap-3">
+                                    <div className="flex-1 h-5 rounded-lg overflow-hidden bg-slate-100 relative">
+                                        <div className="h-full rounded-lg" style={{ width: `${c.weight_pct}%`, backgroundColor: colors[i % colors.length] }} />
+                                        <span className="absolute inset-0 flex items-center px-2 text-[10px] font-bold text-white mix-blend-overlay">{c.name}</span>
+                                    </div>
+                                    <span className="text-[11px] font-extrabold text-slate-600 w-8 text-right">{c.weight_pct}%</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Client Cards */}
+            {clients.length > 0 && (
+                <div>
+                    <SecTitle icon={<Briefcase className="w-3.5 h-3.5" />} label={`${clients.length} Client Projects`} />
+                    <div className="space-y-3">
+                        {clients.map((c) => {
+                            const pc = pillCls(c.health_pill);
+                            const isExp = expandedClient === c.project_code;
+                            const bd = c.score_breakdown || {};
+                            const rel = c.client_relationship || {};
+                            const mods = c.modules || [];
+                            const rcas = c.rca_list || [];
+                            const evidence = c.source_evidence || [];
+
+                            return (
+                                <div key={c.project_code} className={`bg-white border-l-4 ${pc.border} border border-gray-100 rounded-xl shadow-sm overflow-hidden`}>
+                                    {/* Card Header */}
+                                    <button className="w-full px-4 pt-3 pb-3 text-left" onClick={() => setExpandedClient(isExp ? null : c.project_code)}>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                                    <span className="text-[11px] font-extrabold text-slate-800">{c.project_code}</span>
+                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pc.bg}`}>{pillLabel(c.health_pill)}</span>
+                                                    {c.deal_code && <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-1.5 py-0.5 rounded">{c.deal_value}</span>}
+                                                    {rel.blocker_threads > 0 && <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded">🚨 BLOCKER</span>}
+                                                </div>
+                                                <p className="text-xs font-semibold text-slate-800">{c.project_name}</p>
+                                                <p className="text-[10px] text-slate-400">{c.pm_name} · {c.current_stage} · {c.client_name}</p>
+                                            </div>
+                                            <div className="shrink-0 text-right">
+                                                <p className="text-2xl font-extrabold" style={{ color: pc.dot }}>{c.health_score}</p>
+                                                {c.finance_at_risk && c.finance_at_risk !== '₹0' && (
+                                                    <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded block mt-0.5">{c.finance_at_risk} at risk</span>
+                                                )}
+                                                <span className="text-slate-300 text-xs block mt-1">{isExp ? '▲' : '▼'}</span>
+                                            </div>
+                                        </div>
+                                        {/* Score mini-bars */}
+                                        <div className="mt-2 grid grid-cols-2 gap-x-3">
+                                            <ScoreBar label="Sprint DTIF" raw={bd.sprint_dtif} weighted={bd.sprint_dtif_weighted} color="#6366f1" />
+                                            <ScoreBar label="Release Conf." raw={bd.release_confidence} weighted={bd.release_conf_weighted} color="#0ea5e9" />
+                                            <ScoreBar label="Module Compl." raw={bd.module_completion} weighted={bd.module_comp_weighted} color="#10b981" />
+                                            <ScoreBar label="SLA" raw={bd.sla_score} weighted={bd.sla_weighted} color="#f59e0b" />
+                                        </div>
+                                        {/* Source evidence pills */}
+                                        {evidence.length > 0 && (
+                                            <div className="flex gap-1.5 mt-2 flex-wrap">
+                                                {evidence.map((e, ei) => (
+                                                    <span key={ei} className="text-[10px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded-lg border border-slate-100">
+                                                        {e.icon} {e.description}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </button>
+
+                                    {/* Expanded section */}
+                                    {isExp && (
+                                        <div className="border-t border-slate-100">
+                                            {/* Client relationship */}
+                                            <div className="px-4 py-3 flex items-center gap-3 border-b border-slate-50 flex-wrap">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Client Relationship</span>
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sentimentCls(rel.sentiment)}`}>{rel.sentiment}</span>
+                                                <span className="text-[10px] text-slate-400">Last contact: {rel.last_contact_days}d ago</span>
+                                                <span className="text-[10px] text-slate-400">{rel.open_threads} open threads</span>
+                                                {rel.blocker_threads > 0 && <span className="text-[10px] font-bold text-red-600">{rel.blocker_threads} BLOCKER</span>}
+                                            </div>
+
+                                            {/* Modules */}
+                                            {mods.length > 0 && (
+                                                <div className="px-4 py-3 border-b border-slate-100">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{mods.length} Modules</p>
+                                                    <div className="space-y-2">
+                                                        {mods.map((m, mi) => {
+                                                            const mp = pillCls(m.health_pill);
+                                                            return (
+                                                                <div key={m.module_code || mi} className={`border-l-4 ${mp.border} bg-slate-50 rounded-xl px-3 py-2`}>
+                                                                    <div className="flex items-start justify-between gap-2">
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                <span className="text-[10px] font-mono text-slate-400">{m.module_code}</span>
+                                                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${modStatusCls(m.status)}`}>{m.status}</span>
+                                                                                {m.finance_at_risk && <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">{m.finance_amount}</span>}
+                                                                                {m.jira_p1_bugs > 0 && <span className="text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded">P1 BUG</span>}
+                                                                            </div>
+                                                                            <p className="text-[11px] font-semibold text-slate-800 mt-0.5">{m.module_name}</p>
+                                                                            <p className="text-[10px] text-slate-400">{m.jira_open_bugs} bugs · last commit {m.last_commit_days}d · PR age {m.pr_age_max}d</p>
+                                                                        </div>
+                                                                        <div className="shrink-0 text-right">
+                                                                            <p className="text-sm font-extrabold" style={{ color: mp.dot }}>{m.health_score}</p>
+                                                                            <p className="text-[10px] text-slate-400">{m.completion_pct}%</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="mt-1.5 h-1 rounded-full bg-white overflow-hidden">
+                                                                        <div className="h-full rounded-full" style={{ width: `${m.completion_pct}%`, backgroundColor: mp.dot }} />
+                                                                    </div>
+                                                                    {/* Source badges */}
+                                                                    <div className="flex gap-1 mt-1.5">
+                                                                        {m.src_badges?.map(b => (
+                                                                            <span key={b.src} className="text-[10px] text-slate-400" title={b.src}>{b.icon}</span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* RCA cards */}
+                                            {rcas.length > 0 && (
+                                                <div className="px-4 py-3">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{rcas.length} RCA{rcas.length > 1 ? 's' : ''}</p>
+                                                    <div className="space-y-3">
+                                                        {rcas.map((r) => {
+                                                            const rcaKey = `${c.project_code}::${r.rca_code}`;
+                                                            const rcaExp = !!expandedRca[rcaKey];
+                                                            const sevBg = r.severity === 'CRITICAL' ? 'bg-red-600 text-white' : r.severity === 'HIGH' ? 'bg-orange-500 text-white' : 'bg-amber-400 text-gray-900';
+                                                            return (
+                                                                <div key={r.rca_code} className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                                                                    <button className="w-full px-4 pt-3 pb-3 text-left" onClick={() => toggleRca(c.project_code, r.rca_code)}>
+                                                                        <div className="flex items-start justify-between gap-2">
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="flex items-center gap-1.5 mb-1">
+                                                                                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${sevBg}`}>{r.severity}</span>
+                                                                                    <span className="text-[10px] font-mono text-slate-400">{r.rca_code}</span>
+                                                                                </div>
+                                                                                <p className="text-[11px] font-bold text-slate-900 leading-snug">{r.title}</p>
+                                                                                {r.source_evidence?.length > 0 && (
+                                                                                    <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                                                                                        {r.source_evidence.map((e, ei) => (
+                                                                                            <span key={ei} className="text-[10px] bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded-lg">{e.icon} {e.description}</span>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                            <span className="text-slate-300 text-xs shrink-0 mt-1">{rcaExp ? '▲' : '▼'}</span>
+                                                                        </div>
+                                                                    </button>
+                                                                    {rcaExp && (
+                                                                        <div className="border-t border-slate-100">
+                                                                            {r.why_chain?.length > 0 && (
+                                                                                <div className="px-4 py-3 border-b border-slate-100">
+                                                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">5-Why Chain</p>
+                                                                                    <div className="space-y-2">
+                                                                                        {r.why_chain.map((w) => (
+                                                                                            <div key={w.level} className="flex gap-2">
+                                                                                                <span className="text-[10px] font-extrabold text-indigo-400 shrink-0 mt-0.5">#{w.level}</span>
+                                                                                                <p className="text-xs text-slate-700 leading-relaxed">{w.text}</p>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {r.recommended_options?.length > 0 && (
+                                                                                <div className="px-4 py-3">
+                                                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Recommended Actions</p>
+                                                                                    <div className="space-y-2">
+                                                                                        {r.recommended_options.map((o) => (
+                                                                                            <div key={o.rank} className="bg-slate-50 border border-gray-100 rounded-xl p-3 flex items-start justify-between gap-2">
+                                                                                                <div className="flex-1 min-w-0">
+                                                                                                    <span className="text-[10px] font-bold text-indigo-500">{o.rank_label}</span>
+                                                                                                    <p className="text-xs font-semibold text-slate-800 mt-0.5">{o.label}</p>
+                                                                                                    <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                                                                                                        {o.metric_pills?.map((mp, mi) => (
+                                                                                                            <span key={mi} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700">{mp.label}</span>
+                                                                                                        ))}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <button className="shrink-0 text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap">{o.cta_label}</button>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {data.as_of && <p className="text-[10px] text-slate-300 text-right font-mono">as of {data.as_of?.slice(0, 16).replace('T', ' ')} UTC</p>}
+        </div>
+    );
+};
+
+
 const detectType = p => {
     if (!p) return 'generic';
     if (p.includes('/portfolio/')) return 'portfolio';
@@ -2665,6 +2968,7 @@ const detectType = p => {
     if (p.includes('/decision-actions/')) return 'decision';
     if (p.includes('/product/')) return 'product';
     if (p.includes('/itsm/')) return 'itsm';
+    if (p.includes('/client-health/')) return 'clienthealth';
     if (p.includes('/dtif/') || p.includes('/stage/')) return 'dtif';
     if (p.includes('/forecast/')) return 'forecast';
     if (p.includes('/insights/')) return 'insights';
@@ -2687,6 +2991,7 @@ const SmartRenderer = ({ data, apiPath }) => {
         case 'decision': return <DecisionRenderer data={payload} />;
         case 'product': return <ProductOutcomesRenderer data={payload} />;
         case 'itsm': return <ITSMFactorsRenderer data={payload} />;
+        case 'clienthealth': return <ClientHealthRenderer data={payload} />;
         case 'dtif': return <DtifRenderer data={payload} />;
         case 'forecast': return <ForecastRenderer data={payload} />;
         case 'insights': return <InsightsRenderer data={payload} />;
