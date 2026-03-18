@@ -2167,41 +2167,65 @@ const SubItemRow = ({ item, onDrill }) => (
 );
 
 const SectionCard = ({ section, onSubDrill, onCardDrill, onActionClick, isCEO }) => {
+    const [expanded, setExpanded] = React.useState(false);
     const icon = ICON_MAP[section.icon] || <Briefcase className="w-4 h-4" />;
+
+    /* Status-driven color bar */
+    const statusBarColor = section.overall_status === 'critical' ? '#ef4444'
+        : section.overall_status === 'warning' ? '#f97316'
+            : section.overall_status === 'healthy' ? '#22c55e'
+                : '#94a3b8';
+
     const badgeCls = { healthy: 'bg-green-100 text-green-700', warning: 'bg-amber-100 text-amber-700', critical: 'bg-red-100 text-red-700' }[section.overall_status] || 'bg-slate-100 text-slate-600';
+
     return (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-all">
-            <div className="h-1.5" style={{ backgroundColor: section.color }} />
-            <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-2 border-b border-gray-100">
+            {/* Status-colored top bar */}
+            <div className="h-1.5" style={{ backgroundColor: statusBarColor }} />
+
+            {/* Clickable header — always visible */}
+            <button
+                className="w-full px-4 pt-4 pb-3 flex items-center justify-between gap-2 text-left focus:outline-none"
+                onClick={() => setExpanded(prev => !prev)}
+            >
                 <div className="flex items-center gap-2 min-w-0">
-                    <span style={{ color: section.color }}>{icon}</span>
+                    <span style={{ color: statusBarColor }}>{icon}</span>
                     <h3 className="text-sm font-bold text-gray-900 truncate">{section.label}</h3>
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-lg font-extrabold text-gray-900">{section.overall_score}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>{section.overall_status?.toUpperCase()}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-col items-end gap-1">
+                        <span className="text-lg font-extrabold text-gray-900">{section.overall_score}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>{section.overall_status?.toUpperCase()}</span>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} />
                 </div>
-            </div>
-            <div className="px-4 py-1 flex-1">
-                {section.sub_items?.map(item => <SubItemRow key={item.id} item={item} onDrill={onSubDrill} />)}
-            </div>
-            {section.itsm_action_pills?.length > 0 && (
-                <div className="px-4 pb-3 pt-1 flex flex-wrap gap-1.5">
-                    {section.itsm_action_pills.slice(0, 4).map(p => (
-                        <button key={p.id} onClick={() => onActionClick && onActionClick(p.id, p.label)}
-                            className="flex items-center gap-1 text-[10px] font-semibold border border-gray-200 rounded-full px-2.5 py-1 text-gray-600 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all">
-                            {p.label}{isCEO && <ChevronRight className="w-2.5 h-2.5 opacity-60" />}
+            </button>
+
+            {/* Collapsible body */}
+            {expanded && (
+                <>
+                    <div className="border-t border-gray-100 px-4 py-1 flex-1">
+                        {section.sub_items?.map(item => <SubItemRow key={item.id} item={item} onDrill={onSubDrill} />)}
+                    </div>
+                    {section.itsm_action_pills?.length > 0 && (
+                        <div className="px-4 pb-3 pt-1 flex flex-wrap gap-1.5">
+                            {section.itsm_action_pills.slice(0, 4).map(p => (
+                                <button key={p.id} onClick={(e) => { e.stopPropagation(); onActionClick && onActionClick(p.id, p.label); }}
+                                    className="flex items-center gap-1 text-[10px] font-semibold border border-gray-200 rounded-full px-2.5 py-1 text-gray-600 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all">
+                                    {p.label}{isCEO && <ChevronRight className="w-2.5 h-2.5 opacity-60" />}
+                                </button>
+                            ))}
+                            {section.itsm_action_pills.length > 4 && <span className="text-[10px] text-slate-400 self-center">+{section.itsm_action_pills.length - 4} more</span>}
+                        </div>
+                    )}
+                    {section.drill_down && (
+                        <button onClick={(e) => { e.stopPropagation(); onCardDrill(section.drill_down.api, section.drill_down.label); }}
+                            className="w-full px-4 py-2.5 bg-slate-50 border-t border-gray-100 flex items-center justify-between hover:bg-indigo-50 transition-colors group">
+                            <span className="text-[11px] font-semibold text-slate-500 group-hover:text-indigo-700">{section.drill_down.label}</span>
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500" />
                         </button>
-                    ))}
-                    {section.itsm_action_pills.length > 4 && <span className="text-[10px] text-slate-400 self-center">+{section.itsm_action_pills.length - 4} more</span>}
-                </div>
-            )}
-            {section.drill_down && (
-                <button onClick={() => onCardDrill(section.drill_down.api, section.drill_down.label)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border-t border-gray-100 flex items-center justify-between hover:bg-indigo-50 transition-colors group">
-                    <span className="text-[11px] font-semibold text-slate-500 group-hover:text-indigo-700">{section.drill_down.label}</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500" />
-                </button>
+                    )}
+                </>
             )}
         </div>
     );
@@ -2291,7 +2315,7 @@ const ITSMSearchPage = ({ currentUser, onSearch, onActionClick, onConnectMore, o
                 {!loading && sections.length > 0 && (
                     <div className="mb-10">
                         <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-4">CEO Executive Dashboard</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                             {sections.map(s => <SectionCard key={s.id} section={s} onSubDrill={handleDrill} onCardDrill={handleDrill} onActionClick={onActionClick} isCEO={isCEO} />)}
                         </div>
                     </div>
