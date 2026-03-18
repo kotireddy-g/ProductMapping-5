@@ -1230,73 +1230,96 @@ const RecsRenderer = ({ data }) => {
 
 /* ENGINEERING / TEAM PERFORMANCE */
 const EngRenderer = ({ data }) => {
-    /* API: { data: { context, insight: { metrics, kpis, stage_breakdown, active_deals, rca_events, recommendations, signals, trend } } } */
-    const ctx = data?.context || data?.data?.context || {};
-    const ins = data?.insight || data?.data?.insight || data?.data || data || {};
-    const metrics = ins.metrics || {};
-    const kpis = ins.kpis || [];
-    const stages = ins.stage_breakdown || [];
-    const deals = ins.active_deals || [];
-    const rcaEvts = ins.rca_events || [];
-    const recs = ins.recommendations || [];
-    const signals = ins.signals || [];
-    const trend = ins.trend || [];
+    /* ── Engineering Factors: full-featured renderer ── */
+    const s = data?.summary || {};
+    const engineers = data?.engineers || [];
+    const prAging = data?.pr_aging || [];
+    const burnoutList = data?.burnout_list || [];
+    const velocity = data?.sprint_velocity || [];
+    const kpis = data?.kpis || [];
 
-    const kpiColor = s => s === 'healthy' ? 'text-emerald-600 bg-emerald-50' : s === 'warning' ? 'text-amber-600 bg-amber-50' : s === 'critical' ? 'text-red-600 bg-red-50' : 'text-slate-600 bg-slate-50';
-    const stgColor = s => s === 'critical' ? 'text-red-600' : s === 'warning' ? 'text-amber-600' : 'text-emerald-600';
-    const dealPriColor = p => p === 'P1_CRITICAL' ? 'bg-red-100 text-red-700' : p === 'P2_HIGH' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-600';
+    const [tab, setTab] = React.useState('team');   // 'team' | 'prs' | 'burnout' | 'velocity'
+    const [search, setSearch] = React.useState('');
+    const [deptFilter, setDeptFilter] = React.useState('ALL');
 
-    const [showRec, setShowRec] = React.useState(false);
+    const pillCls = pill => {
+        if (pill === 'pg') return { bg: 'bg-green-100 text-green-800', border: 'border-l-green-500', dot: '#22c55e' };
+        if (pill === 'pa') return { bg: 'bg-amber-100 text-amber-800', border: 'border-l-amber-400', dot: '#f59e0b' };
+        if (pill === 'pr') return { bg: 'bg-red-100 text-red-800', border: 'border-l-red-600', dot: '#ef4444' };
+        return { bg: 'bg-slate-100 text-slate-600', border: 'border-l-slate-300', dot: '#94a3b8' };
+    };
+    const pillLabel = pill => pill === 'pg' ? 'GREEN' : pill === 'pa' ? 'AMBER' : pill === 'pr' ? 'RED' : '—';
+    const kpiStatusCls = st => st === 'critical' ? 'text-red-600 bg-red-50' : st === 'warning' ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50';
+    const priorCls = p => p === 'P1_CRITICAL' ? 'bg-red-600 text-white' : p === 'P2_HIGH' ? 'bg-orange-500 text-white' : p === 'P3_MEDIUM' ? 'bg-amber-400 text-gray-900' : 'bg-slate-100 text-slate-600';
+    const burnoutRingColor = score => score >= 90 ? '#ef4444' : score >= 70 ? '#f59e0b' : '#10b981';
+
+    const BurnoutRing = ({ score }) => {
+        const r = 10, circ = 2 * Math.PI * r;
+        const filled = (score / 100) * circ;
+        const col = burnoutRingColor(score);
+        return (
+            <svg width="28" height="28" viewBox="0 0 28 28">
+                <circle cx="14" cy="14" r={r} fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                <circle cx="14" cy="14" r={r} fill="none" stroke={col} strokeWidth="3"
+                    strokeDasharray={`${filled} ${circ - filled}`}
+                    strokeLinecap="round" transform="rotate(-90 14 14)" />
+                <text x="14" y="18" textAnchor="middle" fontSize="6" fontWeight="700" fill={col}>{Math.round(score)}</text>
+            </svg>
+        );
+    };
+
+    const deps = ['ALL', ...Array.from(new Set(engineers.map(e => e.department_code)))];
+    const filtered = engineers.filter(e => {
+        const matchDept = deptFilter === 'ALL' || e.department_code === deptFilter;
+        const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) || e.emp_code.toLowerCase().includes(search.toLowerCase());
+        return matchDept && matchSearch;
+    });
+
+    const bilGap = s.billable_util_gap ?? 0;
+    const bilCurrent = s.billable_utilization ?? 0;
+    const bilTarget = s.billable_util_target ?? 70;
+
+    const TABS = [
+        { key: 'team', label: `Team (${engineers.length})` },
+        { key: 'prs', label: `Stale PRs (${prAging.length})` },
+        { key: 'burnout', label: `🔥 Burnout (${burnoutList.length})` },
+        { key: 'velocity', label: '🏆 Velocity' },
+    ];
 
     return (
         <div className="space-y-4">
-            {/* ── Header banner ── */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 text-white">
+            {/* ── Summary Banner ── */}
+            <div className="bg-gradient-to-br from-teal-600 to-emerald-700 rounded-2xl p-5 text-white">
                 <div className="flex items-center gap-2 mb-1">
                     <Code2 className="w-4 h-4 opacity-80" />
-                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Team Performance · {ctx.entity_name || 'Engineering Command Center'}</p>
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Engineering Productivity · {s.departments?.join(' · ')}</p>
                 </div>
-                <div className="flex items-end gap-3 mb-3">
-                    <p className="text-4xl font-extrabold">{metrics.dtif_pct?.toFixed(1) ?? ins.dtif_pct?.toFixed(1) ?? '—'}%</p>
-                    <div className="mb-1">
-                        <p className="text-xs font-bold text-emerald-400">DTIF Score</p>
-                        <p className="text-[10px] opacity-60">{ins.title || ins.summary?.slice(0, 80)}</p>
-                    </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
-                        <p className="text-lg font-extrabold">{metrics.on_time_pct?.toFixed(1) ?? '—'}%</p>
-                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">On Time</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
-                        <p className="text-lg font-extrabold">{metrics.in_full_pct?.toFixed(1) ?? '—'}%</p>
-                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">In Full</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
-                        <p className="text-lg font-extrabold">{metrics.active_items ?? '—'}</p>
-                        <p className="text-[10px] opacity-70 mt-0.5 font-semibold">Active Items</p>
+                <div className="flex items-end gap-3 mb-4">
+                    <p className="text-4xl font-extrabold leading-none">{s.total_engineers}</p>
+                    <div>
+                        <p className="text-sm font-semibold opacity-80">Engineers</p>
+                        <p className="text-xs opacity-60">WIP: {s.total_wip} · Done: {s.total_stories_done} · Stale PRs: {s.stale_prs}</p>
                     </div>
                 </div>
-                <div className="flex gap-3 mt-2">
-                    <span className="bg-red-500/30 text-red-200 text-[10px] font-bold px-2 py-0.5 rounded-lg">⚠ {metrics.sla_breach_count ?? 0} SLA Breached</span>
-                    <span className="bg-white/10 text-white/70 text-[10px] font-bold px-2 py-0.5 rounded-lg">Risk Score: {metrics.risk_score ?? '—'}</span>
-                    <span className="bg-emerald-500/30 text-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-lg">Confidence: {ins.confidence ?? '—'}%</span>
+                {/* Billable utilization gap bar */}
+                <div className="mb-3">
+                    <div className="flex justify-between text-[10px] mb-1 opacity-80">
+                        <span className="font-bold">Billable Utilization</span>
+                        <span className="font-extrabold text-red-200">{bilCurrent}% / {bilTarget}% target · GAP {bilGap}%</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-white/20 overflow-hidden relative">
+                        <div className="h-full rounded-full bg-white/80" style={{ width: `${Math.min((bilCurrent / bilTarget) * 100, 100)}%` }} />
+                        {/* Target marker */}
+                        <div className="absolute top-0 bottom-0 w-0.5 bg-yellow-300 opacity-80" style={{ left: '100%' }} />
+                    </div>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                    <BStat label="Sprint DTIF" value={`${s.sprint_dtif_pct}%`} />
+                    <BStat label="PR Bottleneck" value={s.pr_bottleneck_count} />
+                    <BStat label="Burnout Risk" value={s.burnout_risk_count} />
+                    <BStat label="Avg Maker Time" value={`${s.avg_maker_time_pct}%`} />
                 </div>
             </div>
-
-            {/* ── Signals chip list ── */}
-            {signals.length > 0 && (
-                <div>
-                    <SecTitle icon={<Activity className="w-3.5 h-3.5" />} label="Live Signals" />
-                    <div className="space-y-1.5">
-                        {signals.map((s, i) => (
-                            <div key={i} className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-[11px] text-slate-700 leading-snug">
-                                • {s}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
 
             {/* ── KPI Grid ── */}
             {kpis.length > 0 && (
@@ -1304,20 +1327,20 @@ const EngRenderer = ({ data }) => {
                     <SecTitle icon={<BarChart2 className="w-3.5 h-3.5" />} label="Engineering KPIs" />
                     <div className="grid grid-cols-2 gap-2">
                         {kpis.map((k, i) => {
-                            const hitTarget = k.status === 'healthy';
-                            const pct = k.target > 0 ? Math.min((k.current / k.target) * 100, 150) : 0;
-                            const barW = Math.min(pct, 100);
+                            const barW = k.target > 0 ? Math.min((k.current / k.target) * 100, 100) : 0;
+                            const barCol = k.status === 'critical' ? 'bg-red-500' : k.status === 'warning' ? 'bg-amber-400' : 'bg-emerald-500';
                             return (
                                 <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
                                     <div className="flex items-center justify-between mb-1">
                                         <p className="text-[10px] text-slate-500 font-semibold">{k.title}</p>
-                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${kpiColor(k.status)}`}>{k.status?.toUpperCase()}</span>
+                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${kpiStatusCls(k.status)}`}>{k.status?.toUpperCase()}</span>
                                     </div>
                                     <p className="text-xl font-extrabold text-slate-900">{k.current}<span className="text-xs font-normal text-slate-400 ml-1">{k.unit}</span></p>
                                     <div className="mt-1.5 w-full bg-slate-100 rounded-full h-1.5">
-                                        <div className={`h-1.5 rounded-full ${hitTarget ? 'bg-emerald-500' : k.status === 'warning' ? 'bg-amber-400' : 'bg-red-500'}`} style={{ width: `${barW}%` }} />
+                                        <div className={`h-1.5 rounded-full ${barCol}`} style={{ width: `${barW}%` }} />
                                     </div>
-                                    <p className="text-[10px] text-slate-400 mt-1">Target: {k.target} {k.unit}</p>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Target: {k.target} {k.unit}</p>
+                                    {k.definition && <p className="text-[9px] text-slate-300 mt-0.5 leading-tight">{k.definition}</p>}
                                 </div>
                             );
                         })}
@@ -1325,136 +1348,173 @@ const EngRenderer = ({ data }) => {
                 </div>
             )}
 
-            {/* ── Stage Breakdown ── */}
-            {stages.length > 0 && (
-                <div>
-                    <SecTitle icon={<Layers className="w-3.5 h-3.5" />} label="Stage Breakdown" />
-                    <div className="space-y-2">
-                        {stages.map((s, i) => (
-                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.colorHex || '#94a3b8' }} />
-                                        <p className="text-sm font-bold text-slate-900">{s.stageName}</p>
-                                    </div>
-                                    <span className={`text-sm font-extrabold ${stgColor(s.status)}`}>{s.dtifPct?.toFixed(1)}%</span>
-                                </div>
-                                <div className="w-full bg-slate-100 rounded-full h-2 mb-2">
-                                    <div className="h-2 rounded-full bg-red-500/70 transition-all" style={{ width: `${Math.min(s.dtifPct ?? 0, 100)}%` }} />
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="text-center">
-                                        <p className="text-[10px] text-slate-400">On-Time</p>
-                                        <p className="text-xs font-bold text-slate-700">{s.onTimePct?.toFixed(1)}%</p>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-[10px] text-slate-400">In-Full</p>
-                                        <p className="text-xs font-bold text-slate-700">{s.inFullPct?.toFixed(1)}%</p>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-[10px] text-slate-400">Avg Cycle</p>
-                                        <p className="text-xs font-bold text-slate-700">{s.avgCycleHours ? `${s.avgCycleHours.toFixed(0)}h` : '—'}</p>
-                                    </div>
-                                </div>
-                                {s.slaBreachCount > 0 && (
-                                    <p className="text-[10px] text-red-500 font-bold mt-1.5">⚠ {s.slaBreachCount} SLA breaches</p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* ── Active Deals ── */}
-            {deals.length > 0 && (
-                <div>
-                    <SecTitle icon={<DollarSign className="w-3.5 h-3.5" />} label={`${deals.length} Active Deals`} />
-                    <div className="space-y-2">
-                        {deals.map((d, i) => (
-                            <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${dealPriColor(d.priority)}`}>{d.priority?.replace('_', ' ')}</span>
-                                        <span className="text-[10px] font-mono text-slate-400">{d.deal_code}</span>
-                                        <span className="text-[10px] text-slate-400">{d.stage}</span>
-                                    </div>
-                                    <p className="text-xs font-bold text-slate-900">{d.title}</p>
-                                    <div className="flex gap-2 mt-1">
-                                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${d.on_time ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>OT {d.on_time ? '✓' : '✗'}</span>
-                                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${d.in_full ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>IF {d.in_full ? '✓' : '✗'}</span>
-                                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${d.risk_score < 30 ? 'bg-emerald-50 text-emerald-700' : d.risk_score < 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>Risk {d.risk_score?.toFixed(0)}</span>
-                                    </div>
-                                </div>
-                                <div className="shrink-0 text-right">
-                                    <p className="text-sm font-extrabold text-slate-900">{fmtINR(d.value)}</p>
-                                    <p className="text-[10px] text-slate-400">{d.client}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* ── RCA Events ── */}
-            {rcaEvts.length > 0 && (
-                <div>
-                    <SecTitle icon={<AlertTriangle className="w-3.5 h-3.5" />} label="Active RCA Events" />
-                    <div className="space-y-2">
-                        {rcaEvts.map((r, i) => (
-                            <div key={i} className={`bg-white border-l-4 ${r.severity === 'P1' ? 'border-l-red-500' : 'border-l-orange-400'} border border-gray-100 rounded-xl p-3 shadow-sm`}>
-                                <div className="flex items-start justify-between gap-2 mb-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${r.severity === 'P1' ? 'bg-red-600 text-white' : 'bg-orange-500 text-white'}`}>{r.severity}</span>
-                                        <span className="text-[10px] font-mono text-slate-400">{r.rca_id}</span>
-                                    </div>
-                                    <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">DTIF -{r.reason?.dtif_impact_pct?.toFixed(1)}%</span>
-                                </div>
-                                <p className="text-xs font-bold text-slate-900 leading-snug">{r.reason?.title}</p>
-                                <p className="text-[11px] text-slate-500 mt-1 leading-snug">{r.action?.display_text?.slice(0, 120)}…</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* ── Recommendations ── */}
-            {recs.length > 0 && (
-                <div>
-                    <button className="w-full flex items-center justify-between py-1" onClick={() => setShowRec(v => !v)}>
-                        <SecTitle icon={<Lightbulb className="w-3.5 h-3.5" />} label={`${recs.length} Recommendations`} />
-                        <span className="text-slate-400 text-xs">{showRec ? '▲' : '▼'}</span>
+            {/* ── Tabs ── */}
+            <div className="flex overflow-x-auto gap-1 pb-1">
+                {TABS.map(t => (
+                    <button key={t.key} onClick={() => setTab(t.key)}
+                        className={`shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors ${tab === t.key ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                        {t.label}
                     </button>
-                    {showRec && (
-                        <div className="space-y-2 mt-2">
-                            {recs.map((r, i) => (
-                                <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
-                                    <div className="flex gap-2 flex-wrap mb-1">
-                                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${r.severity === 'high' ? 'bg-orange-500 text-white' : 'bg-amber-400 text-gray-900'}`}>{r.severity?.toUpperCase()}</span>
-                                        <span className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">{r.category?.replace('_', ' ')}</span>
-                                    </div>
-                                    <p className="text-xs font-bold text-slate-900 leading-snug">{r.name}</p>
-                                    <p className="text-[11px] text-slate-500 mt-1">{r.details}</p>
-                                    {r.signals && (
-                                        <div className="flex flex-wrap gap-1 mt-1.5">
-                                            {r.signals.slice(0, 3).map((s, si) => (
-                                                <span key={si} className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded">{s}</span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                ))}
+            </div>
+
+            {/* ── Team Tab ── */}
+            {tab === 'team' && (
+                <div>
+                    {/* Search + dept filter */}
+                    <div className="flex gap-2 mb-3">
+                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search engineer…"
+                            className="flex-1 text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-teal-400" />
+                        <div className="flex gap-1 overflow-x-auto">
+                            {deps.map(d => (
+                                <button key={d} onClick={() => setDeptFilter(d)}
+                                    className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg transition-colors ${deptFilter === d ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-500'}`}>{d}</button>
                             ))}
                         </div>
-                    )}
+                    </div>
+                    <div className="space-y-2">
+                        {filtered.map(e => {
+                            const pc = pillCls(e.status_pill);
+                            return (
+                                <div key={e.emp_code} className={`bg-white border-l-4 ${pc.border} border border-gray-100 rounded-xl px-3 py-2.5 shadow-sm`}>
+                                    <div className="flex items-start gap-2.5">
+                                        {/* Burnout ring */}
+                                        <div className="shrink-0 mt-0.5">
+                                            <BurnoutRing score={e.burnout_score} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                                <span className="text-[11px] font-extrabold text-slate-800">{e.name}</span>
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pc.bg}`}>{pillLabel(e.status_pill)}</span>
+                                                {e.burnout_risk && <span className="text-[10px] bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded-full">🔥 BURNOUT</span>}
+                                                <span className="text-[10px] text-slate-400 font-mono">{e.emp_code}</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-500">{e.role} · {e.department_code} · {e.attendance}</p>
+                                            {/* Utilization bar */}
+                                            <div className="flex items-center gap-1.5 mt-1.5">
+                                                <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                                    <div className="h-full rounded-full" style={{ width: `${Math.min(e.utilization_pct, 100)}%`, backgroundColor: pc.dot }} />
+                                                </div>
+                                                <span className="text-[10px] font-bold shrink-0" style={{ color: pc.dot }}>{e.utilization_pct}%</span>
+                                            </div>
+                                            {/* Story stats */}
+                                            <div className="flex gap-2 mt-1 flex-wrap">
+                                                {e.stories_done > 0 && <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded">✓ {e.stories_done} done</span>}
+                                                {e.stories_in_progress > 0 && <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded">⚡ {e.stories_in_progress} WIP</span>}
+                                                {e.stories_blocked > 0 && <span className="text-[10px] bg-red-50 text-red-700 font-bold px-1.5 py-0.5 rounded">🚫 {e.stories_blocked} blocked</span>}
+                                                {e.story_points_done > 0 && <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded">{e.story_points_done} SP</span>}
+                                                <span className="text-[10px] text-slate-400">Maker: {e.maker_time_pct}%</span>
+                                            </div>
+                                            {/* Source evidence */}
+                                            {e.source_evidence?.length > 0 && (
+                                                <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                                                    {e.source_evidence.map((ev, ei) => (
+                                                        <span key={ei} className="text-[10px] bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded-lg border border-slate-100">{ev.icon} {ev.description}</span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {filtered.length === 0 && <p className="text-center text-slate-400 text-xs py-6">No engineers match filters</p>}
+                    </div>
                 </div>
             )}
 
-            {/* ── DTIF Trend chart ── */}
-            {trend.length > 1 && (
-                <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                    <SecTitle icon={<TrendingUp className="w-3.5 h-3.5" />} label="DTIF Trend" />
-                    <TrendChart data={trend} xKey="date" yKey="dtif_pct" color="#6366f1" />
+            {/* ── Stale PRs Tab ── */}
+            {tab === 'prs' && (
+                <div className="space-y-2">
+                    {prAging.map((pr, i) => {
+                        const isP1 = pr.priority === 'P1_CRITICAL';
+                        return (
+                            <div key={i} className={`bg-white border-l-4 ${isP1 ? 'border-l-red-600' : 'border-l-orange-400'} border border-gray-100 rounded-xl px-3 py-2.5 shadow-sm`}>
+                                <div className="flex items-start gap-2 justify-between">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                            <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${priorCls(pr.priority)}`}>{pr.priority?.replace('_', ' ')}</span>
+                                            <span className="text-[10px] font-mono text-slate-400">{pr.story_key}</span>
+                                            <span className="text-[10px] font-bold text-red-600">{pr.days_in_review}d stale</span>
+                                            <span className="text-[10px] text-slate-400">{pr.story_points} SP</span>
+                                        </div>
+                                        <p className="text-xs font-semibold text-slate-900 leading-snug">{pr.title}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">by {pr.author}</p>
+                                    </div>
+                                    {pr.github_pr_url && (
+                                        <a href={pr.github_pr_url} target="_blank" rel="noreferrer"
+                                            className="shrink-0 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg hover:bg-indigo-100 transition-colors">
+                                            View PR →
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {prAging.length === 0 && <p className="text-center text-slate-400 text-xs py-6">No stale PRs 🎉</p>}
                 </div>
             )}
+
+            {/* ── Burnout Tab ── */}
+            {tab === 'burnout' && (
+                <div className="space-y-2">
+                    {burnoutList.map((e, i) => {
+                        const pc = pillCls(e.status_pill);
+                        return (
+                            <div key={i} className={`bg-white border-l-4 border-l-red-500 border border-gray-100 rounded-xl px-3 py-2.5 shadow-sm`}>
+                                <div className="flex items-center gap-2.5">
+                                    <BurnoutRing score={e.burnout_score} />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="text-[11px] font-extrabold text-slate-800">{e.name}</span>
+                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pc.bg}`}>{e.health_status}</span>
+                                            <span className="text-[10px] font-mono text-slate-400">{e.emp_code}</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500">{e.role} · {e.department_code} · Utilization {e.utilization_pct}%</p>
+                                        <div className="flex gap-2 mt-1 flex-wrap">
+                                            {e.stories_blocked > 0 && <span className="text-[10px] bg-red-50 text-red-700 font-bold px-1.5 py-0.5 rounded">🚫 {e.stories_blocked} blocked</span>}
+                                            {e.stories_in_progress > 0 && <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded">⚡ {e.stories_in_progress} WIP</span>}
+                                            <span className="text-[10px] text-slate-400">Maker: {e.maker_time_pct}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {burnoutList.length === 0 && <p className="text-center text-slate-400 text-xs py-6">No burnout risks detected 🎉</p>}
+                </div>
+            )}
+
+            {/* ── Velocity Leaderboard Tab ── */}
+            {tab === 'velocity' && (
+                <div className="space-y-2">
+                    <SecTitle icon={<TrendingUp className="w-3.5 h-3.5" />} label="Sprint Velocity Leaderboard (Story Points)" />
+                    {velocity.map((v, i) => {
+                        const maxSP = velocity[0]?.story_points || 1;
+                        const barPct = (v.story_points / maxSP) * 100;
+                        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+                        return (
+                            <div key={i} className="bg-white border border-gray-100 rounded-xl px-3 py-2.5 shadow-sm">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm shrink-0 w-6 text-center">{medal}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between text-[11px] mb-1">
+                                            <span className="font-bold text-slate-900">{v.name}</span>
+                                            <span className="font-extrabold text-indigo-600">{v.story_points} SP {v.wip > 0 && <span className="text-[10px] text-slate-400 font-normal">· {v.wip} WIP</span>}</span>
+                                        </div>
+                                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                            <div className="h-full rounded-full bg-indigo-500" style={{ width: `${barPct}%` }} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {velocity.length === 0 && <p className="text-center text-slate-400 text-xs py-6">No velocity data</p>}
+                </div>
+            )}
+
+            {data?.as_of && <p className="text-[10px] text-slate-300 text-right font-mono">as of {data.as_of?.slice(0, 16).replace('T', ' ')} UTC</p>}
         </div>
     );
 };
@@ -2965,6 +3025,7 @@ const detectType = p => {
     if (p.includes('/notifications/')) return 'notif';
     if (p.includes('/pr-aging/')) return 'pr';
     if (p.includes('/command-center/')) return 'eng';
+    if (p.includes('/engineering/')) return 'eng';
     if (p.includes('/decision-actions/')) return 'decision';
     if (p.includes('/product/')) return 'product';
     if (p.includes('/itsm/')) return 'itsm';
