@@ -2296,17 +2296,7 @@ const ITSMSearchPage = ({ currentUser, onSearch, onActionClick, onConnectMore, o
                         </div>
                     </div>
                 )}
-                {!loading && agent && (
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-5 shadow-sm">
-                        <div className="flex items-center gap-2 mb-1"><Zap className="w-4 h-4 text-indigo-500" /><h2 className="text-sm font-bold text-indigo-900">{agent.title}</h2></div>
-                        <p className="text-xs text-indigo-600 mb-4">{agent.description}</p>
-                        <div className="flex flex-col lg:flex-row gap-3">
-                            <AgentCol title={agent.actionable_insights?.label} tags={agent.actionable_insights?.tags} tagColor="bg-red-100 text-red-700" items={agent.actionable_insights?.items} />
-                            <AgentCol title={agent.actionable_labels?.label} tags={agent.actionable_labels?.tags} tagColor="bg-amber-100 text-amber-700" items={agent.actionable_labels?.items} />
-                            <AgentCol title={agent.actionable_recommendations?.label} tags={agent.actionable_recommendations?.tags} tagColor="bg-green-100 text-green-700" items={agent.actionable_recommendations?.items} />
-                        </div>
-                    </div>
-                )}
+
             </main>
             <DrillDownPanel open={panel.open} title={panel.title} apiPath={panel.api} onClose={() => setPanel({ open: false, title: '', api: '' })} />
         </div>
