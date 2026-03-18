@@ -2058,9 +2058,240 @@ const GenericRenderer = ({ data }) => {
     return <p className="text-sm text-slate-800">{String(data)}</p>;
 };
 
-/* ── Smart Dispatcher ── */
+
+/* ── Portfolio Overview Renderer ── */
+const PortfolioRenderer = ({ data }) => {
+    const s = data.summary || {};
+    const stages = data.stage_distribution || [];
+    const projects = data.projects || [];
+    const rcas = data.rca_highlights || [];
+    const burnout = data.burnout_engineers || [];
+    const [expandedRca, setExpandedRca] = React.useState(null);
+
+    const totalStage = stages.reduce((a, b) => a + b.count, 0) || 1;
+
+    const hpillCls = pill => {
+        const v = String(pill || '').toLowerCase();
+        if (v === 'pg') return 'bg-green-100 text-green-800';
+        if (v === 'pa') return 'bg-amber-100 text-amber-800';
+        if (v === 'pr') return 'bg-red-100 text-red-800';
+        return 'bg-slate-100 text-slate-600';
+    };
+    const hpillLabel = pill => {
+        if (pill === 'pg') return 'HEALTHY';
+        if (pill === 'pa') return 'AT RISK';
+        if (pill === 'pr') return 'CRITICAL';
+        return pill?.toUpperCase() || '—';
+    };
+    const rcaSevCls = sev => {
+        if (sev === 'CRITICAL') return { border: 'border-l-red-600', badge: 'bg-red-600 text-white' };
+        if (sev === 'HIGH') return { border: 'border-l-orange-500', badge: 'bg-orange-500 text-white' };
+        if (sev === 'MEDIUM') return { border: 'border-l-amber-400', badge: 'bg-amber-400 text-gray-900' };
+        return { border: 'border-l-slate-300', badge: 'bg-slate-200 text-slate-700' };
+    };
+
+    return (
+        <div className="space-y-5">
+            {/* ── Summary Banner ── */}
+            <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                    <Briefcase className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Portfolio Overview</p>
+                </div>
+                <div className="flex items-end gap-3 mb-4">
+                    <p className="text-4xl font-extrabold leading-none">{s.portfolio_dtif ?? '—'}</p>
+                    <div>
+                        <p className="text-sm font-semibold opacity-80">Portfolio DTIF</p>
+                        <p className="text-xs opacity-60">Target: {s.dtif_target}% · Gap: <span className="font-bold text-red-300">{s.dtif_gap}%</span></p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                    <BStat label="Projects On Track" value={`${s.projects_on_track} / ${s.total_projects}`} />
+                    <BStat label="Pipeline Value" value={s.pipeline_value_cr != null ? `₹${s.pipeline_value_cr}Cr` : '—'} />
+                    <BStat label="Active Deals" value={`${s.active_deals} (${s.at_risk_deals} at risk)`} />
+                    <BStat label="Revenue at Risk" value={s.revenue_risk_fmt || '—'} />
+                    <BStat label="SLA Compliance" value={s.sla_compliance_pct != null ? `${s.sla_compliance_pct}%` : '—'} />
+                    <BStat label="Open RCAs" value={s.open_rcas?.total ?? '—'} />
+                </div>
+            </div>
+
+            {/* ── Stage Distribution ── */}
+            {stages.length > 0 && (
+                <div>
+                    <SecTitle icon={<Layers className="w-3.5 h-3.5" />} label="Stage Distribution" />
+                    <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+                        <div className="flex h-3 rounded-full overflow-hidden gap-0.5 mb-3">
+                            {stages.map(st => (
+                                <div key={st.stage} className="h-full" style={{ width: `${(st.count / totalStage) * 100}%`, backgroundColor: st.color }} />
+                            ))}
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                            {stages.map(st => (
+                                <div key={st.stage} className="flex items-center gap-1.5">
+                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: st.color }} />
+                                    <span className="text-xs text-slate-600 capitalize font-medium">{st.stage}</span>
+                                    <span className="text-xs font-bold text-slate-900">{st.count}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Projects ── */}
+            {projects.length > 0 && (
+                <div>
+                    <SecTitle icon={<Briefcase className="w-3.5 h-3.5" />} label={`${projects.length} Projects`} />
+                    <div className="space-y-2.5">
+                        {projects.map((p, i) => {
+                            const hp = hpillCls(p.health_pill);
+                            return (
+                                <div key={p.project_code || i} className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                                    <div className="px-4 py-3 flex items-start justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-[10px] font-mono font-bold text-slate-400">{p.project_code}</span>
+                                                {p.current_stage && <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{p.current_stage}</span>}
+                                                {p.open_rca_count > 0 && <span className="text-[10px] bg-red-50 text-red-600 font-bold px-1.5 py-0.5 rounded">⚠ {p.open_rca_code}</span>}
+                                            </div>
+                                            <p className="text-sm font-bold text-gray-900 mt-0.5">{p.project_name}</p>
+                                            <p className="text-[11px] text-slate-400 mt-0.5">{p.client_name}</p>
+                                        </div>
+                                        <div className="shrink-0 flex flex-col items-end gap-1">
+                                            <span className="text-xl font-extrabold text-gray-900">{p.health_score?.toFixed(1)}</span>
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hp}`}>{hpillLabel(p.health_pill)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="px-4 pb-3 flex items-center justify-between">
+                                        <div className="flex gap-1">
+                                            {p.source_badges?.map(b => (
+                                                <span key={b.src} className="text-sm" title={b.src}>{b.icon}</span>
+                                            ))}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-slate-400">DTIF {p.dtif_pct?.toFixed(1)}%</span>
+                                            {p.deal_value && p.deal_value !== '₹0' && <span className="text-[10px] font-bold text-indigo-600">{p.deal_value}</span>}
+                                        </div>
+                                    </div>
+                                    {/* Health bar */}
+                                    <div className="h-1" style={{ background: p.health_pill === 'pg' ? '#22c55e' : p.health_pill === 'pa' ? '#f59e0b' : '#ef4444', width: `${p.health_score || 0}%` }} />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* ── RCA Highlights ── */}
+            {rcas.length > 0 && (
+                <div>
+                    <SecTitle icon={<Flame className="w-3.5 h-3.5" />} label={`${rcas.length} RCA Highlights`} />
+                    <div className="space-y-3">
+                        {rcas.map((r, i) => {
+                            const cls = rcaSevCls(r.severity);
+                            const isExp = expandedRca === r.rca_code;
+                            const opts = r.recommended_options || [];
+                            const why = r.why_chain || [];
+                            return (
+                                <div key={r.rca_code || i} className={`bg-white border border-l-4 ${cls.border} border-gray-100 rounded-xl shadow-sm overflow-hidden`}>
+                                    <button className="w-full px-4 pt-3 pb-3 text-left" onClick={() => setExpandedRca(isExp ? null : r.rca_code)}>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${cls.badge}`}>{r.severity}</span>
+                                                    <span className="text-[10px] font-mono text-slate-400">{r.rca_code}</span>
+                                                    <span className="text-[10px] text-slate-400">{r.department}</span>
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-900 leading-snug">{r.title}</p>
+                                            </div>
+                                            <div className="shrink-0 flex flex-col items-end gap-1">
+                                                {r.dtif_impact_pct != null && <span className="text-xs font-extrabold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg">DTIF -{r.dtif_impact_pct}%</span>}
+                                                <span className="text-[10px] bg-red-50 text-red-700 font-bold px-2 py-0.5 rounded">{r.financial_risk_fmt}</span>
+                                                <span className="text-slate-300 text-xs mt-1">{isExp ? '▲' : '▼'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5 mt-2">
+                                            <span className="bg-slate-50 text-slate-500 text-[10px] px-2 py-0.5 rounded-lg">{r.stage} · {r.confidence_pct}% confidence</span>
+                                        </div>
+                                    </button>
+                                    {isExp && (
+                                        <div className="border-t border-slate-100">
+                                            {why.length > 0 && (
+                                                <div className="px-4 py-3 border-b border-slate-100">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">5-Why Chain</p>
+                                                    <div className="space-y-2">
+                                                        {why.map((w, wi) => (
+                                                            <div key={wi} className="flex gap-2">
+                                                                <span className="text-[10px] font-extrabold text-indigo-400 shrink-0 mt-0.5">#{w.level}</span>
+                                                                <p className="text-xs text-slate-700 leading-relaxed">{w.text}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {opts.length > 0 && (
+                                                <div className="px-4 py-3">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Recommended Actions</p>
+                                                    <div className="space-y-2">
+                                                        {opts.map((o, oi) => (
+                                                            <div key={oi} className="bg-white border border-gray-100 rounded-xl p-3 flex items-start justify-between gap-2">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <span className="text-[10px] font-bold text-indigo-500">{o.rank_label}</span>
+                                                                    <p className="text-xs font-semibold text-slate-800 mt-0.5">{o.label}</p>
+                                                                    <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                                                                        {o.metric_pills?.map((mp, mi) => (
+                                                                            <span key={mi} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hpillCls(mp.class)}`}>{mp.label}</span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                                <button className="shrink-0 text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap">{o.cta_label}</button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Burnout Risk Engineers ── */}
+            {burnout.length > 0 && (
+                <div>
+                    <SecTitle icon={<Flame className="w-3.5 h-3.5" />} label={`${burnout.length} Engineers at Risk`} />
+                    <div className="space-y-2">
+                        {burnout.map((e, i) => (
+                            <div key={e.emp_code || i} className="bg-white border border-amber-100 rounded-xl px-4 py-3 flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900">{e.name}</p>
+                                    <p className="text-[10px] text-slate-400">{e.role?.replace(/_/g, ' ')} · {e.emp_code}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="text-right">
+                                        <p className="text-lg font-extrabold text-amber-600">{e.utilization_pct?.toFixed(1)}%</p>
+                                        <p className="text-[10px] text-slate-400">Utilization</p>
+                                    </div>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${hpillCls(e.pill_class)}`}>{e.health_status}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {data.as_of && <p className="text-[10px] text-slate-300 text-right font-mono">as of {data.as_of?.slice(0, 16).replace('T', ' ')} UTC</p>}
+        </div>
+    );
+};
+
+
 const detectType = p => {
     if (!p) return 'generic';
+    if (p.includes('/portfolio/')) return 'portfolio';
     if (p.includes('/deals/')) return 'deals';
     if (p.includes('/rca/')) return 'rca';
     if (p.includes('/opi/')) return 'opi';
@@ -2080,7 +2311,9 @@ const SmartRenderer = ({ data, apiPath }) => {
     if (!data) return <p className="text-sm text-slate-400 text-center py-12">No data returned</p>;
     const payload = data?.data ?? data;
     switch (detectType(apiPath || '')) {
+        case 'portfolio': return <PortfolioRenderer data={payload} />;
         case 'deals': return <DealsRenderer data={payload} />;
+
         case 'rca': return <RcaRenderer data={payload} />;
         case 'opi': return <OpiRenderer data={payload} />;
         case 'recs': return <RecsRenderer data={payload} />;
