@@ -3,7 +3,7 @@ import {
     Search, Mic, Plus, CheckCircle2, Loader2, AlertTriangle,
     Briefcase, Users, Code2, Monitor, Shield, Brain, Bell, BarChart2,
     ChevronRight, Zap, X, RefreshCw, TrendingUp, TrendingDown,
-    AlertCircle, Clock, GitPullRequest, Activity, Target, Lightbulb, DollarSign, Flame, Layers,
+    AlertCircle, Clock, GitPullRequest, Activity, Target, Lightbulb, DollarSign, Flame, Layers, MessageSquare,
 } from 'lucide-react';
 import { AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import ceoItsmService from '../../services/ceoItsmService';
@@ -2289,6 +2289,369 @@ const PortfolioRenderer = ({ data }) => {
 };
 
 
+/* ── Product Outcomes Renderer ── */
+const ProductOutcomesRenderer = ({ data }) => {
+    const s = data.summary || {};
+    const journeys = data.screen_journeys || [];
+    const lowVal = data.low_value_features || [];
+    const [expandedProj, setExpandedProj] = React.useState(null);
+
+    const pillCls = pill => {
+        const v = String(pill || '').toLowerCase();
+        if (v === 'pg') return { bg: 'bg-green-100 text-green-800', bar: '#22c55e' };
+        if (v === 'pa') return { bg: 'bg-amber-100 text-amber-800', bar: '#f59e0b' };
+        if (v === 'pr') return { bg: 'bg-red-100 text-red-800', bar: '#ef4444' };
+        return { bg: 'bg-slate-100 text-slate-600', bar: '#94a3b8' };
+    };
+    const statusLabel = pill => {
+        if (pill === 'pg') return 'HEALTHY';
+        if (pill === 'pa') return 'AT RISK';
+        if (pill === 'pr') return 'CRITICAL';
+        return '—';
+    };
+    const sentimentCls = s => {
+        if (s === 'BLOCKER') return 'bg-red-600 text-white';
+        if (s === 'NEGATIVE') return 'bg-red-100 text-red-700';
+        if (s === 'POSITIVE') return 'bg-green-100 text-green-700';
+        return 'bg-slate-100 text-slate-600';
+    };
+
+    return (
+        <div className="space-y-5">
+            {/* Summary Banner */}
+            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                    <Monitor className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Product Outcomes</p>
+                </div>
+                <div className="flex items-end gap-3 mb-4">
+                    <p className="text-4xl font-extrabold leading-none">{s.avg_feature_adoption_pct ?? '—'}%</p>
+                    <div>
+                        <p className="text-sm font-semibold opacity-80">Avg Feature Adoption</p>
+                        <p className="text-xs opacity-60">Target: {s.adoption_target_pct}% · Drop-off: <span className="font-bold text-red-300">{s.avg_dropoff_pct}%</span></p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5">
+                    <BStat label="Total Features" value={s.total_features} />
+                    <BStat label="Critical Screens" value={s.critical_screens} />
+                    <BStat label="P1 Defects" value={s.p1_defects} />
+                    <BStat label="P2 Defects" value={s.p2_defects} />
+                    <BStat label="Low-Value" value={s.low_value_features} />
+                    <BStat label="Projects" value={s.projects_with_ui_data} />
+                </div>
+            </div>
+
+            {/* Low-Value Feature Callout */}
+            {lowVal.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                    <SecTitle icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-600" />} label={`${lowVal.length} Low-Value Features Flagged`} />
+                    <div className="space-y-2 mt-2">
+                        {lowVal.map((f, i) => (
+                            <div key={f.feature_code || i} className="bg-white border border-amber-100 rounded-xl px-3 py-2.5 flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-[10px] font-mono text-slate-400">{f.feature_code}</span>
+                                        <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">{f.project_code}</span>
+                                    </div>
+                                    <p className="text-xs font-semibold text-slate-800 mt-0.5">{f.feature_name}</p>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">{f.recommendation}</p>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                    <p className="text-sm font-extrabold text-amber-600">{f.completion_pct}%</p>
+                                    <p className="text-[10px] text-slate-400">{f.sp_planned} SP</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Project Journeys */}
+            {journeys.length > 0 && (
+                <div>
+                    <SecTitle icon={<Layers className="w-3.5 h-3.5" />} label={`${journeys.length} Project Journeys`} />
+                    <div className="space-y-2.5">
+                        {journeys.map((j, ji) => {
+                            const isExp = expandedProj === j.project_code;
+                            const screens = j.screens || [];
+                            const critCount = j.critical_screens || 0;
+                            const amberCount = j.amber_screens || 0;
+                            const greenCount = screens.length - critCount - amberCount;
+                            return (
+                                <div key={j.project_code || ji} className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                                    <button className="w-full px-4 py-3 text-left" onClick={() => setExpandedProj(isExp ? null : j.project_code)}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[11px] font-extrabold text-slate-800">{j.project_code}</span>
+                                                <span className="text-[10px] text-slate-400">{screens.length} features</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                {critCount > 0 && <span className="text-[10px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{critCount} CRIT</span>}
+                                                {amberCount > 0 && <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{amberCount} AMBER</span>}
+                                                {greenCount > 0 && <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{greenCount} OK</span>}
+                                                <span className="text-slate-300 ml-1">{isExp ? '▲' : '▼'}</span>
+                                            </div>
+                                        </div>
+                                        {/* Adoption mini bar */}
+                                        <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                            <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+                                                style={{ width: `${screens.length ? (screens.reduce((a, x) => a + (x.adoption_pct || 0), 0) / screens.length) : 0}%` }} />
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">
+                                            avg adoption {screens.length ? (screens.reduce((a, x) => a + (x.adoption_pct || 0), 0) / screens.length).toFixed(1) : 0}%
+                                        </p>
+                                    </button>
+                                    {isExp && (
+                                        <div className="border-t border-slate-100">
+                                            {screens.map((sc, si) => {
+                                                const pc = pillCls(sc.health_pill);
+                                                return (
+                                                    <div key={sc.feature_code || si} className="px-4 py-3 border-b border-slate-50 last:border-0">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                                    <span className="text-[10px] font-mono text-slate-400">{sc.feature_code}</span>
+                                                                    {sc.p1_bugs > 0 && <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded">P1 BUG</span>}
+                                                                    {sc.teams_sentiment === 'BLOCKER' && <span className="text-[10px] bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded">🚨 BLOCKER</span>}
+                                                                </div>
+                                                                <p className="text-xs font-semibold text-slate-800 mt-0.5">{sc.feature_name}</p>
+                                                                <p className="text-[10px] text-slate-400">{sc.assignee} · {sc.jira_ticket}</p>
+                                                            </div>
+                                                            <div className="shrink-0 text-right">
+                                                                <p className="text-base font-extrabold text-slate-900">{sc.adoption_pct}%</p>
+                                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pc.bg}`}>{statusLabel(sc.health_pill)}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-2 flex items-center gap-2">
+                                                            <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                                                <div className="h-full rounded-full" style={{ width: `${sc.adoption_pct || 0}%`, backgroundColor: pc.bar }} />
+                                                            </div>
+                                                            <div className="flex gap-1">
+                                                                {sc.src_badges?.map(b => <span key={b.src} className="text-[10px] font-bold text-slate-400" title={b.src}>{b.src === 'JIRA' ? '📋' : b.src === 'GITHUB' ? '🐙' : b.src === 'TEAMS' ? '💬' : b.src === 'FINANCE' ? '💰' : b.src === 'BIOMETRIC' ? '👆' : '•'}</span>)}
+                                                            </div>
+                                                        </div>
+                                                        {sc.open_bugs > 0 && <p className="text-[10px] text-red-500 mt-1">{sc.open_bugs} open bug(s) · {sc.sp_done}/{sc.sp_planned} SP done</p>}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {data.as_of && <p className="text-[10px] text-slate-300 text-right font-mono">as of {data.as_of?.slice(0, 16).replace('T', ' ')} UTC</p>}
+        </div>
+    );
+};
+
+
+/* ── ITSM Factors Renderer ── */
+const ITSMFactorsRenderer = ({ data }) => {
+    const s = data.summary || {};
+    const incidents = data.incidents || [];
+    const slaItems = data.sla_countdown || [];
+    const threads = data.blocker_threads || [];
+    const [expandedInc, setExpandedInc] = React.useState(null);
+
+    const sevCls = sev => {
+        if (sev === 'P1' || sev === 'CRITICAL') return { border: 'border-l-red-600', badge: 'bg-red-600 text-white', text: 'text-red-600' };
+        if (sev === 'P2' || sev === 'HIGH') return { border: 'border-l-orange-500', badge: 'bg-orange-500 text-white', text: 'text-orange-600' };
+        if (sev === 'P3' || sev === 'MEDIUM') return { border: 'border-l-amber-400', badge: 'bg-amber-400 text-gray-900', text: 'text-amber-600' };
+        return { border: 'border-l-slate-300', badge: 'bg-slate-200 text-slate-700', text: 'text-slate-500' };
+    };
+    const pillCls = pill => {
+        if (pill === 'pg') return 'bg-green-100 text-green-800';
+        if (pill === 'pa') return 'bg-amber-100 text-amber-800';
+        if (pill === 'pr') return 'bg-red-100 text-red-800';
+        return 'bg-slate-100 text-slate-600';
+    };
+    const urgencyIcon = u => u === 'CRITICAL' ? '🚨' : u === 'HIGH' ? '⚠️' : u === 'NORMAL' ? '⚡' : '•';
+
+    return (
+        <div className="space-y-5">
+            {/* Summary Banner */}
+            <div className="bg-gradient-to-br from-rose-600 to-red-700 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">ITSM Factors</p>
+                </div>
+                <div className="flex items-end gap-3 mb-4">
+                    <p className="text-4xl font-extrabold leading-none">{s.sla_compliance_pct ?? '—'}%</p>
+                    <div>
+                        <p className="text-sm font-semibold opacity-80">SLA Compliance</p>
+                        <p className="text-xs opacity-60">Target: {s.sla_target_pct}% · At Risk: <span className="font-bold text-red-300">{s.at_sla_risk}</span></p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5">
+                    <BStat label="Open Incidents" value={s.open_incidents} />
+                    <BStat label="P1 Critical" value={s.p1_incidents} />
+                    <BStat label="P2 High" value={s.p2_incidents} />
+                    <BStat label="MTTA" value={`${s.avg_mtta_hours}h`} />
+                    <BStat label="MTTR" value={`${s.avg_mttr_hours}h`} />
+                    <BStat label="Change Success" value={`${s.change_success_pct}%`} />
+                </div>
+                {/* MTTA/MTTR bars */}
+                <div className="mt-3 space-y-1.5">
+                    <div>
+                        <div className="flex justify-between text-[10px] opacity-70 mb-0.5"><span>MTTA {s.avg_mtta_hours}h</span><span>Target {s.mtta_target_hours}h</span></div>
+                        <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${Math.min(100, (s.mtta_target_hours / Math.max(s.avg_mtta_hours, 0.1)) * 100)}%`, backgroundColor: s.avg_mtta_hours <= s.mtta_target_hours ? '#4ade80' : '#fbbf24' }} />
+                        </div>
+                    </div>
+                    <div>
+                        <div className="flex justify-between text-[10px] opacity-70 mb-0.5"><span>MTTR {s.avg_mttr_hours}h</span><span>Target {s.mttr_target_hours}h</span></div>
+                        <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${Math.min(100, (s.mttr_target_hours / Math.max(s.avg_mttr_hours, 0.1)) * 100)}%`, backgroundColor: s.avg_mttr_hours <= s.mttr_target_hours ? '#4ade80' : '#fbbf24' }} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* SLA Countdown */}
+            {slaItems.length > 0 && (
+                <div>
+                    <SecTitle icon={<Clock className="w-3.5 h-3.5" />} label={`${slaItems.length} Milestone SLA Countdowns`} />
+                    <div className="space-y-2">
+                        {slaItems.map((m, i) => (
+                            <div key={m.milestone_code || i} className="bg-white border border-amber-100 border-l-4 border-l-amber-400 rounded-xl px-4 py-3">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-[10px] font-mono font-bold text-slate-400">{m.milestone_code}</span>
+                                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">{m.project_code}</span>
+                                        </div>
+                                        <p className="text-xs font-bold text-slate-800 mt-0.5">{m.title}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{m.risk_reason}</p>
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <p className="text-base font-extrabold text-red-600">{m.days_to_due}d</p>
+                                        <p className="text-[10px] text-slate-400">left</p>
+                                        <p className="text-[10px] font-bold text-indigo-600 mt-1">{m.amount}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Open Incidents */}
+            {incidents.length > 0 && (
+                <div>
+                    <SecTitle icon={<Flame className="w-3.5 h-3.5" />} label={`${incidents.length} Open Incidents`} />
+                    <div className="space-y-3">
+                        {incidents.map((inc, i) => {
+                            const sc = sevCls(inc.severity);
+                            const isExp = expandedInc === inc.incident_id;
+                            const why = inc.why_chain || [];
+                            const opts = inc.recommended_options || [];
+                            const evidence = inc.source_evidence || [];
+                            return (
+                                <div key={inc.incident_id || i} className={`bg-white border border-l-4 ${sc.border} border-gray-100 rounded-xl shadow-sm overflow-hidden`}>
+                                    <button className="w-full px-4 pt-3 pb-3 text-left" onClick={() => setExpandedInc(isExp ? null : inc.incident_id)}>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${sc.badge}`}>{inc.severity} · {inc.severity_label}</span>
+                                                    <span className="text-[10px] font-mono text-slate-400">{inc.incident_id}</span>
+                                                    <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{inc.project_code}</span>
+                                                </div>
+                                                <p className="text-xs font-bold text-slate-900 leading-snug">{inc.title}</p>
+                                                <p className="text-[10px] text-slate-400 mt-1">{inc.department} · Age: {inc.age_hours?.toFixed(1)}h · MTTA: {inc.mtta_hours}h</p>
+                                            </div>
+                                            <div className="shrink-0 flex flex-col items-end gap-1">
+                                                {inc.financial_risk && inc.financial_risk !== '₹0' && <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">{inc.financial_risk}</span>}
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pillCls(inc.sla_pill)}`}>SLA</span>
+                                                <span className="text-slate-300 text-xs">{isExp ? '▲' : '▼'}</span>
+                                            </div>
+                                        </div>
+                                        {evidence.length > 0 && (
+                                            <div className="flex gap-1.5 mt-2 flex-wrap">
+                                                {evidence.map((e, ei) => (
+                                                    <span key={ei} className="text-[10px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded-lg">{e.icon} {e.description}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </button>
+                                    {isExp && (
+                                        <div className="border-t border-slate-100">
+                                            {/* 5-Why */}
+                                            {why.length > 0 && (
+                                                <div className="px-4 py-3 border-b border-slate-100">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">5-Why Chain</p>
+                                                    <div className="space-y-2">
+                                                        {why.map((w, wi) => (
+                                                            <div key={wi} className="flex gap-2">
+                                                                <span className="text-[10px] font-extrabold text-rose-400 shrink-0 mt-0.5">#{w.level}</span>
+                                                                <p className="text-xs text-slate-700 leading-relaxed">{w.text}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {/* Recommended actions */}
+                                            {opts.length > 0 && (
+                                                <div className="px-4 py-3">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Recommended Actions</p>
+                                                    <div className="space-y-2">
+                                                        {opts.map((o, oi) => (
+                                                            <div key={oi} className="bg-slate-50 border border-gray-100 rounded-xl p-3 flex items-start justify-between gap-2">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <span className="text-[10px] font-bold text-rose-500">{o.rank_label}</span>
+                                                                    <p className="text-xs font-semibold text-slate-800 mt-0.5">{o.label}</p>
+                                                                    <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                                                                        {o.metric_pills?.map((mp, mi) => (
+                                                                            <span key={mi} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{mp.label}</span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                                <button className="shrink-0 text-[10px] font-bold text-white bg-rose-600 hover:bg-rose-700 px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap">{o.cta_label}</button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Blocker Threads */}
+            {threads.length > 0 && (
+                <div>
+                    <SecTitle icon={<MessageSquare className="w-3.5 h-3.5" />} label={`${threads.length} Blocker Threads`} />
+                    <div className="space-y-2">
+                        {threads.map((t, i) => (
+                            <div key={t.thread_id || i} className="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                        <span className="text-[10px] font-mono text-slate-400">{t.project_code}</span>
+                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${urgencyIcon(t.urgency) ? '' : ''}`}>{urgencyIcon(t.urgency)}</span>
+                                    </div>
+                                    <p className="text-xs font-semibold text-slate-800">{t.subject}</p>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">{t.days_open}d open · {t.days_no_reply}d no reply</p>
+                                </div>
+                                <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${t.sentiment === 'BLOCKER' ? 'bg-red-600 text-white' : t.sentiment === 'NEGATIVE' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>{t.sentiment}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {data.as_of && <p className="text-[10px] text-slate-300 text-right font-mono">as of {data.as_of?.slice(0, 16).replace('T', ' ')} UTC</p>}
+        </div>
+    );
+};
+
+
 const detectType = p => {
     if (!p) return 'generic';
     if (p.includes('/portfolio/')) return 'portfolio';
@@ -2300,6 +2663,8 @@ const detectType = p => {
     if (p.includes('/pr-aging/')) return 'pr';
     if (p.includes('/command-center/')) return 'eng';
     if (p.includes('/decision-actions/')) return 'decision';
+    if (p.includes('/product/')) return 'product';
+    if (p.includes('/itsm/')) return 'itsm';
     if (p.includes('/dtif/') || p.includes('/stage/')) return 'dtif';
     if (p.includes('/forecast/')) return 'forecast';
     if (p.includes('/insights/')) return 'insights';
@@ -2313,7 +2678,6 @@ const SmartRenderer = ({ data, apiPath }) => {
     switch (detectType(apiPath || '')) {
         case 'portfolio': return <PortfolioRenderer data={payload} />;
         case 'deals': return <DealsRenderer data={payload} />;
-
         case 'rca': return <RcaRenderer data={payload} />;
         case 'opi': return <OpiRenderer data={payload} />;
         case 'recs': return <RecsRenderer data={payload} />;
@@ -2321,6 +2685,8 @@ const SmartRenderer = ({ data, apiPath }) => {
         case 'pr': return <PrRenderer data={payload} />;
         case 'eng': return <EngRenderer data={payload} />;
         case 'decision': return <DecisionRenderer data={payload} />;
+        case 'product': return <ProductOutcomesRenderer data={payload} />;
+        case 'itsm': return <ITSMFactorsRenderer data={payload} />;
         case 'dtif': return <DtifRenderer data={payload} />;
         case 'forecast': return <ForecastRenderer data={payload} />;
         case 'insights': return <InsightsRenderer data={payload} />;
