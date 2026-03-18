@@ -2176,56 +2176,66 @@ const SectionCard = ({ section, onSubDrill, onCardDrill, onActionClick, isCEO })
             : section.overall_status === 'healthy' ? '#22c55e'
                 : '#94a3b8';
 
-    const badgeCls = { healthy: 'bg-green-100 text-green-700', warning: 'bg-amber-100 text-amber-700', critical: 'bg-red-100 text-red-700' }[section.overall_status] || 'bg-slate-100 text-slate-600';
+    const badgeCls = {
+        healthy: 'bg-green-100 text-green-700',
+        warning: 'bg-amber-100 text-amber-700',
+        critical: 'bg-red-100 text-red-700'
+    }[section.overall_status] || 'bg-slate-100 text-slate-600';
+
+    /* Title click — same as drill_down button */
+    const handleTitleClick = () => {
+        if (section.drill_down) onCardDrill(section.drill_down.api, section.drill_down.label);
+    };
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-all">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-all self-start">
             {/* Status-colored top bar */}
             <div className="h-1.5" style={{ backgroundColor: statusBarColor }} />
 
-            {/* Clickable header — always visible */}
-            <button
-                className="w-full px-4 pt-4 pb-3 flex items-center justify-between gap-2 text-left focus:outline-none"
-                onClick={() => setExpanded(prev => !prev)}
-            >
+            {/* Header row — always visible */}
+            <div className="px-4 pt-4 pb-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                     <span style={{ color: statusBarColor }}>{icon}</span>
-                    <h3 className="text-sm font-bold text-gray-900 truncate">{section.label}</h3>
+                    {/* Clickable title fires drill-down */}
+                    <button
+                        onClick={handleTitleClick}
+                        className="text-sm font-bold text-gray-900 truncate text-left hover:text-indigo-700 hover:underline transition-colors focus:outline-none"
+                        title={section.drill_down?.label || section.label}
+                    >
+                        {section.label}
+                    </button>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex flex-col items-end gap-1">
-                        <span className="text-lg font-extrabold text-gray-900">{section.overall_score}</span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>{section.overall_status?.toUpperCase()}</span>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} />
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-lg font-extrabold text-gray-900">{section.overall_score}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>{section.overall_status?.toUpperCase()}</span>
                 </div>
-            </button>
+            </div>
 
-            {/* Collapsible body */}
-            {expanded && (
-                <>
-                    <div className="border-t border-gray-100 px-4 py-1 flex-1">
-                        {section.sub_items?.map(item => <SubItemRow key={item.id} item={item} onDrill={onSubDrill} />)}
-                    </div>
-                    {section.itsm_action_pills?.length > 0 && (
-                        <div className="px-4 pb-3 pt-1 flex flex-wrap gap-1.5">
-                            {section.itsm_action_pills.slice(0, 4).map(p => (
-                                <button key={p.id} onClick={(e) => { e.stopPropagation(); onActionClick && onActionClick(p.id, p.label); }}
-                                    className="flex items-center gap-1 text-[10px] font-semibold border border-gray-200 rounded-full px-2.5 py-1 text-gray-600 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all">
-                                    {p.label}{isCEO && <ChevronRight className="w-2.5 h-2.5 opacity-60" />}
-                                </button>
-                            ))}
-                            {section.itsm_action_pills.length > 4 && <span className="text-[10px] text-slate-400 self-center">+{section.itsm_action_pills.length - 4} more</span>}
-                        </div>
-                    )}
-                    {section.drill_down && (
-                        <button onClick={(e) => { e.stopPropagation(); onCardDrill(section.drill_down.api, section.drill_down.label); }}
-                            className="w-full px-4 py-2.5 bg-slate-50 border-t border-gray-100 flex items-center justify-between hover:bg-indigo-50 transition-colors group">
-                            <span className="text-[11px] font-semibold text-slate-500 group-hover:text-indigo-700">{section.drill_down.label}</span>
-                            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500" />
+            {/* "more" toggle + action pills on same row */}
+            <div className="px-4 pb-2 flex items-center justify-between gap-2">
+                <div className="flex flex-wrap gap-1.5">
+                    {section.itsm_action_pills?.slice(0, 3).map(p => (
+                        <button key={p.id} onClick={() => onActionClick && onActionClick(p.id, p.label)}
+                            className="flex items-center gap-1 text-[10px] font-semibold border border-gray-200 rounded-full px-2 py-0.5 text-gray-500 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all">
+                            {p.label}{isCEO && <ChevronRight className="w-2.5 h-2.5 opacity-60" />}
                         </button>
-                    )}
-                </>
+                    ))}
+                    {(section.itsm_action_pills?.length || 0) > 3 &&
+                        <span className="text-[10px] text-slate-400 self-center">+{section.itsm_action_pills.length - 3} more</span>}
+                </div>
+                <button
+                    onClick={() => setExpanded(prev => !prev)}
+                    className="text-[10px] font-semibold text-indigo-500 hover:text-indigo-700 shrink-0 transition-colors focus:outline-none"
+                >
+                    {expanded ? 'less ↑' : 'more ↓'}
+                </button>
+            </div>
+
+            {/* Collapsible sub-items */}
+            {expanded && (
+                <div className="border-t border-gray-100 px-4 py-1">
+                    {section.sub_items?.map(item => <SubItemRow key={item.id} item={item} onDrill={onSubDrill} />)}
+                </div>
             )}
         </div>
     );
@@ -2295,7 +2305,7 @@ const ITSMSearchPage = ({ currentUser, onSearch, onActionClick, onConnectMore, o
                         </div>
                     </form>
                 </div>
-                <div className="mb-8">
+                <div className="max-w-2xl mx-auto mb-8">
                     <div className="flex items-center justify-between mb-3">
                         <p className="text-xs font-bold text-slate-500 tracking-widest uppercase">Data Sources</p>
                         <button onClick={onConnectMore} className="flex items-center gap-1 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-50 transition-colors"><Plus className="w-3.5 h-3.5" />Connect More</button>
@@ -2313,9 +2323,9 @@ const ITSMSearchPage = ({ currentUser, onSearch, onActionClick, onConnectMore, o
                 {error && <div className="flex items-center gap-3 p-4 mb-6 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700"><AlertTriangle className="w-4 h-4" />{error}</div>}
                 {loading && <div className="flex items-center justify-center py-16 gap-3 text-slate-400"><Loader2 className="w-6 h-6 animate-spin" /><span className="text-sm">Loading dashboard…</span></div>}
                 {!loading && sections.length > 0 && (
-                    <div className="mb-10">
+                    <div className="max-w-2xl mx-auto mb-10">
                         <p className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-4">CEO Executive Dashboard</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4 items-start">
                             {sections.map(s => <SectionCard key={s.id} section={s} onSubDrill={handleDrill} onCardDrill={handleDrill} onActionClick={onActionClick} isCEO={isCEO} />)}
                         </div>
                     </div>
