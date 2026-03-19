@@ -1766,131 +1766,355 @@ const NotifRenderer = ({ data }) => {
 
 /* BOTTLENECK ALERTS — /dtif/api/decision-actions/list/ */
 const DecisionRenderer = ({ data }) => {
-    /* API shape: flat array of { label_code, label_name, priority, family, family_name, trigger, short_description, recommended_action, owner } */
-    const items = Array.isArray(data) ? data : (data?.data || data?.items || []);
+    /* ── Decision Intelligence: /dtif/api/decision/factors/ ── */
+    const s = data?.summary || {};
+    const rcaMap = data?.rca_map || [];
+    const labelCounts = data?.itsm_label_counts || [];
+    const recommendations = data?.pending_recommendations || [];
+    const decisions = data?.di_decisions || [];
+    const signalCounts = data?.source_signal_counts || {};
+    const asOf = data?.as_of;
 
-    // Group by family
-    const familyMap = {};
-    items.forEach(item => {
-        const fid = item.family || 'OTHER';
-        if (!familyMap[fid]) familyMap[fid] = { name: item.family_name || fid, items: [] };
-        familyMap[fid].items.push(item);
-    });
-    const families = Object.entries(familyMap);
+    const [tab, setTab] = React.useState('rca');
+    const [expandedRca, setExpandedRca] = React.useState(null);
+    const [expandedDec, setExpandedDec] = React.useState(null);
+    const [expandedRec, setExpandedRec] = React.useState(null);
 
-    const FAMILY_META = {
-        INCIDENT_PRODUCTIVITY: { color: '#ef4444', bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700', icon: '🚨' },
-        FLOW_EFFICIENCY: { color: '#f59e0b', bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', icon: '🔄' },
-        QUALITY: { color: '#8b5cf6', bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700', icon: '🔍' },
-        DELIVERY: { color: '#3b82f6', bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', icon: '🚀' },
-        FINANCIAL: { color: '#10b981', bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', icon: '💰' },
+    /* ─── color helpers ─── */
+    const sevBg = (sev) => {
+        if (sev === 'CRITICAL') return 'bg-gradient-to-br from-red-600 to-rose-700';
+        if (sev === 'HIGH') return 'bg-gradient-to-br from-orange-500 to-amber-600';
+        if (sev === 'AT_RISK') return 'bg-gradient-to-br from-amber-500 to-yellow-600';
+        return 'bg-gradient-to-br from-slate-500 to-slate-700';
     };
-    const priBadge = p => p === 'P0' ? 'bg-red-600 text-white'
-        : p === 'P1' ? 'bg-red-100 text-red-700'
-            : p === 'P2' ? 'bg-amber-100 text-amber-700'
-                : 'bg-slate-100 text-slate-600';
+    const sevPill = (sev) => {
+        if (sev === 'CRITICAL') return 'bg-red-600 text-white';
+        if (sev === 'HIGH') return 'bg-orange-500 text-white';
+        if (sev === 'AT_RISK') return 'bg-amber-400 text-gray-900';
+        if (sev === 'MEDIUM') return 'bg-yellow-400 text-gray-900';
+        return 'bg-slate-200 text-slate-700';
+    };
+    const pilCls = (p) => p === 'pr' ? 'bg-red-100 text-red-700' : p === 'pa' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700';
+    const priPill = (p) => p === 'HIGH' ? 'bg-red-100 text-red-700' : p === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600';
+    const actionStyle = (style) => style === 'danger' ? 'bg-red-600 text-white' : style === 'warning' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700';
+    const decTypeIcon = (t) => t === 'ESCALATE' ? '🚨' : t === 'DECISION_REQUIRED' ? '⚡' : t === 'MONITOR' ? '👁' : '📋';
+    const srcIcon = { JIRA: '📋', GITHUB: '🐙', BIOMETRIC: '👆', TEAMS: '💬', FINANCE: '💰', HRMS: '👤', CCTV: '📷' };
 
-    const [openItem, setOpenItem] = React.useState(null);
-    const p0Count = items.filter(i => i.priority === 'P0').length;
-    const p1Count = items.filter(i => i.priority === 'P1').length;
-    const p2Count = items.filter(i => i.priority === 'P2').length;
+    const TABS = [
+        { key: 'rca', label: `🔍 RCA Map (${rcaMap.length})` },
+        { key: 'decisions', label: `⚡ Decisions (${decisions.length})` },
+        { key: 'recs', label: `💡 Actions (${recommendations.length})` },
+        { key: 'labels', label: `🏷 Patterns (${labelCounts.length})` },
+    ];
 
     return (
         <div className="space-y-4">
-            {/* ── Banner ── */}
-            <div className="bg-gradient-to-br from-cyan-700 to-teal-800 rounded-2xl p-5 text-white">
-                <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="w-4 h-4 opacity-80" />
-                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Bottleneck Alerts · Decision Actions</p>
+            {/* ── Summary Banner ── */}
+            <div className="bg-gradient-to-br from-indigo-700 to-violet-800 rounded-2xl p-5 text-white">
+                <div className="flex items-center gap-2 mb-1">
+                    <Brain className="w-4 h-4 opacity-80" />
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">Decision Intelligence · AI-Correlated Signals</p>
                 </div>
-                <p className="text-3xl font-extrabold mb-0.5">{items.length} <span className="text-base font-semibold opacity-70">Alert Types</span></p>
-                <p className="text-[10px] opacity-70 mb-3">{families.length} categories — watch these signals for incoming bottlenecks</p>
-
-                <div className="grid grid-cols-4 gap-2">
-                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
-                        <p className="text-sm font-extrabold">{items.length}</p>
-                        <p className="text-[10px] opacity-70 mt-0.5">Total</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
-                        <p className="text-sm font-extrabold text-red-200">{p0Count}</p>
-                        <p className="text-[10px] opacity-70 mt-0.5">P0</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
-                        <p className="text-sm font-extrabold text-orange-200">{p1Count}</p>
-                        <p className="text-[10px] opacity-70 mt-0.5">P1</p>
-                    </div>
-                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
-                        <p className="text-sm font-extrabold text-yellow-200">{p2Count}</p>
-                        <p className="text-[10px] opacity-70 mt-0.5">P2</p>
+                <div className="flex items-end gap-3 mb-4">
+                    <p className="text-4xl font-extrabold leading-none">{s.total_alerts_active}</p>
+                    <div>
+                        <p className="text-sm font-semibold opacity-80">Active Alerts</p>
+                        <p className="text-xs opacity-60">{s.open_rcas} open RCAs · {s.pending_decisions} pending decisions</p>
                     </div>
                 </div>
+                {/* Metric grid */}
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                    <BStat label="Confidence" value={`${s.avg_confidence_pct}%`} />
+                    <BStat label="Revenue Safe" value={s.revenue_protected_fmt} />
+                    <BStat label="P0 Decisions" value={s.p0_decisions} />
+                    <BStat label="P1 Decisions" value={s.p1_decisions} />
+                </div>
+                {/* Source signal bar */}
+                <div>
+                    <p className="text-[10px] font-bold opacity-70 mb-1.5">Signal Sources ({s.sources_correlated})</p>
+                    <div className="flex gap-1.5 flex-wrap">
+                        {(s.source_names || []).map(src => (
+                            <span key={src} className="flex items-center gap-1 bg-white/15 text-white text-[10px] font-bold px-2 py-1 rounded-lg">
+                                <span>{srcIcon[src] || '🔗'}</span> {src}
+                                {signalCounts[src] != null && <span className="ml-1 bg-white/20 rounded px-1">{signalCounts[src]}</span>}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+                {asOf && <p className="text-[9px] text-right opacity-40 mt-2 font-mono">as of {asOf?.slice(0, 16).replace('T', ' ')} UTC</p>}
             </div>
 
-            {/* ── Grouped by Family ── */}
-            {families.map(([fid, fam]) => {
-                const meta = FAMILY_META[fid] || { color: '#64748b', bg: 'bg-slate-50', border: 'border-slate-200', badge: 'bg-slate-100 text-slate-700', icon: '📋' };
-                return (
-                    <div key={fid}>
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-base">{meta.icon}</span>
-                            <span className="text-xs font-extrabold text-slate-700">{fam.name}</span>
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: meta.color + '20', color: meta.color }}>
-                                {fam.items.length}
-                            </span>
-                        </div>
-                        <div className="space-y-2">
-                            {fam.items.map((item, i) => {
-                                const key = `${fid}-${i}`;
-                                const isOpen = openItem === key;
-                                return (
-                                    <div key={key} className={`bg-white border ${meta.border} rounded-xl shadow-sm overflow-hidden`}>
-                                        <button
-                                            className="w-full px-4 py-3 text-left flex items-center gap-3"
-                                            onClick={() => setOpenItem(isOpen ? null : key)}
-                                        >
-                                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 ${priBadge(item.priority)}`}>
-                                                {item.priority}
-                                            </span>
-                                            <p className="text-xs font-bold text-slate-900 flex-1 text-left">{item.label_name}</p>
-                                            <span className="text-slate-400 text-xs shrink-0">{isOpen ? '▲' : '▼'}</span>
-                                        </button>
+            {/* ── Tabs ── */}
+            <div className="flex overflow-x-auto gap-1 pb-1">
+                {TABS.map(t => (
+                    <button key={t.key} onClick={() => setTab(t.key)}
+                        className={`shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors ${tab === t.key ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                        {t.label}
+                    </button>
+                ))}
+            </div>
 
-                                        {isOpen && (
-                                            <div className={`border-t ${meta.border} p-3 space-y-2.5 ${meta.bg}`}>
-                                                {/* Short description */}
-                                                <p className="text-[11px] text-slate-700 leading-relaxed">{item.short_description}</p>
+            {/* ══ RCA Map Tab ══ */}
+            {tab === 'rca' && (
+                <div className="space-y-3">
+                    {rcaMap.map((rca, i) => {
+                        const isOpen = expandedRca === rca.rca_code;
+                        const isCrit = rca.severity === 'CRITICAL';
+                        return (
+                            <div key={rca.rca_code} className={`rounded-xl border overflow-hidden shadow-sm ${isCrit ? 'border-red-200' : 'border-orange-100'}`}>
+                                {/* Card header — always visible */}
+                                <button className="w-full text-left px-4 py-3" onClick={() => setExpandedRca(isOpen ? null : rca.rca_code)}>
+                                    <div className="flex items-start gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${sevPill(rca.severity)}`}>{rca.severity}</span>
+                                                <span className="text-[10px] font-mono text-slate-400">{rca.rca_code}</span>
+                                                <span className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">{rca.label_type?.replace(/_/g, ' ')}</span>
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${rca.dtif_impact_pct >= 4 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>
+                                                    -{rca.dtif_impact_pct}% DTIF
+                                                </span>
+                                            </div>
+                                            <p className="text-xs font-bold text-slate-900 leading-snug line-clamp-2">{rca.title}</p>
+                                            {/* Source badges always show */}
+                                            <div className="flex gap-1 mt-1.5 flex-wrap">
+                                                {rca.source_badges?.map((b, bi) => (
+                                                    <span key={bi} className="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded font-semibold">{b.icon} {b.src}</span>
+                                                ))}
+                                                <span className="text-[10px] text-slate-400 self-center ml-1">Confidence {rca.confidence_pct}%</span>
+                                                {rca.financial_risk_inr > 0 && <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">⚠ {rca.financial_risk_fmt} at risk</span>}
+                                            </div>
+                                        </div>
+                                        <span className="text-slate-400 text-xs shrink-0 mt-1">{isOpen ? '▲' : '▼'}</span>
+                                    </div>
+                                </button>
 
-                                                {/* Trigger */}
-                                                <div className="bg-white border border-gray-100 rounded-lg p-2.5">
-                                                    <p className="text-[10px] font-extrabold text-slate-500 uppercase mb-0.5">⚡ Trigger Condition</p>
-                                                    <p className="text-[11px] text-slate-700 font-mono leading-relaxed">{item.trigger}</p>
+                                {/* Expanded body */}
+                                {isOpen && (
+                                    <div className="border-t border-slate-100 p-4 space-y-4 bg-slate-50">
+                                        {/* Source Evidence */}
+                                        {rca.source_evidence?.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-extrabold uppercase text-slate-500 mb-2">📡 Source Evidence</p>
+                                                <div className="space-y-1.5">
+                                                    {rca.source_evidence.map((ev, ei) => (
+                                                        <div key={ei} className="bg-white border border-slate-100 rounded-lg px-3 py-2 flex items-start gap-2">
+                                                            <span className="text-base shrink-0">{ev.icon}</span>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex gap-1.5 flex-wrap">
+                                                                    <span className="text-[10px] font-extrabold text-slate-700">{ev.source}</span>
+                                                                    <span className="text-[10px] text-slate-400">{ev.src_label}</span>
+                                                                    <span className="text-[10px] font-mono text-indigo-600">{ev.ref}</span>
+                                                                    <span className="text-[10px] text-slate-400">{ev.when}</span>
+                                                                </div>
+                                                                <p className="text-[11px] text-slate-600 mt-0.5">{ev.description}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
+                                            </div>
+                                        )}
 
-                                                {/* Recommended Action */}
-                                                <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
-                                                    <p className="text-[10px] font-extrabold text-emerald-700 uppercase mb-0.5">✅ Recommended Action</p>
-                                                    <p className="text-[11px] text-emerald-800 leading-relaxed">{item.recommended_action}</p>
+                                        {/* 5-Why Chain */}
+                                        {rca.why_chain?.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-extrabold uppercase text-slate-500 mb-2">🔗 5-Why Root Cause Chain</p>
+                                                <div className="relative pl-4">
+                                                    {rca.why_chain.map((w, wi) => (
+                                                        <div key={wi} className="relative mb-2 last:mb-0">
+                                                            <div className="absolute -left-4 top-1.5 w-3 h-3 rounded-full border-2 border-indigo-400 bg-white flex items-center justify-center">
+                                                                <span className="text-[8px] font-extrabold text-indigo-600">{w.level}</span>
+                                                            </div>
+                                                            <div className="bg-white border border-slate-100 rounded-lg px-3 py-2">
+                                                                <p className="text-[11px] text-slate-700 leading-snug">{w.text}</p>
+                                                                {w.source_links?.length > 0 && (
+                                                                    <div className="flex gap-1 mt-1 flex-wrap">
+                                                                        {w.source_links.map((sl, sli) => (
+                                                                            <span key={sli} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">{sl.label}</span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
+                                            </div>
+                                        )}
 
-                                                {/* Owner */}
-                                                {item.owner && (
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">Owner</span>
-                                                        <span className="text-[11px] text-slate-700 font-semibold">{item.owner}</span>
-                                                    </div>
-                                                )}
+                                        {/* Recommended Options */}
+                                        {rca.recommended_options?.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-extrabold uppercase text-slate-500 mb-2">✅ Recommended Options</p>
+                                                <div className="space-y-2">
+                                                    {rca.recommended_options.map((opt, oi) => (
+                                                        <div key={oi} className={`bg-white border rounded-xl p-3 ${oi === 0 ? 'border-emerald-200' : 'border-slate-100'}`}>
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex gap-1.5 flex-wrap mb-1">
+                                                                        <span className="text-[10px] font-bold text-slate-500">{opt.rank_label}</span>
+                                                                        {opt.metric_pills?.map((mp, mpi) => (
+                                                                            <span key={mpi} className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${mp.class === 'pg' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>{mp.label}</span>
+                                                                        ))}
+                                                                    </div>
+                                                                    <p className="text-xs text-slate-800 font-semibold leading-snug">{opt.label}</p>
+                                                                </div>
+                                                                <button className={`shrink-0 text-[10px] font-extrabold px-2.5 py-1.5 rounded-lg ${oi === 0 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                                                                    {opt.cta_label}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
-                                );
-                            })}
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* ══ DI Decisions Tab ══ */}
+            {tab === 'decisions' && (
+                <div className="space-y-3">
+                    {decisions.map((dec, i) => {
+                        const isOpen = expandedDec === dec.entity_code;
+                        return (
+                            <div key={dec.entity_code} className="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
+                                <button className="w-full text-left px-4 py-3" onClick={() => setExpandedDec(isOpen ? null : dec.entity_code)}>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-lg shrink-0 mt-0.5">{decTypeIcon(dec.decision_type)}</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap gap-1.5 mb-1">
+                                                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${sevPill(dec.severity)}`}>{dec.severity}</span>
+                                                <span className="text-[10px] font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded">{dec.decision_type?.replace('_', ' ')}</span>
+                                                <span className="text-[10px] font-mono text-indigo-500">{dec.entity_code}</span>
+                                                <span className="text-[10px] text-slate-400">{dec.entity_type}</span>
+                                            </div>
+                                            <p className="text-xs font-bold text-slate-900 leading-snug">{dec.title}</p>
+                                            <p className="text-[10px] text-slate-400 mt-0.5">Confidence {dec.confidence_pct}%</p>
+                                        </div>
+                                        <span className="text-slate-400 text-xs shrink-0 mt-1">{isOpen ? '▲' : '▼'}</span>
+                                    </div>
+                                </button>
+
+                                {isOpen && (
+                                    <div className="border-t border-slate-100 p-4 space-y-3 bg-slate-50">
+                                        {/* Summary */}
+                                        <div className="bg-white border border-slate-100 rounded-lg p-3">
+                                            <p className="text-[10px] font-extrabold uppercase text-slate-400 mb-1">Situation</p>
+                                            <p className="text-[11px] text-slate-700 leading-relaxed">{dec.summary}</p>
+                                        </div>
+                                        {/* Recommendation */}
+                                        <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
+                                            <p className="text-[10px] font-extrabold uppercase text-emerald-600 mb-1">✅ Recommendation</p>
+                                            <p className="text-[11px] text-emerald-800 leading-relaxed">{dec.recommendation}</p>
+                                        </div>
+                                        {/* Sources */}
+                                        {dec.contributing_sources?.length > 0 && (
+                                            <div className="flex gap-1.5 flex-wrap">
+                                                <span className="text-[10px] font-bold text-slate-500 self-center">Sources:</span>
+                                                {dec.contributing_sources.map(src => (
+                                                    <span key={src} className="text-[10px] bg-slate-100 rounded px-1.5 py-0.5 font-semibold">{srcIcon[src] || '🔗'} {src}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {/* Actions */}
+                                        {dec.actions?.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-extrabold uppercase text-slate-400 mb-1.5">Actions</p>
+                                                <div className="flex gap-2 flex-wrap">
+                                                    {dec.actions.map((act, ai) => (
+                                                        <button key={ai} className={`text-[11px] font-bold px-3 py-1.5 rounded-lg ${actionStyle(act.style)}`}>
+                                                            {act.label}
+                                                            {act.emp && <span className="ml-1 opacity-70 font-mono">({act.emp})</span>}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* ══ Pending Recommendations Tab ══ */}
+            {tab === 'recs' && (
+                <div className="space-y-2">
+                    {recommendations.map((rec, i) => {
+                        const isOpen = expandedRec === rec.id;
+                        return (
+                            <div key={rec.id} className="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
+                                <button className="w-full text-left px-4 py-3" onClick={() => setExpandedRec(isOpen ? null : rec.id)}>
+                                    <div className="flex items-start gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${priPill(rec.priority)}`}>{rec.priority}</span>
+                                                <span className="text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">{rec.category?.replace(/_/g, ' ')}</span>
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${rec.status === 'ACCEPTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}`}>{rec.status}</span>
+                                            </div>
+                                            <p className="text-xs font-bold text-slate-900 leading-snug">{rec.title}</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{rec.target_name}</p>
+                                        </div>
+                                        <span className="text-slate-400 text-xs shrink-0 mt-1">{isOpen ? '▲' : '▼'}</span>
+                                    </div>
+                                </button>
+
+                                {isOpen && (
+                                    <div className="border-t border-slate-100 p-4 space-y-2.5 bg-slate-50">
+                                        <p className="text-[11px] text-slate-700 leading-relaxed">{rec.description}</p>
+                                        <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
+                                            <p className="text-[10px] font-extrabold text-emerald-700 mb-0.5">📈 Estimated Impact</p>
+                                            <p className="text-[11px] text-emerald-800">{rec.estimated_impact}</p>
+                                        </div>
+                                        {rec.signals?.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-extrabold text-slate-400 uppercase mb-1.5">📡 Signal Evidence</p>
+                                                <div className="space-y-1">
+                                                    {rec.signals.map((sig, si) => (
+                                                        <div key={si} className="flex items-start gap-2 bg-white border border-slate-100 rounded-lg px-2.5 py-1.5">
+                                                            <span className="text-[11px] font-mono text-indigo-600 shrink-0">{sig.split(':')[0]}:</span>
+                                                            <span className="text-[11px] text-slate-600">{sig.split(':').slice(1).join(':').trim()}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <button className="w-full text-center text-[11px] font-extrabold bg-indigo-600 text-white py-2 rounded-lg">
+                                            Accept Recommendation
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* ══ ITSM Label Patterns Tab ══ */}
+            {tab === 'labels' && (
+                <div className="space-y-2">
+                    <SecTitle icon={<AlertTriangle className="w-3.5 h-3.5" />} label="Detected Bottleneck Patterns" />
+                    {labelCounts.map((lc, i) => (
+                        <div key={i} className="bg-white border border-slate-100 rounded-xl px-4 py-3 shadow-sm flex items-center gap-3">
+                            <span className={`text-[18px] shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${pilCls(lc.severity_pill)}`}>{lc.count}</span>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-slate-900">{lc.label?.replace(/_/g, ' ')}</p>
+                            </div>
+                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${pilCls(lc.severity_pill)}`}>
+                                {lc.severity_pill === 'pr' ? 'RED' : lc.severity_pill === 'pa' ? 'AMBER' : 'GREEN'}
+                            </span>
                         </div>
-                    </div>
-                );
-            })}
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
+
 
 /* KPI DETAIL — /api/kpi/detail/ */
 const KpiDetailRenderer = ({ data }) => {
@@ -3026,7 +3250,7 @@ const detectType = p => {
     if (p.includes('/pr-aging/')) return 'pr';
     if (p.includes('/command-center/')) return 'eng';
     if (p.includes('/engineering/')) return 'eng';
-    if (p.includes('/decision-actions/')) return 'decision';
+    if (p.includes('/decision-actions/') || p.includes('/decision/')) return 'decision';
     if (p.includes('/product/')) return 'product';
     if (p.includes('/itsm/')) return 'itsm';
     if (p.includes('/client-health/')) return 'clienthealth';
