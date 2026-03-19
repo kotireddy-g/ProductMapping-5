@@ -1519,6 +1519,374 @@ const EngRenderer = ({ data }) => {
     );
 };
 
+/* ENGINEERING COMMAND CENTER — /dtif/api/command-center/engineering/ */
+const CommandCenterEngRenderer = ({ data }) => {
+    /* API shape: { success, data:{ context{}, insight{ severity, title, summary, metrics{},
+       stage_breakdown[], kpis[], rca_events[], recommendations[], active_deals[], signals[], actions[],
+       contributing_sources[], trend[], confidence, decision_type } } } */
+    const d = data?.data || data || {};
+    const ctx = d.context || {};
+    const ins = d.insight || {};
+    const metrics = ins.metrics || {};
+    const stages = ins.stage_breakdown || [];
+    const kpis = ins.kpis || [];
+    const rcas = ins.rca_events || [];
+    const recs = ins.recommendations || [];
+    const deals = ins.active_deals || [];
+    const signals = ins.signals || [];
+    const actions = ins.actions || [];
+    const sources = ins.contributing_sources || [];
+    const trend = d.trend || ins.trend || [];
+
+    const [tab, setTab] = React.useState('overview');
+    const [openRca, setOpenRca] = React.useState(null);
+    const [openRec, setOpenRec] = React.useState(null);
+
+    const sevColor = sev => {
+        if (!sev) return { bg: 'bg-slate-100', text: 'text-slate-600', dot: '#94a3b8' };
+        const s = sev.toLowerCase();
+        if (s === 'critical') return { bg: 'bg-red-100', text: 'text-red-700', dot: '#ef4444' };
+        if (s === 'high' || s === 'p1') return { bg: 'bg-orange-100', text: 'text-orange-700', dot: '#f97316' };
+        if (s === 'medium' || s === 'p2') return { bg: 'bg-amber-100', text: 'text-amber-700', dot: '#f59e0b' };
+        return { bg: 'bg-green-100', text: 'text-green-700', dot: '#22c55e' };
+    };
+    const kpiStat = st => st === 'critical' ? 'text-red-600 bg-red-50 border border-red-100'
+        : st === 'warning' ? 'text-amber-600 bg-amber-50 border border-amber-100'
+            : 'text-emerald-600 bg-emerald-50 border border-emerald-100';
+    const dealPri = p => p === 'P1_CRITICAL' ? 'bg-red-600 text-white'
+        : p === 'P2_HIGH' ? 'bg-orange-500 text-white'
+            : 'bg-amber-400 text-gray-900';
+
+    const dtif = metrics.dtif_pct ?? ins.dtif_pct ?? 0;
+    const onTime = metrics.on_time_pct ?? 0;
+    const inFull = metrics.in_full_pct ?? 0;
+    const activeItems = metrics.active_items ?? 0;
+    const slaBreaches = metrics.sla_breach_count ?? 0;
+    const riskScore = metrics.risk_score ?? 0;
+
+    const dtifColor = v => v >= 80 ? '#10b981' : v >= 60 ? '#f59e0b' : '#ef4444';
+    const dtifBg = v => v >= 80 ? 'from-emerald-700 to-teal-800' : v >= 60 ? 'from-amber-600 to-orange-700' : 'from-red-700 to-rose-800';
+
+    const MiniBar = ({ value, max = 100, color = '#3b82f6' }) => (
+        <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1">
+            <div className="h-1.5 rounded-full" style={{ width: `${Math.min(100, (value / max) * 100)}%`, background: color }} />
+        </div>
+    );
+
+    const TABS = [
+        { key: 'overview', label: '📊 Overview' },
+        { key: 'kpis', label: `🎯 KPIs (${kpis.length})` },
+        { key: 'pipeline', label: `🏗 Pipeline (${deals.length})` },
+        { key: 'rca', label: `🔍 RCA (${rcas.length})` },
+        { key: 'actions', label: `⚡ Actions (${recs.length})` },
+    ];
+
+    return (
+        <div className="space-y-3">
+            {/* ── Banner ── */}
+            <div className={`bg-gradient-to-br ${dtifBg(dtif)} rounded-2xl p-4 text-white`}>
+                <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest opacity-75">
+                        Engineering Command Center · {ins.severity || 'CRITICAL'} · {ins.decision_type || 'ESCALATE'}
+                    </span>
+                </div>
+                <p className="text-lg font-extrabold leading-snug mb-3">{ins.title || ctx.entity_name}</p>
+
+                {/* Metric strip */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-xl font-extrabold" style={{ color: dtifColor(dtif) === '#10b981' ? '#6ee7b7' : dtifColor(dtif) === '#f59e0b' ? '#fcd34d' : '#fca5a5' }}>{dtif.toFixed(1)}%</p>
+                        <p className="text-[10px] opacity-70">DTIF</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-xl font-extrabold">{onTime.toFixed(1)}%</p>
+                        <p className="text-[10px] opacity-70">On-Time</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2.5 text-center">
+                        <p className="text-xl font-extrabold">{inFull.toFixed(1)}%</p>
+                        <p className="text-[10px] opacity-70">In-Full</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-white/10 rounded-xl p-2 text-center">
+                        <p className="text-sm font-extrabold">{activeItems}</p>
+                        <p className="text-[9px] opacity-70">Active Items</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2 text-center">
+                        <p className="text-sm font-extrabold text-red-200">{slaBreaches}</p>
+                        <p className="text-[9px] opacity-70">SLA Breaches</p>
+                    </div>
+                    <div className="bg-white/10 rounded-xl p-2 text-center">
+                        <p className="text-sm font-extrabold">{riskScore.toFixed(1)}</p>
+                        <p className="text-[9px] opacity-70">Risk Score</p>
+                    </div>
+                </div>
+
+                {/* Source chips */}
+                {sources.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-3">
+                        {sources.map(src => (
+                            <span key={src} className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/20">{src}</span>
+                        ))}
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/20">{ins.confidence}% confidence</span>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Tabs ── */}
+            <div className="flex gap-1 flex-wrap">
+                {TABS.map(t => (
+                    <button key={t.key} onClick={() => setTab(t.key)}
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full transition-all ${tab === t.key ? 'bg-indigo-600 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                        {t.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* ── OVERVIEW ── */}
+            {tab === 'overview' && (
+                <div className="space-y-3">
+                    {/* Summary */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                        <p className="text-[10px] font-extrabold text-slate-500 uppercase mb-1">📋 Status Summary</p>
+                        <p className="text-xs text-slate-700 leading-relaxed">{ins.summary || ins.current_status}</p>
+                    </div>
+
+                    {/* Stage breakdown */}
+                    {stages.length > 0 && (
+                        <div>
+                            <p className="text-[10px] font-extrabold text-slate-500 uppercase mb-1.5">🔄 Stage Breakdown</p>
+                            <div className="space-y-2">
+                                {stages.map(st => (
+                                    <div key={st.stageId} className="bg-white border border-slate-200 rounded-xl p-3">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-xs font-bold text-slate-800">{st.stageName}</span>
+                                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${sevColor(st.status).bg} ${sevColor(st.status).text}`}>
+                                                {st.status?.toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-1.5 text-center">
+                                            <div>
+                                                <p className="text-xs font-extrabold" style={{ color: dtifColor(st.dtifPct) }}>{st.dtifPct?.toFixed(1)}%</p>
+                                                <p className="text-[9px] text-slate-500">DTIF</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-extrabold text-blue-600">{st.onTimePct?.toFixed(1)}%</p>
+                                                <p className="text-[9px] text-slate-500">On-Time</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-extrabold text-purple-600">{st.inFullPct?.toFixed(1)}%</p>
+                                                <p className="text-[9px] text-slate-500">In-Full</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-extrabold text-amber-600">{st.slaBreachCount?.toLocaleString()}</p>
+                                                <p className="text-[9px] text-slate-500">SLA Breach</p>
+                                            </div>
+                                        </div>
+                                        <MiniBar value={st.dtifPct} color={dtifColor(st.dtifPct)} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Signals */}
+                    {signals.length > 0 && (
+                        <div>
+                            <p className="text-[10px] font-extrabold text-slate-500 uppercase mb-1.5">📡 Signals ({signals.length})</p>
+                            <div className="space-y-1">
+                                {signals.map((sig, i) => (
+                                    <div key={i} className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
+                                        <span className="text-amber-500 mt-0.5 shrink-0">⚠</span>
+                                        <p className="text-[11px] text-amber-800 leading-snug">{sig}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Top Actions */}
+                    {actions.length > 0 && (
+                        <div>
+                            <p className="text-[10px] font-extrabold text-slate-500 uppercase mb-1.5">✅ Top Actions</p>
+                            <div className="space-y-1">
+                                {actions.map((act, i) => (
+                                    <div key={i} className="flex items-start gap-2 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1.5">
+                                        <span className="text-emerald-500 shrink-0 mt-0.5">{i + 1}.</span>
+                                        <p className="text-[11px] text-emerald-800 leading-snug">{act}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── KPIs ── */}
+            {tab === 'kpis' && (
+                <div className="grid grid-cols-1 gap-2">
+                    {kpis.map(kpi => {
+                        const isGood = kpi.status === 'healthy';
+                        const pct = kpi.unit === '%' ? kpi.current : null;
+                        return (
+                            <div key={kpi.id} className="bg-white border border-slate-200 rounded-xl p-3">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs font-bold text-slate-800">{kpi.title}</span>
+                                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${kpiStat(kpi.status)}`}>
+                                        {kpi.status?.toUpperCase()}
+                                    </span>
+                                </div>
+                                <div className="flex items-end gap-1.5 mb-1">
+                                    <span className="text-lg font-extrabold text-slate-900">{kpi.current}</span>
+                                    <span className="text-[10px] text-slate-500 mb-0.5">{kpi.unit}</span>
+                                    <span className="text-[10px] text-slate-400 mb-0.5">/ target {kpi.target} {kpi.unit}</span>
+                                </div>
+                                {pct !== null && (
+                                    <MiniBar value={pct} color={isGood ? '#10b981' : kpi.status === 'warning' ? '#f59e0b' : '#ef4444'} />
+                                )}
+                                <p className="text-[10px] text-slate-500 mt-1.5 leading-snug">{kpi.current_status}</p>
+                            </div>
+                        );
+                    })}
+                    {kpis.length === 0 && <p className="text-xs text-slate-400 text-center py-4">No KPI data</p>}
+                </div>
+            )}
+
+            {/* ── PIPELINE (Active Deals) ── */}
+            {tab === 'pipeline' && (
+                <div className="space-y-2">
+                    {deals.map(deal => (
+                        <div key={deal.deal_code} className="bg-white border border-slate-200 rounded-xl p-3">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                                <div>
+                                    <p className="text-xs font-bold text-slate-800 leading-snug">{deal.title}</p>
+                                    <p className="text-[10px] text-slate-500">{deal.deal_code} · {deal.stage}</p>
+                                </div>
+                                <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shrink-0 ${dealPri(deal.priority)}`}>
+                                    {deal.priority?.replace('_', ' ')}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-4 gap-1 text-center mt-1.5">
+                                <div className="bg-slate-50 rounded-lg p-1">
+                                    <p className="text-[10px] font-bold text-slate-700">₹{(deal.value / 1e7).toFixed(1)}Cr</p>
+                                    <p className="text-[9px] text-slate-400">Value</p>
+                                </div>
+                                <div className={`rounded-lg p-1 ${deal.on_time ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                                    <p className={`text-[10px] font-bold ${deal.on_time ? 'text-emerald-600' : 'text-red-600'}`}>{deal.on_time ? '✓' : '✗'}</p>
+                                    <p className="text-[9px] text-slate-400">On-Time</p>
+                                </div>
+                                <div className={`rounded-lg p-1 ${deal.in_full ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                                    <p className={`text-[10px] font-bold ${deal.in_full ? 'text-emerald-600' : 'text-red-600'}`}>{deal.in_full ? '✓' : '✗'}</p>
+                                    <p className="text-[9px] text-slate-400">In-Full</p>
+                                </div>
+                                <div className={`rounded-lg p-1 ${deal.risk_score < 30 ? 'bg-emerald-50' : deal.risk_score < 60 ? 'bg-amber-50' : 'bg-red-50'}`}>
+                                    <p className={`text-[10px] font-bold ${deal.risk_score < 30 ? 'text-emerald-600' : deal.risk_score < 60 ? 'text-amber-600' : 'text-red-600'}`}>{deal.risk_score?.toFixed(0)}</p>
+                                    <p className="text-[9px] text-slate-400">Risk</p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    {deals.length === 0 && <p className="text-xs text-slate-400 text-center py-4">No active deals</p>}
+                </div>
+            )}
+
+            {/* ── RCA ── */}
+            {tab === 'rca' && (
+                <div className="space-y-2">
+                    {rcas.map((rca, i) => {
+                        const isOpen = openRca === i;
+                        const sev = sevColor(rca.severity);
+                        return (
+                            <div key={rca.rca_id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                <button className="w-full px-3 py-2.5 text-left flex items-start gap-2"
+                                    onClick={() => setOpenRca(isOpen ? null : i)}>
+                                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${sev.bg} ${sev.text}`}>{rca.severity}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-slate-800 leading-snug">{rca.reason?.title}</p>
+                                        <p className="text-[10px] text-slate-500 mt-0.5">{rca.rca_id} · {rca.reason?.label_type?.replace(/_/g, ' ')}</p>
+                                    </div>
+                                    <span className="text-slate-400 shrink-0">{isOpen ? '▲' : '▼'}</span>
+                                </button>
+                                {isOpen && (
+                                    <div className="border-t border-slate-100 p-3 space-y-2 bg-slate-50">
+                                        <div className="bg-white border border-slate-100 rounded-lg p-2.5">
+                                            <p className="text-[10px] font-extrabold text-slate-500 uppercase mb-0.5">Root Cause</p>
+                                            <p className="text-[11px] text-slate-700 leading-relaxed">{rca.reason?.display_text}</p>
+                                            <p className="text-[10px] text-indigo-600 font-semibold mt-1">DTIF Impact: −{rca.reason?.dtif_impact_pct?.toFixed(1)}%</p>
+                                        </div>
+                                        <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
+                                            <p className="text-[10px] font-extrabold text-emerald-700 uppercase mb-0.5">✅ Recommended Action</p>
+                                            <p className="text-[11px] text-emerald-800 leading-relaxed">{rca.action?.display_text}</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button className="flex-1 text-[10px] font-bold py-1.5 px-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                                {rca.action?.cta?.primary || 'Resolve Now'}
+                                            </button>
+                                            <button className="flex-1 text-[10px] font-bold py-1.5 px-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200">
+                                                {rca.action?.cta?.secondary || 'Assign Owner'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                    {rcas.length === 0 && <p className="text-xs text-slate-400 text-center py-4">No RCA events</p>}
+                </div>
+            )}
+
+            {/* ── ACTIONS (Recommendations) ── */}
+            {tab === 'actions' && (
+                <div className="space-y-2">
+                    {recs.map((rec, i) => {
+                        const isOpen = openRec === i;
+                        const sc = sevColor(rec.severity);
+                        return (
+                            <div key={rec.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                <button className="w-full px-3 py-2.5 text-left flex items-start gap-2"
+                                    onClick={() => setOpenRec(isOpen ? null : i)}>
+                                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${sc.bg} ${sc.text}`}>
+                                        {rec.severity?.toUpperCase()}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-slate-800 leading-snug">{rec.name}</p>
+                                        <p className="text-[10px] text-slate-500 mt-0.5">{rec.category?.replace(/_/g, ' ')} · {rec.target_name}</p>
+                                    </div>
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 shrink-0">{rec.status}</span>
+                                </button>
+                                {isOpen && (
+                                    <div className="border-t border-slate-100 p-3 space-y-2 bg-slate-50">
+                                        <p className="text-[11px] text-slate-700 leading-relaxed">{rec.description}</p>
+                                        <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2">
+                                            <p className="text-[10px] font-extrabold text-indigo-700 uppercase mb-0.5">📈 Expected Outcome</p>
+                                            <p className="text-[11px] text-indigo-800">{rec.details}</p>
+                                        </div>
+                                        {rec.signals?.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-extrabold text-slate-500 uppercase mb-1">📡 Signal Evidence</p>
+                                                {rec.signals.map((sig, j) => (
+                                                    <p key={j} className="text-[10px] text-slate-600 flex items-start gap-1 mb-0.5">
+                                                        <span className="text-slate-400">·</span>{sig}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <button className="w-full text-[10px] font-bold py-1.5 px-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                                            Accept & Assign
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                    {recs.length === 0 && <p className="text-xs text-slate-400 text-center py-4">No recommendations</p>}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
 /* PR AGING / PR REVIEW DELAYS */
 const PrRenderer = ({ data }) => {
     /* API shape: { data: { pr_list[], summary{} }, meta{} } */
@@ -3248,7 +3616,7 @@ const detectType = p => {
     if (p.includes('/recommendations/')) return 'recs';
     if (p.includes('/notifications/')) return 'notif';
     if (p.includes('/pr-aging/')) return 'pr';
-    if (p.includes('/command-center/')) return 'eng';
+    if (p.includes('/command-center/')) return 'engcc';
     if (p.includes('/engineering/')) return 'eng';
     if (p.includes('/decision-actions/') || p.includes('/decision/')) return 'decision';
     if (p.includes('/product/')) return 'product';
@@ -3272,6 +3640,7 @@ const SmartRenderer = ({ data, apiPath }) => {
         case 'recs': return <RecsRenderer data={payload} />;
         case 'notif': return <NotifRenderer data={payload} />;
         case 'pr': return <PrRenderer data={payload} />;
+        case 'engcc': return <CommandCenterEngRenderer data={payload} />;
         case 'eng': return <EngRenderer data={payload} />;
         case 'decision': return <DecisionRenderer data={payload} />;
         case 'product': return <ProductOutcomesRenderer data={payload} />;
